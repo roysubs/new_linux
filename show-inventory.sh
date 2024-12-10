@@ -6,14 +6,8 @@ if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt updat
 install-if-missing() { if ! dpkg-query -l "$1" >/dev/null; then sudo apt install -y $1; fi; }
 install-if-missing samba
 install-if-missing smbclient
-install-if-missing nfs-utils
 install-if-missing nfs-common
 install-if-missing duf
-# if ! dpkg-query -l "samba" >/dev/null; then sudo apt install -y samba; fi
-# if ! dpkg-query -l "smbclient" >/dev/null; then sudo apt install -y smbclient; fi
-# if ! dpkg-query -l "nfs-common" >/dev/null; then sudo apt install -y nfs-utils nfs-common; fi
-# if ! dpkg-query -l "duf" >/dev/null; then sudo apt install -y duf; fi
-exit 1
 
 # Function to list all disks and their status
 list_disks() {

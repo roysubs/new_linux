@@ -117,8 +117,8 @@ def main():
     if selected_script is None:
         print("No script was executed. Exiting.")
     else:
-        # print(f"The selected script is: {selected_script}")
-        input("The selected script is '{selected_script}\nPress Enter to start execution...")  # Pause for user confirmation
+        print(f"The selected script is '{selected_script}'")
+        input("Press any key to run the script.")  # Pause for user confirmation
         print("\nExecuting the selected script...\n")
         run_script(script_dir, selected_script)
 

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Serve a web page that displays various basic information
-# If 8081 is in use, 'sudo lsof -i :8081' and kill the process
+# If 8081 is in use, 'sudo lsof -i :8081' and kill that process then rerun this
+# To make it run independently and in the background:
 # nohup ./web-system-info-8081.sh > output.log 2>&1 &
 #    nohup "no hang up" ensures the script keeps running after the terminal session is closed.
 #    > output.log redirects standard output to a log file (output.log).
@@ -13,18 +14,17 @@
 #    crontab -e
 # Add this line:
 #    @reboot /path/to/your/web-page.sh &
-# Note that every though this is user level crontab, it *does* start at reboot, and not user logon.
+# Note that this is user level crontab, so will not start until the user has logged on.
 # Other methods:
 # - systemd Service (for system reboot)
 #   The service will run the script as soon as the system has finished booting and the network is available.
 #   This is ideal if you need the script to run independently of any user logging in.
 # - Cron @reboot (for system reboot)
-#   Runs the specified command or script once when the system boots up, similar to systemd but managed through the cron daemon.
-#   When to use: Use this if you don't want to create a full systemd service but still need the script to run at boot.
+#   Use this if you don't want to create a full systemd service but want the script to run easily.
 # - rc.local (for system reboot)
-#   Like systemd and cron @reboot, it does not depend on user login. Legacy method.
+#   Like systemd, it does not depend on user login. Legacy method.
 # - init.d (for system reboot)
-#   Also a legacy method, it's effective for older Linux systems or distributions that still use the init system.
+#   Also a legacy method, effective for older Linux systems or distributions that still use the init system.
 # - For user logon (session start), you can use ~/.bashrc (console logins) or ~/.profile (for graphical logins).
 
 # Set to dynamically refresh every 30 seconds, but only when a user is on the page:

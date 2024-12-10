@@ -7,7 +7,7 @@
 
 # Define output file for passwords
 SCRIPT_NAME=$(basename "$0")
-PASSWORD_FILE="${SCRIPT_NAME%.sh}-passwords.txt"
+PASSWORD_FILE="~/.vnc/${SCRIPT_NAME%.sh}-passwords.txt"
 > "$PASSWORD_FILE"   # Clear the contents of this file
 DESKTOP_PACKAGE="task-mate-desktop"      # task-xfce-desktop
 DESKTOP_BINARY="/usr/bin/mate-session"   # /usr/bin/startxfce4
