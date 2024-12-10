@@ -1,0 +1,81 @@
+TimeShift is very easy to use, --create / --restore
+By default, --create / --restore ignore /home
+
+# sudo timeshift --create
+# sudo timeshift --restore
+
+Just be aware of the GRUB2 re-installation step and the effect on
+/etc/fstab of performing a snapshort restore.
+
+# Re-install GRUB2 bootloader? (recommended) (y/n): y
+# 
+# Select GRUB device:
+# 
+# Num     Device  Description
+# ------------------------------------------------------------------------------
+# 0    >  sda     ATA ST32000542AS [MBR]
+# 1    >  sda1     ext4, 1999.4 GB GB
+# 2    >  sdb     ATA SAMSUNG HD103UJ [MBR]
+# 3    >  sdc     ATA SAMSUNG HD103UJ [MBR]
+# 
+# [ENTER = Default (/dev/sda), a = Abort]
+# 
+# Enter device name or number (a=Abort):
+
+The GRUB device typically goes to the drive containing the bootloader, which is usually
+the primary drive used to boot the system, i.e. it should be installed to /sda (option 0)
+and not to /sda1, since that is most likely to be the default boot drive.
+Key Points to Consider: Choose the Whole Disk, Not a Partition, as GRUB is installed in
+the Master Boot Record (MBR) of the disk, not within a specific partition, while
+/dev/sda1 refers to a partiton, and GRUB does not belong there unless you're doing a very
+specific EFI or custom setup.
+
+/etc/fstab:
+
+After the restore, Linux may go into emergency boot mode as the /etc/fstab may contain
+drives (sdb / sdc) that were not there when the snapshot was created. To fix this, go into
+emergency boot and edit /etc/fstab to remove the drives that were not there, or edit the
+/etc/fstab inside the TimeShift snapshot before restoring it. To do this, run Timeshift
+with the browse option to access the snapshot files:
+
+sudo timeshift --restore
+
+When prompted, select the snapshot you want to restore but do not proceed with the
+restoration. Instead, note where it mounts the snapshot (e.g., /run/timeshift/...) and
+from that, locate and edit the fstab File:
+
+cd /run/timeshift/[snapshot_path]/backup/etc
+sudo vi fstab
+
+Remove the entries that you think may not be in the current configuration (drives can be
+re-added later after the restore completes).
+
+If you want to find the correct UUIDs for your partitions, run:
+
+blkid
+
+Replace device names (e.g., /dev/sdb) in fstab with their corresponding UUIDs:
+
+UUID=<your-partition-uuid>  /mount-point  ext4  defaults  0  1
+
+This ensures the entries are independent of device names, avoiding issues caused by device renaming. Double-check the updated fstab for accuracy and save the file (Ctrl + O, then Ctrl + X to exit nano).
+
+sudo timeshift --restore
+
+This time, the updated fstab file will be applied during the restoration.
+
+Alternatively, you can just modify during Emergency Mode by pressing Ctrl + D or log in as root and then edit /etc/fstab:
+
+To mount the root filesystem in read-write mode:
+
+mount -o remount,rw /
+
+Edit /etc/fstab directly:
+
+vi /etc/fstab
+
+Then reboot to complete the fix.
+
+reboot
+
+Updating fstab in the snapshot ensures the restored system will boot without requiring emergency fixes.

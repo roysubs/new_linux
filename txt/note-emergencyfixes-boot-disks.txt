@@ -1,0 +1,29 @@
+Linux can go into emergency boot if an entry in fstab exists but the disk is no longer present
+
+# 1. Check and edit fstab, remove any entries for removed disks
+sudo vi /etc/fstab
+
+# 2. Ensure drive is not mounted
+sudo umount /dev/sdb1  # Or other partitions
+
+# 3. Identify processes using the drive
+sudo lsof /dev/sdb
+sudo kill <PID>
+
+# 4. Clear the partition table
+sudo sgdisk --zap-all /dev/sdb
+sudo partprobe /dev/sdb
+
+# 5. Verify with lsblk
+lsblk
+
+# 6. Use fdisk if necessary to delete partitions
+sudo fdisk /dev/sdb
+
+# 7. Reboot the system
+sudo reboot
+
+# 8. Recreate partitions (Optional)
+sudo fdisk /dev/sdb
+sudo mkfs.ext4 /dev/sdb1  # Create filesystem
+

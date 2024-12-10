@@ -1,0 +1,6 @@
+
+
+tigervncserver -kill :1
+tigervncserver :1
+
+tigervncserver -xstartup /usr/bin/mate-session -geometry 800x600 -localhost no :1

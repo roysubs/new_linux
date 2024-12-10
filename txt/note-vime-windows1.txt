@@ -1,0 +1,7 @@
+ssh over PowerShell
+
+
+Remember Ctrl+Win+rightcursor/leftcursor to jump to a new desktop, very useful to segregate work, and built into Windows 11
+
+
+

@@ -1,0 +1,108 @@
+you can delete the older folders, including the Full backup, as long as you are using hard links properly in your incremental backups.
+
+Here's how hard links work in this context:
+Hard links:
+
+A hard link is essentially another pointer to the same data on disk. It doesn't create a new copy of the file, but rather a new reference to the same data.
+If you have a Full backup and create Incremental backups that use hard links to the unchanged files, the Incremental backups will continue to point to the same data stored in the Full backup.
+How hard links affect your backups:
+
+If you delete the Full backup folder (or its files), all hard links to the data in that folder will be broken.
+However, if you preserve the data files (even if they are now part of the Incremental backups) and the Incremental backups are still in place, the data remains accessible through those Incremental backups because they contain hard links to the original data.
+Important note:
+
+Ensure that your Incremental backup contains all the files and data that were in the Full backup. If you delete the Full backup, only the data that exists in your Incremental backups (via hard links) will still be available.
+If you delete the Full backup and the Incremental backup doesn't have all the files (i.e., it only has hard links to the parts of the Full backup that were modified), you risk losing data.
+To summarize:
+You can safely delete the older Full backup folder as long as the Incremental backups have hard links to the same data and have included all files.
+Ensure your Incremental backup is complete and contains all necessary hard links to prevent any loss of data.
+Just make sure that when you delete the Full backup, the Incremental backup folders still contain all of the necessary files, as hard links will only point to the data, not duplicate it.
+
+
+
+# In cron, the syntax "0 * * * *" means:
+# 0 in the minute field: Execute at minute 0 (the start of the hour).
+# * in the hour field: Any hour (0-23).
+# * in the day of month field: Any day of the month (1-31).
+# * in the month field: Any month (1-12).
+# * in the day of the week field: Any day of the week (0-7, where both 0 and 7 represent Sunday).
+# crontab -e   # Edit the crontab in a text editor; to disable a specific job, comment it out with #
+# crontab -l   # Displays all scheduled jobs for the current user.
+# crontab -r   # remove all cron jobs
+# User cron jobs are stored in /var/spool/cron/crontabs/<username> (do not ever touch these)
+# sudo systemctl stop cron   # Stop cron (until next reboot
+# sudo systemctl start cron  # Start cron
+# cat /etc/crontab           # List system-wide cron jobs
+
+
+
+# rsync is inherently capable of performing incremental backups, and it's one of the most efficient tools for this purpose. The way rsync handles incremental backups is by transferring only the files that have changed since the last backup, based on file modifications (e.g., timestamps and sizes). This makes it highly efficient because it avoids duplicating data and only updates the changes.
+# 
+# How rsync Does Incremental Backups:
+# File Comparison: rsync compares the source files to the destination files. If a file in the source directory is newer (based on timestamp or size), rsync will copy it to the destination.
+# Efficient Transfer: For files that haven't changed, rsync uses hard links to create a reference in the backup directory without physically copying the data again.
+# Preserving File Structure: rsync preserves the directory structure, permissions, and file metadata.
+# Key Options for Incremental Backups with rsync:
+# --archive (-a): Preserves the directory structure, symlinks, permissions, and timestamps.
+# --link-dest: Used for incremental backups by comparing the current backup to a previous one and reusing unchanged files by creating hard links.
+# Basic Syntax for an Incremental Backup with rsync:
+# Here’s a step-by-step breakdown of how you can use rsync for incremental backups:
+# 
+# bash
+# Copy code
+# rsync -av --link-dest=/path/to/previous_backup /path/to/source/ /path/to/backup/
+# Explanation of the options:
+# -a (--archive): This option ensures that rsync preserves the file permissions, symlinks, timestamps, and directory structure.
+# -v (--verbose): This provides verbose output for better monitoring during the backup process.
+# --link-dest: This is the key to incremental backups. It points to the directory where the previous backup is stored. rsync will create hard links for files that haven't changed between the source and destination (the backup), making this process much faster and space-efficient.
+# /path/to/source/: The source directory you want to back up.
+# /path/to/backup/: The destination backup directory.
+# Example: Incremental Backup with rsync
+# Let’s say you want to back up your home directory (~) to ~/backups, and you want to keep incremental backups.
+# 
+# 1. First Backup (Full Backup)
+# For the first backup, you don’t need --link-dest because there’s no previous backup to reference. This will create a full backup.
+# 
+# bash
+# Copy code
+# rsync -av --exclude="backups" --exclude=".backup-home" ~ /home/$(whoami)/backups/home-$(date +%Y-%m-%d_%H-%M-%S)/
+# This command will copy everything from ~ (except the backups and .backup-home directories) to a new directory named with the current timestamp.
+# 2. Subsequent Backups (Incremental)
+# For subsequent backups, you can use the --link-dest option to reference the last backup, and rsync will only copy files that have changed. This will save both time and disk space.
+# 
+# bash
+# Copy code
+# rsync -av --link-dest=/home/$(whoami)/backups/home-$(date -d '1 day ago' +%Y-%m-%d_%H-%M-%S) --exclude="backups" --exclude=".backup-home" ~ /home/$(whoami)/backups/home-$(date +%Y-%m-%d_%H-%M-%S)/
+# --link-dest: Points to the last backup directory. rsync compares the files in the source directory (~) with those in the last backup directory and only copies the ones that are different (new or modified).
+# --exclude: Prevents unnecessary directories (like backups and .backup-home) from being included in the backup.
+# Incremental Backup with Hard Links
+# If you want to store multiple incremental backups and maintain hard links to unchanged files from previous backups, you can use this approach:
+# 
+# bash
+# Copy code
+# rsync -av --link-dest=/home/$(whoami)/backups/latest --exclude="backups" --exclude=".backup-home" ~ /home/$(whoami)/backups/home-$(date +%Y-%m-%d_%H-%M-%S)/
+# ln -snf /home/$(whoami)/backups/home-$(date +%Y-%m-%d_%H-%M-%S) /home/$(whoami)/backups/latest
+# --link-dest: Reuses unchanged files by creating hard links to them from the last backup.
+# ln -snf: Creates a symlink latest that always points to the most recent backup.
+# Benefits of Using rsync for Incremental Backups:
+# Efficiency: Only new or modified files are copied.
+# Space Savings: Hard links for unchanged files save disk space, as they share the same blocks on the disk.
+# Speed: Incremental backups are faster because rsync avoids copying files that haven’t changed.
+# Managing Multiple Incremental Backups
+# To manage multiple incremental backups, you can keep old backups in separate directories with timestamps. For example:
+# 
+# /backups/home-2024-02-20_12-00-00/
+# /backups/home-2024-02-21_12-00-00/
+# /backups/home-2024-02-22_12-00-00/
+# Each directory contains a full snapshot of files at that point in time, but files that haven’t changed will be hard-linked from previous backups, saving space.
+# 
+# Restoring from Incremental Backups
+# If you need to restore your backup, you can simply copy files from the most recent backup directory (using rsync again) or from any previous incremental backup:
+# 
+# bash
+# Copy code
+# rsync -av /home/$(whoami)/backups/home-2024-02-22_12-00-00/ ~/
+# This will restore the files from the backup to your home directory, including any incremental changes up to that point.
+# 
+# Conclusion
+# rsync is a great tool for incremental backups because of its flexibility and efficiency. By using the --link-dest option, you can ensure that only changed files are backed up, and hard links are used to save space on unchanged files. This makes it both a fast and space-efficient method for backing up large sets of files.

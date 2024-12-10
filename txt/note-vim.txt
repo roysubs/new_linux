@@ -1,0 +1,157 @@
+Vim Quick Notes
+===============
+
+Neovim (nvim) is almost always an improvement over Vim (much more modern support and plugins etc) but almost identical in operation.
+This setup makes switching between the two simple with '. set-vim.sh' and '. set-nvim.sh'
+By default, ":%s/\nText/\n   NewText 123/g", nvim shows you the proposed updates before pressing Enter.
+Graphic and paste support is significant.
+Asynchronous processing: nvim supports background tasks (e.g., LSP, linting) without blocking the UI.
+Built-in terminal emulator: nvim includes a terminal for running shell commands.
+Improved plugin system: Better support for modern plugins, such as via dein or packer.
+Enhanced UI features: Real-time diff and interactive search, as well as a built-in status line and floating windows.
+Better cross-platform support: nvim is more compatible with modern operating systems.
+Improved extensibility: Allows deeper integration of external tools and systems.
+
+
+Vim modes: Normal (navigate and manipulate text), Insert (insert text), 
+  Visual modes (Visual, Block to select regions), Command-line (:w :%s/text/replace/g etc).
+:set paste   Note the 'paste mode'. Use when pasting (usually from clipboard) formats badly. This temporarily adjusts Vim to disable auto-indentation, adjust line wrapping settings so that long lines won't wrap unexpectedly, and disable mappings and abbreviations.: Custom key mappings and text substitutions (abbreviations) won't interfere with the pasted text.
+
+
+- Quick Basics:
+    In normal mode, h(left),j(down),k(up),l(right) to navigate (or cursor keys). In insert mode, use cursor keys, PgUp/PgDn to navigate.
+    dd to delete a line (into the buffer), yy (to yank a line into the buffer), p (paste the buffer to the cursor position)
+    r (replace a char), R (replace mode, overwrite words).
+
+
+- Quick Visual Mode and Select summary:
+    v enter visual mode at the position of the cursor, could use cursor keys or ^ or $ to select text, d or y to manipulate etc
+    V (Shift+v) visual mode line select, will select the whole line, use cursor up/down to select more or e.g., 5j to select 5 line below etc.
+    Ctrl+v (or Ctrl+q) visual block mode, block select on multiple lines.
+    Note! As Ctrl+v often has different uses, the additional option of Ctrl+q is always available!!
+    After Ctrl+q and cursor up/down/left/right, can press d to delete the block, or I (Shift+i) to insert some text.
+    This text will only show on one line until you press ESC after which the text will be propogated to every line in the visual block.
+    To append text to the end of multiple lines of different lengths, Ctrl+v (or Ctrl+q) then j/k (or cursors) to select lines, then $ to go
+    to end of the lines (all text in all lines will be highlighted), then A (Shift+a) to append, type text, then 'Esc' to apply to all lines.
+    (In VS Code, same would be: Ctrl+Shift+Alt+down to select lines, 'End' to go to end of lines, then start typing).
+    Tried to copy Ctrl+Alt+Shift+down to mimic VS Code, but Vim does not recognise Alt:   noremap <C-A-S-Down> <C-V>
+    Note: once in visual mode, you can also roll the mouse wheel to select multiple lines.
+    gh enters Select mode to enter multiline select from the current cursor position.
+
+
+- Quick navigate summary:
+    g is 'goto'. Various actions after that, but gg goes to start of first line.
+    G is 'goto line'. 123G will go to line 123 (can also do in command mode with ':123')
+    G on it's own (without being prefixed by a number) is to go to last line.
+    dG will delete from current position of cursor to the end of the file (yG to do a yank).
+    dgg will delete from current position to the start of the file (ygg to do a yank).
+    ggdG will delete everything in the file (gg=goto-start/d=delete/G=goto-lastline).
+    0 go to start of line, ^ to first non-space in line, $ to end of line (d$, d0, y$, y0).
+    w jump forward a word, b just backwards a word, e cursor to end of current word.
+    Ctrl+f (jump forward a page, +d half a page),  Ctrl+b (jump backwards a page, +u half a page).
+    { i.e. Shift+[ go to beginning of paragraph,  } i.e. Shift+] go to end of paragraph.
+    ( go backwards to beginning of sentence,  ) go forwards to start of next sentence.
+
+
+- Delete a word, or to end of line
+    Insert mode: Ctrl + W (delete word before), Ctrl + U (delete word after)
+    Insert mode: Shift + d (D) delete from cursor to end of line
+    dw  : d (delete) w (word)            : deletes the word after the cursor.
+    daw : d (delete) a (around) w (word) : delete the word around the cursor (left and right).
+
+
+- d is a cut instead of delete (saved in buffer) so yank, lines deleted are stored in the buffer, so 5dd, or d5j or dG will grab, then p to paste.
+
+
+- Delete actions (usually d followed by an action)
+    d$ or D (Shift-d) (delete to the end of line)
+    d^ (delete to the start of line)
+    d5j (delete/5/j=down), d5h (delete/5/k=up), d5l (delete/5/l=right), d5h (delete/5/h=left)
+    dG (delete from cursor to the end of file)
+    ggdG (gg=goto-start-of-file/d=delete/G=goto-end-of-file) will delete everything in a file.
+    dgg (delete from cursor to the start of file)
+    daw (delete/around/word, deletes a whole word, right-left around cursor position)
+    - To delete down to the next line that starts fi (to remove a whole if-fi block for example)
+      d/fi<Enter>   d (start delete operation) ^ (start of line), so /^fi (find next line starting ^ with fi)
+      d/^fi/+1<Enter>   /+1 (include the matching line with the fi in it in the deletion range)
+      <Enter>: Executes the command.
+
+
+Notes from /etc/vim/vimrc
+==========
+If no user .vimrc, vim will load $VIMRUNTIME/defaults.vim (but *after* /etc/vim/vimrc(.local) are loaded, so it will override those files.
+Debian-specific settings are defined in $VIMRUNTIME/debian.vim and sourced by this call in /etc/vim/vimrc:   runtime! debian.vim
+debian.vim will be overwritten everytime the vim package is upgraded (so do not make changes in that file) 
+To make Vim more Vi-compatible:   set compatible
+Vim5 and later versions support syntax highlighting:   syntax on
+If using a dark background within the editing area and syntax highlighting, turn this on:   set background=dark
+To jump to the last position when reopening a file:   au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+To load indentation rules and plugins according to the detected filetype:   filetype plugin indent on
+The following are commented out as they cause vim to behave a lot differently from regular Vi, but they are highly recommended:
+set showcmd        " Show (partial) command in status line.
+set showmatch      " Show matching brackets.
+set ignorecase     " Do case insensitive matching
+set smartcase      " Do smart case matching
+set incsearch      " Incremental search
+set autowrite      " Automatically save before commands like :next and :make
+set hidden         " Hide buffers when they are abandoned
+set mouse=a        " Enable mouse usage (all modes)
+
+
+Possible uses for F3 (F2=toggle-lines, F4=show-non-print-characters)
+==========
+10 or more possible uses for F3 in Vim, aligned with the logic of toggling line numbers (F2) and non-printable characters (F4):
+
+" Toggle Search Highlighting: This can toggle the highlighting of search matches on and off.
+nnoremap <F3> :set hlsearch!<CR>
+
+" Toggle Line Wrapping: Toggles line wrapping in the editor, so lines that exceed the screen width will either wrap or stay on a single line.
+nnoremap <F3> :set wrap!<CR>
+
+" Toggle Relative Line Numbers: Switches between absolute and relative line numbers.
+nnoremap <F3> :set relativenumber!<CR>
+
+" Toggle Paste Mode: Enables or disables paste mode, which disables automatic indentation and other behaviors when pasting text.
+nnoremap <F3> :set paste!<CR>
+
+" Toggle Spell Checking: Toggles the spell checker on or off.
+nnoremap <F3> :set spell!<CR>
+
+" Toggle Undo Tree: Opens or closes the undo tree (if you use a plugin like undotree).
+nnoremap <F3> :UndotreeToggle<CR>
+
+" Toggle Syntax Highlighting: Disables or enables syntax highlighting.
+nnoremap <F3> :syntax toggle<CR>
+
+" Toggle File Explorer: Opens or closes the file explorer (e.g., NERDTree or netrw).
+nnoremap <F3> :NERDTreeToggle<CR>
+
+" Toggle Conceal (for markdown, LaTeX, etc.): Toggles the conceal feature for hiding or showing special markup characters (useful in markdown or LaTeX).
+nnoremap <F3> :setlocal concealcursor+=n<CR>
+
+" Toggle Folding: Toggles code folding, hiding or showing sections of code.
+nnoremap <F3> :set foldmethod=manual<CR>
+
+" Toggle Auto-Indentation: Toggles the auto-indentation behavior (on/off).
+nnoremap <F3> :set smartindent!<CR>
+
+" Toggle Wrapscan: This toggles whether search wraps around when it reaches the end of the file.
+nnoremap <F3> :set wrapscan!<CR>
+
+" Toggle Quickfix Window: Opens or closes the quickfix window (useful for search results, compilation errors, etc.).
+nnoremap <F3> :cwindow<CR>
+
+" Toggle Soft Line Breaks: Switch between hard and soft line breaks, useful for text editing.
+nnoremap <F3> :set textwidth=80<CR>
+
+" Toggle Cursor Line Highlight: This highlights the line where the cursor is, making it easier to focus on.
+nnoremap <F3> :set cursorline!<CR>
+
+" Toggle Mouse Mode: Toggles mouse support in Vim, useful if you want to enable or disable mouse interaction.
+nnoremap <F3> :set mouse=!<CR>
+
+" Toggle Insert Mode Cursor: Toggles the cursor shape between block (normal mode) and vertical bar (insert mode).
+nnoremap <F3> :set guicursor=a:ver35<CR>
+
+" Toggle Matchparen: This feature highlights matching parentheses, brackets, and braces when the cursor is placed on them.
+nnoremap <F3> :set showmatch!<CR>

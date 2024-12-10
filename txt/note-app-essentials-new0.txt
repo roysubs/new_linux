@@ -1,0 +1,3 @@
+netstat  # sudo apt install net-tools
+ifconfig # sudo apt install net-tools
+telnet   # sudo apt install telnetd

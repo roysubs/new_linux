@@ -1,0 +1,179 @@
+Setting up X11 forwarding:
+Once setup, always connect with -Y
+    ssh -Y username@remote-server
+
+####################
+#
+# On the Local Machine
+#
+####################
+
+- On the local system, setup an X11 server:
+      Xorg on Linux
+      Xming on Windows
+
+- Make sure that the X11 server is running (Xming will have an X icon in the system tray).
+  Note that this fixed connection issues for me:
+      cd "C:\Program Files\Xming"
+      Xming.exe :0 -ac -multiwindow
+  Or create an Xming shortcut with these details in it.
+
+- Both PuTTY or Windows SSH both support X11 Forwarding. 
+
+  - In PuTTY, go to Connection > SSH > X11:
+    Check the box for Enable X11 forwarding.
+    In the X display location field, enter localhost:0
+    Go back to the Session category and save the session for future use.
+
+  - For Windows SSH:
+    Set the DISPLAY environment variable in PowerShell:
+        $env:DISPLAY="127.0.0.1:0.0"
+
+- Start the SSH Session with X11 Forwarding: Use the -Y option to enable trusted X11 forwarding:
+  Use -X for general purposes where security is a concern, and you need basic X11 forwarding.
+  Use -Y when you need full X11 functionality and trust the remote server.
+     ssh -Y username@remote-server
+
+- Run X11 Applications: Once connected, you can run X11 applications like xeyes:
+     xeyes
+
+??? Set the DISPLAY Environment Variable: Before starting the SSH session, set the DISPLAY environment variable in PowerShell:
+
+
+
+####################
+#
+# On the Remote Machine (Linux system)
+#
+####################
+
+- set DISPLAY if it is not set alraedy:
+      export DISPLAY=:0
+
+- Enable X11 forwarding in SSH:
+  - On the Linux system to connect to, check /etc/ssh/sshd_config
+        grep -e X11Forwarding -e X11UseLocalhost /etc/ssh/sshd_config
+            X11Forwarding yes
+            X11UseLocalhost yes
+    Both must be set to 'yes'
+  - Restart SSH: 
+        sudo systemctl restart ssh
+
+- Now run the graphical application, and it should display on your local machine.
+      xeyes
+
+
+####################
+#
+# Use VNC or X2Go
+#
+####################
+
+- For smoother performance, tools like VNC or X2Go could be considered, especially for intensive applications like games.
+
+
+####################
+#
+# Troubleshooting
+#
+####################
+
+Check Xming logs by right-clicking on Xming icon and selecting "View log"
+Check for updates after trying various fixes below. Focus on client rejected entries and confirm whether they match the key in xauth.
+Starting Xming with these settings resolved most issues for me:
+    Xming.exe :0 -ac -multiwindow
+nc -zv 192.168.1.29 6000   # Test if port 6000 required for X11 forwarding is open on the other side
+netstat -an | findstr :6000  # list ports open on your system
+rm -f ~/.Xauthority
+touch ~/.Xauthority
+xauth generate :0 . trusted
+# Test With xauth Debugging, enable debugging to see where it might fail:
+xauth info
+xauth list
+xauth merge ~/.Xauthority
+
+Let me know if this resolves the issue!
+
+# Check sshd_config for "X11Forwarding yes"
+sudo vi /etc/ssh/sshd_config
+
+boss@hp2: ~ $ export DISPLAY=:0
+boss@hp2: ~ $ export DISPLAY=192.168.1.29:0   # Directly set to the local system running Xming
+boss@hp2: ~ $ xeyes
+Authorization required, but no authorization protocol specified
+
+Error: Can't open display: :0
+
+# So, manually export DISPLAY
+export DISPLAY=:0 
+
+# test xhost
+boss@hp2: ~ $ xhost +SI:localuser:$(whoami)
+Authorization required, but no authorization protocol specified
+
+xhost:  unable to open display ":0"
+
+# Check xauth list and try to add the cookie manually
+boss@hp2: ~ $ xauth list
+hp2/unix:11  MIT-MAGIC-COOKIE-1  104cfd1ecf960ae659f28a1046e91a18
+hp2/unix:12  MIT-MAGIC-COOKIE-1  6cc45192d8afb69d2b9e5b4e38da628a
+hp2/unix:10  MIT-MAGIC-COOKIE-1  96158415e6c3cf0ab7b6341ef33cd81b
+
+boss@hp2: ~ $ xauth add :0 . 104cfd1ecf960ae659f28a1046e91a18
+
+boss@hp2: ~ $ xeyes
+Invalid MIT-MAGIC-COOKIE-1 key
+Error: Can't open display: :0
+
+# You can restart the X server using:
+sudo systemctl restart display-manager
+
+# Or if using a specific display manager like LightDM:
+sudo systemctl restart lightdm
+
+# Look at the Xorg Log for Errors
+cat /var/log/Xorg.0.log | grep -i error
+
+Additional Considerations:
+Ensure that your Windows firewall is not blocking Xming or any incoming connections on port 6000 (which is used for X11).
+If you are still experiencing problems, consider restarting both Xming and the SSH connection to make sure all settings are applied correctly.
+
+
+
+
+
+
+
+
+
+
+
+
+# Script to check if forwarding components are active (work on this)
+
+#!/bin/bash
+
+# Check if X11 forwarding is enabled (if DISPLAY is set)
+if [[ -z "$DISPLAY" ]]; then
+  echo "Error: X11 forwarding is not enabled. Please connect using 'ssh -X'."
+  exit 1
+fi
+
+# Check for X11 components (xauth and xclock) are installed
+if ! command -v xauth &> /dev/null || ! command -v xclock &> /dev/null; then
+  echo "Error: Required X11 components are missing. Ensure that X11 is installed on your system."
+  exit 1
+fi
+
+# Check if the X11 server is running (useful for RDP setups)
+if ! pgrep -x "Xorg" > /dev/null; then
+  echo "Error: X11 server is not running. Ensure an X11 server is active (e.g., Xming or Xorg)."
+  exit 1
+fi
+
+
+To check if Xming (or any X11 server) is running locally, the local system must either have a method for you to query its status or you would need to use some other approach, like checking for the presence of specific X11 environment variables or processes locally.
+
+If you use -Y, it enables trusted X11 forwarding (useful for some applications that require higher levels of access).
+
+Test with xeyes: After connecting via SSH with -X, try running an X11 application like xeyes (if installed) to see if the window pops up on your local machine. If it works, the X11 forwarding is set up correctly.

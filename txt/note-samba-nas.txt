@@ -1,0 +1,36 @@
+Common Samba Share Parameters:
+Here is a list of commonly used parameters in Samba share definitions:
+
+=====
+
+path: Specifies the directory to share.
+
+browseable: Determines whether the share is visible in network browsing tools (yes/no).
+
+read only: Sets whether the share is read-only (yes/no).
+
+guest ok: Allows guest access to the share (yes/no).
+
+comment: Adds a comment for the share.
+
+valid users: Specifies users allowed to access the share.
+
+write list: Specifies users or groups who can write to the share.
+
+force user: Forces all access to the share to be as a specific user.
+
+force group: Forces all access to the share to be as a specific group.
+
+create mask: Sets permissions for new files.
+
+directory mask: Sets permissions for new directories.
+
+locking: Enables or disables file locking (yes/no).
+
+veto files: Prevents specified files from being created or accessed.
+
+hide files: Hides specified files from the directory listing.
+
+max connections: Limits the number of simultaneous connections.
+
+writeable: An alternative to read only = no (yes/no).

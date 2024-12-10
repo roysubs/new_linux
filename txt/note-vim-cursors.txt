@@ -1,0 +1,25 @@
+Vim can be awkward with compiled feature support like termguicursor etc
+Neovim (nvim) has much better support for everything and is usually a better option for most situations.
+alias vi=nvim
+
+- Test if the console can handle changing the cursor:
+echo -e "\e[6 q"  # Should change the cursor to a blinking bar
+echo -e "\e[2 q"  # Should change it to a steady block
+
+
+Advanced: Modify Terminal Configuration
+If your terminal doesn't recognize Ctrl+Shift+Arrow, you can configure it to send specific escape sequences. Here's an example for some popular terminals:
+
+For Xterm
+Add the following to your .Xresources file:
+
+plaintext
+Copy code
+XTerm*vt100.translations: #override \
+  Shift Ctrl <KeyPress> Up: string(0x1b) string("[1;6A") \n\
+  Shift Ctrl <KeyPress> Down: string(0x1b) string("[1;6B")
+Reload the configuration:
+
+bash
+Copy code
+xrdb ~/.Xresources
