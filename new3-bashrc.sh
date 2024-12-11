@@ -23,6 +23,7 @@ alias initvim='vi ~/.config/nvim/init.vim'
 alias vimrcroot='sudo vi /etc/vim/vimrc'
 alias vimrcsudo='sudo vi /etc/vim/vimrc'
 alias cd..='cd ..'
+alias ..='cd ..'
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
 alias apti='sudo apt install'  # apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade)

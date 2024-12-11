@@ -74,22 +74,21 @@ else
     fi
 fi
 
-# Final advice
-echo -e "\nConfiguration completed successfully."
-echo -e "\nSummary:"
-echo "- The 'sudo' group exists and is configured in /etc/sudoers."
-echo "- The user '$USERNAME' has been added to the 'sudo' group (if they were not already a member)."
-echo "- Please log out and log back in for group membership changes to take effect."
+echo -e "
+Configuration complete.
 
-echo -e "\nCommon group membership commands:"
-echo "  sudo usermod -aG <group_name> <username>   # Add a user to a group"
-echo "  sudo usermod -aG sudo boss"
-echo "  sudo gpasswd -d <username> <group_name>    # Delete a user from a group"
-echo "  sudo gpasswd -d boss sudo"
-echo "  getent group <group_name>                  # View members of a group"
-echo "  getent group sudo"
-echo "  members <group_name>                       # Alternative way to view members of a group"
-echo "  members sudo"
+The 'sudo' group exists and is configured in /etc/sudoers.
+- The user '$USERNAME' has been added to the 'sudo' group (if they were not already a member).
 
-echo -e "\nIf you encounter issues, ensure that the /etc/sudoers file has no syntax errors using 'sudo visudo'."
+Common group membership commands:
+  sudo usermod -aG <group_name> <username>   # Add a user to a group
+  sudo usermod -aG sudo boss
+  sudo gpasswd -d <username> <group_name>    # Delete a user from a group
+  sudo gpasswd -d boss sudo
+  getent group <group_name>                  # View members of a group
+  getent group sudo
+  members <group_name>                       # Alternative way to view members of a group
+  members sudo
 
+If you encounter issues, ensure that the /etc/sudoers file has no syntax errors using 'sudo visudo'.
+"

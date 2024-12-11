@@ -1,12 +1,8 @@
 #!/bin/bash
 
-####################
-#
 # Fix Debian /etc/apt/sources.list
-# Current distro (2024-12) has a distro setup that creates warnings
-# Fix this with:   bookworm main => bookworm main contrib non-free non-free-firmware
-#
-####################
+# Current distro (2024-12) has distro setup that creates warnings
+# Fix by changing:   bookworm main => bookworm main contrib non-free non-free-firmware
 
 # Define the file to modify
 sources_list="/etc/apt/sources.list"
