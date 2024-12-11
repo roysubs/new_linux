@@ -53,7 +53,7 @@ def display_menu(stdscr, options):
             return None
 
 def run_scripts(script_dir, selected_scripts):
-    """Run the selected scripts interactively in order with streaming output and timing."""
+    """Run the selected scripts in order with streaming output and timing."""
     script_start_times = {}
     overall_start_time = time.time()
 
@@ -67,13 +67,24 @@ def run_scripts(script_dir, selected_scripts):
         print("-" * 40)
 
         try:
-            # Run the script interactively
-            subprocess.run(
+            # Stream output line by line
+            process = subprocess.Popen(
                 [script_path],
-                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
             )
-        except subprocess.CalledProcessError as e:
-            print(f"Script {script} failed with error code {e.returncode}")
+
+            for line in process.stdout:
+                print(line, end="")
+
+            process.stdout.close()
+            return_code = process.wait()
+
+            if return_code != 0:
+                error_output = process.stderr.read()
+                print(f"\nError running {script}:\n{error_output}")
+                process.stderr.close()
         except FileNotFoundError:
             print(f"Error: Script not found: {script_path}")
         except PermissionError:
@@ -92,6 +103,31 @@ def run_scripts(script_dir, selected_scripts):
     print(f"{final_end_time} - Finished running scripts")
     total_runtime = overall_end_time - overall_start_time
     print(f"Total runtime: {total_runtime:.2f} seconds.")
+
+def run_script_with_pty(script_path):
+    # Create a pseudo-terminal
+    master, slave = pty.openpty()
+    process = subprocess.Popen(
+        [script_path],
+        stdin=slave,
+        stdout=slave,
+        stderr=slave,
+        text=True,
+    )
+    os.close(slave)
+
+    # Read output line by line and print to the real stdout
+    while True:
+        try:
+            output = os.read(master, 1024).decode()
+            if not output:
+                break
+            print(output, end="")
+        except OSError:
+            break
+
+    os.close(master)
+    process.wait()
 
 def main():
     # Define the folder containing scripts

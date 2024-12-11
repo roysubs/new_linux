@@ -2,7 +2,7 @@
 
 # Define text formatting for output
 GREEN='\033[0;32m'
-WHITE='\033[0;37m'
+YELLOW='\033[0;93m'
 NC='\033[0m' # No color
 
 echo
@@ -11,7 +11,7 @@ echo "Ansible is a powerful tool for automating IT infrastructure."
 echo
 
 # Step 1: Update and Upgrade System Packages
-echo -e "${WHITE}Step 1: Updating and upgrading system packages.${NC}"
+echo -e "${YELLOW}Step 1: Updating and upgrading system packages.${NC}"
 echo "This ensures your system has the latest updates and security patches."
 echo "Press Enter to continue or CTRL+C to exit."
 read
@@ -28,7 +28,7 @@ fi
 
 
 # Step 2: Install Required Dependencies
-echo -e "${WHITE}Step 2: Installing required dependencies.${NC}"
+echo -e "${YELLOW}Step 2: Installing required dependencies.${NC}"
 echo "These include Python3, pip3, and sshpass, which are needed by Ansible."
 echo "Press Enter to continue."
 read
@@ -44,7 +44,7 @@ echo -e "${GREEN}Dependencies installed successfully!${NC}"
 echo
 
 # # Step 3: Add Ansible PPA and Install Ansible
-# echo -e "${WHITE}Step 3: Adding Ansible PPA and installing Ansible.${NC}"
+# echo -e "${YELLOW}Step 3: Adding Ansible PPA and installing Ansible.${NC}"
 # echo "The default Ansible version in Debian repositories may not be the latest as"
 # echo "Ansible is owned by Red Hat so we'll use a PPA to get the latest stable release."
 # echo "Press Enter to continue."
@@ -84,7 +84,7 @@ ansible --version
 echo
 
 # Step 4: Set Up SSH Key for Ansible (without overwriting existing key)
-echo -e "${WHITE}Step 4: Setting up SSH keys for secure communication.${NC}"
+echo -e "${YELLOW}Step 4: Setting up SSH keys for secure communication.${NC}"
 echo "Ansible uses SSH to communicate with managed hosts. If you already have an SSH key, we won't overwrite it."
 echo "We'll check if an SSH key already exists and only create a new one if necessary."
 echo "Press Enter to continue."
@@ -105,7 +105,7 @@ echo "Where 'user' is the username on the remote machine and 'remote_host' is it
 echo
 
 # Step 5: Configure the Inventory File
-echo -e "${WHITE}Step 5: Configuring the Ansible inventory file.${NC}"
+echo -e "${YELLOW}Step 5: Configuring the Ansible inventory file.${NC}"
 echo "The inventory file at /etc/ansible/hosts defines the hosts that"
 echo "Ansible will manage. For now, we will add just localhost. Later,"
 echo "you can add remote hosts. The structure should look like this:"
@@ -129,7 +129,7 @@ echo -e "${GREEN}Inventory file configured!${NC}"
 echo
 
 # Step 6: Test Connectivity
-echo -e "${WHITE}Step 6: Testing connectivity to the managed host.${NC}"
+echo -e "${YELLOW}Step 6: Testing connectivity to the managed host.${NC}"
 echo "We'll use the Ansible ping module to test connectivity."
 echo -e "Running: ${GREEN}ansible all -m ping${NC}"
 ansible all -m ping
@@ -138,7 +138,7 @@ echo -e "${GREEN}Connectivity test complete!${NC}"
 echo
 
 # Step 7: Optional: Install Additional Collections
-echo -e "${WHITE}Step 7: (Optional) Installing additional collections.${NC}"
+echo -e "${YELLOW}Step 7: (Optional) Installing additional collections.${NC}"
 echo "You can extend Ansible's functionality by installing collections from Ansible Galaxy."
 echo "Press Enter to skip or specify a collection to install (e.g., community.general):"
 read -p "Collection name (leave blank to skip): " collection_name
@@ -152,7 +152,7 @@ fi
 echo
 
 # Step 8: Start Using Ansible
-echo -e "${WHITE}Step 8: Start using Ansible!${NC}"
+echo -e "${YELLOW}Step 8: Start using Ansible!${NC}"
 echo "You can now create playbooks to automate tasks. Playbooks are YAML files that describe the tasks to execute."
 echo
 echo "Example Playbook (example.yml):"

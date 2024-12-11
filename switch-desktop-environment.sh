@@ -2,7 +2,7 @@
 
 # Ensure script is run as sudo
 if [[ $EUID -ne 0 ]]; then
-  echo "Please run this script as root using sudo."
+  echo "Please run this script using sudo."
   exit 1
 fi
 
@@ -32,11 +32,16 @@ declare -A DESKTOP_ENVS=(
 
 # Function to display usage instructions
 display_usage() {
-  echo "Usage: ./configure-shell <Desktop Environment>"
+  echo "Usage: ./swith-desktop-environment.sh <Desktop Environment>"
+  echo
+  echo "Install a new Desktop Environments."
+  echo "Also update VNC and XRDP to default to the new Desktop Environment."
+  echo
   echo "Available Desktop Environments:"
   for DE in "${!DESKTOP_ENVS[@]}"; do
     echo "  $DE - ${DESKTOP_ENVS[$DE]}"
   done
+  echo
   exit 0
 }
 

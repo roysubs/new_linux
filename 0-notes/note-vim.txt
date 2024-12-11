@@ -5,9 +5,17 @@ Neovim (nvim) is usually better than Vim (more modern support and plugins etc) w
 e.g. Try :%s/Text/Replace/, in nvim you see live what the change will look like on all affected lines.i
 Have created scripts to switch between vim/nvim '. set-vim.sh' and '. set-nvim.sh'.
 
-# Breakout to shell from vi
+- Breakout to shell from vi
 Ctrl+Z: Suspends vim/nvim and puts it in the background. Use 'fg' to bring it back.
 Or, :sh to get to a new shell, then Ctrl+D to exits the shell (when opened with :sh). If you're not in a shell, it won't exit Vim/Neovim.
+
+- To copy text from file1 to file2. Select text (10yy to grab 10 lines), then :e file2 to open file2, then p to paste the text, then :e file1 to go back to the first file. Or, use :split filename or :vsplit filename. Navigate to the split containing the new file using Ctrl-w (e.g., Ctrl-w j to move down or Ctrl-w l to move right).
+
+Type 10yy to yank (copy) 10 lines starting from the current line. The yanked lines are stored in the unnamed register (").
+Open Another File:
+
+Type :e filename to open another file in the current Vim session, replacing the current buffer.
+Alternatively, use :split filename or :vsplit filename to open the new file in a split window while keeping the current file visible.
 
 Vim modes: Normal (navigate and manipulate text), Insert (insert text), 
   Visual modes (Visual, Block to select regions), Command-line (:w :%s/text/replace/g etc).

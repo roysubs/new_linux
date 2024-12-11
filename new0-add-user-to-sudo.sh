@@ -79,7 +79,7 @@ The 'sudo' group exists and is configured in /etc/sudoers.
 Common group membership commands:
   sudo adduser bert --ingroup sudo  # Create user bert and add him to a group (sudo)
   sudo usermod -aG sudo bert        # Add an already-created user to a group (sudo)
-  sudo gpasswd -d bert sudo          # Delete bert from a group (sudo)
+  sudo gpasswd -d bert sudo         # Delete bert from a group (sudo)
   getent group sudo                 # View members of a group (sudo)
   members sudo                      # Alternative tool to view members of a group
 
