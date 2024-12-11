@@ -23,7 +23,7 @@ alias initvim='vi ~/.config/nvim/init.vim'
 alias vimrcroot='sudo vi /etc/vim/vimrc'
 alias vimrcsudo='sudo vi /etc/vim/vimrc'
 alias cd..='cd ..'
-alias l.='ls -d .*'
+alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
 alias apti='sudo apt install'  # apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade)
 alias ii='sudo apt install'
@@ -39,9 +39,10 @@ alias hg='history | grep'       # 'history-grep'. After search, !201 will run it
 alias ifconfig='sudo ifconfig'  # Here because 'ifconfig' shows 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
 # Jump functions (if functions in .bashrc, do not need to dot source as for scripts)
-n() { cd /home/boss/new_linux || return; ls; echo; }  # jump to new_linux
-h() { cd /home/boss || return; ls; echo; }            # jump to home
-w() { cd /home/boss/192.168.1.29-d || return; ls; echo; }  # jump to 'WHITE' PC SMB share
+n() { cd ~/new_linux || return; ls; echo; }       # jump to new_linux
+h() { cd ~ || return; ls; echo; }                 # jump to home
+w() { cd ~/192.168.1.29-d || return; ls; echo; }  # jump to 'WHITE' PC SMB share
+v() { cd ~/.vnc || return; ls; echo; }            # jump to .vnc
 
 # tmux definitions
 alias tt='tmux'
