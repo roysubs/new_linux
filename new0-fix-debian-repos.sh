@@ -26,11 +26,10 @@ echo -e "\nRepository configuration $sources_list updated. The warning about 'no
 
 
 
-####################
-#
-# Fix Microsoft repos if present
-#
-####################
+# Fix the Microsoft repo left over by pwsh7 (PowerShell) installation
+# leaving a repo that is not properly setup in some cases.
+#    /etc/apt/sources.list.d/microsoft-prod.list
+#    /etc/apt/sources.list.d/microsoft.list
 
 # Remove the Microsoft repository if it exists
 echo "Removing Microsoft repository if it exists..."

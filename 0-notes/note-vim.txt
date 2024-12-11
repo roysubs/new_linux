@@ -1,17 +1,13 @@
 Vim Quick Notes
 ===============
 
-Neovim (nvim) is almost always an improvement over Vim (much more modern support and plugins etc) but almost identical in operation.
-This setup makes switching between the two simple with '. set-vim.sh' and '. set-nvim.sh'
-By default, ":%s/\nText/\n   NewText 123/g", nvim shows you the proposed updates before pressing Enter.
-Graphic and paste support is significant.
-Asynchronous processing: nvim supports background tasks (e.g., LSP, linting) without blocking the UI.
-Built-in terminal emulator: nvim includes a terminal for running shell commands.
-Improved plugin system: Better support for modern plugins, such as via dein or packer.
-Enhanced UI features: Real-time diff and interactive search, as well as a built-in status line and floating windows.
-Better cross-platform support: nvim is more compatible with modern operating systems.
-Improved extensibility: Allows deeper integration of external tools and systems.
+Neovim (nvim) is usually better than Vim (more modern support and plugins etc) while almost identical in operation.
+e.g. Try :%s/Text/Replace/, in nvim you see live what the change will look like on all affected lines.i
+Have created scripts to switch between vim/nvim '. set-vim.sh' and '. set-nvim.sh'.
 
+# Breakout to shell from vi
+Ctrl+Z: Suspends vim/nvim and puts it in the background. Use 'fg' to bring it back.
+Or, :sh to get to a new shell, then Ctrl+D to exits the shell (when opened with :sh). If you're not in a shell, it won't exit Vim/Neovim.
 
 Vim modes: Normal (navigate and manipulate text), Insert (insert text), 
   Visual modes (Visual, Block to select regions), Command-line (:w :%s/text/replace/g etc).

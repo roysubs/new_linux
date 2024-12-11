@@ -22,8 +22,6 @@ then
     else
         echo "Error: Neovim installation failed."
     fi
-else
-    echo "Neovim is already installed."
 fi
 
 # Set Neovim as the default editor

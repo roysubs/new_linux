@@ -1,16 +1,10 @@
+
 #!/bin/bash
 
 BASHRC_FILE="$HOME/.bashrc"
-# Uncomment alias lines for ll, la, and l
-echo "Uncommenting alias lines in ~/.bashrc"
-sed -i '/^#alias ll=/ s/^#//' "$BASHRC_FILE"
-sed -i '/^#alias la=/ s/^#//' "$BASHRC_FILE"
-sed -i '/^#alias l=/ s/^#//' "$BASHRC_FILE"
-# Notify the user
-echo "Alias lines have been uncommented. To apply changes, run:"
-echo "source ~/.bashrc"
 
-# viconfig() { [[ \$(command -v vi) == *nvim* ]] && vi ~/.config/nvim/init.vim || vi ~/.vimrc; }  # Open config depending on what vi is aliased to
+# Backup ~/.bashrc before making changes
+cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
 
 # Block of text to add
 bashrc_block="
@@ -79,84 +73,73 @@ tmm() {
 }
 "
 
-# Backup ~/.bashrc before making changes
-cp ~/.bashrc ~/.bashrc.$(date +'%Y-%m-%d_%H-%M-%S').bak
+# Function to check and add lines
+add_line_if_not_exists() {
+    local line="$1"
+    local type="$2"
 
-# Iterate over each line in bashrc_block
+    case $type in
+        alias)
+            alias_name=$(echo "$line" | cut -d'=' -f1)
+            if ! grep -q "^$alias_name=" "$BASHRC_FILE"; then
+                echo "Adding alias: $line"
+                echo "$line" >> "$BASHRC_FILE"
+            else
+                echo "Alias $alias_name already exists. Skipping."
+            fi
+            ;;
+        export)
+            export_name=$(echo "$line" | cut -d'=' -f1)
+            if ! grep -q "^$export_name=" "$BASHRC_FILE"; then
+                echo "Adding export: $line"
+                echo "$line" >> "$BASHRC_FILE"
+            else
+                echo "Export $export_name already exists. Skipping."
+            fi
+            ;;
+        comment)
+            if ! grep -qF "$line" "$BASHRC_FILE"; then
+                echo "Adding comment: $line"
+                echo "$line" >> "$BASHRC_FILE"
+            else
+                echo "Comment already exists. Skipping."
+            fi
+            ;;
+        *)
+            echo "Unknown type: $type"
+            ;;
+    esac
+}
+
+# Process each line in the block
 while IFS= read -r line; do
-    # Debugging: Print the line being processed
-    # echo "Processing line: '$line'"
-
-    # If the line is blank or contains only spaces/tabs, add a real blank line
-    if [[ -z "$line" || "$line" =~ ^[[:space:]]*$ ]]; then
-        # Debugging: Check if it's a blank line
-        echo "Detected blank or whitespace-only line."
-
-        # Directly add a blank line without checking for its existence in ~/.bashrc
-        echo "Adding blank line"
-        echo "" >> ~/.bashrc
-    # If the line starts with "#", check for whole line in ~/.bashrc
-    elif [[ "$line" =~ ^# ]]; then
-        if ! grep -Fxq "$line" ~/.bashrc; then
-            echo "Adding comment: $line"
-            echo "$line" >> ~/.bashrc
-        fi
-    # If the line starts with "alias" (up to and including "="), check for it in ~/.bashrc
-    elif [[ "$line" =~ ^alias.*= ]]; then
-        alias_name=$(echo "$line" | cut -d'=' -f1)
-        if ! grep -q "^$alias_name=" ~/.bashrc; then
-            echo "Adding alias: $line"
-            echo "$line" >> ~/.bashrc
-        fi
-    # If the line starts with "export" (up to and including "="), check for it in ~/.bashrc
-    elif [[ "$line" =~ ^export.*= ]]; then
-        export_name=$(echo "$line" | cut -d'=' -f1)
-        if ! grep -q "^$export_name=" ~/.bashrc; then
-            echo "Adding export: $line"
-            echo "$line" >> ~/.bashrc
-        fi
-    # If the line starts with "function" (up to and including the "{"), check for it in ~/.bashrc
-    elif [[ "$line" =~ ^function.*\ \{ ]]; then
-        func_name=$(echo "$line" | cut -d' ' -f2 | cut -d'(' -f1)
-        if ! grep -q "^function $func_name" ~/.bashrc; then
-            echo "Adding function: $line"
-            echo "$line" >> ~/.bashrc
-        fi
-    # Handle multiline functions (those that start with "<functionname> () {" and end with "^\}" on a later line), we gather all lines
-    elif [[ "$line" =~ ^.*\ \{ ]]; then
+    if [[ "$line" =~ ^# ]]; then
+        add_line_if_not_exists "$line" "comment"
+    elif [[ "$line" =~ ^alias ]]; then
+        add_line_if_not_exists "$line" "alias"
+    elif [[ "$line" =~ ^export ]]; then
+        add_line_if_not_exists "$line" "export"
+    elif [[ "$line" =~ \ \{ ]]; then
+        # Handle multiline functions
         func_start=$(echo "$line" | cut -d' ' -f1)
-        if ! grep -q "$func_start" ~/.bashrc; then
+        if ! grep -q "^$func_start" "$BASHRC_FILE"; then
             echo "Adding multiline function: $line"
-            echo "$line" >> ~/.bashrc
+            echo "$line" >> "$BASHRC_FILE"
             # Add the rest of the function until we find the closing brace
             while IFS= read -r next_line && [[ ! "$next_line" =~ ^\} ]]; do
-                echo "$next_line" >> ~/.bashrc
+                echo "$next_line" >> "$BASHRC_FILE"
             done
-            echo "$next_line" >> ~/.bashrc # Append the closing brace
+            echo "$next_line" >> "$BASHRC_FILE" # Append the closing brace
+        else
+            echo "Function $func_start already exists. Skipping."
         fi
+    elif [[ -z "$line" ]]; then
+        # Add blank lines directly
+        echo >> "$BASHRC_FILE"
     fi
 done <<< "$bashrc_block"
 
-# Remove any blank lines, but only at the end of .bashrc, that may have been introduced due to how blank lines are added above
-sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' ~/.bashrc
-# :a; N; $!ba:             This reads the whole file into memory.
-# s/\n[[:space:]]*\n*$//   Removes any empty lines or whitespace-only lines from the end of the file.
+# Remove extra blank lines at the end
+sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"
 
-echo "Finished updating ~/.bashrc"
-
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    # The script was sourced, so you can safely run the block here
-    echo "$script_name was sourced, so 'source ~/.bashrc' will be run now"
-    
-    # Ensure BASHRC_FILE is set to the correct path
-    BASHRC_FILE="$HOME/.bashrc"
-    
-    # Check if the .bashrc file exists
-    if [[ -f "$BASHRC_FILE" ]]; then
-        echo "Reloading .bashrc..."
-        source "$BASHRC_FILE"
-    else
-        echo "Error: $BASHRC_FILE not found!"
-        exit 1
-    fi
-fi
+echo "Finished updating $BASHRC_FILE. To apply changes, run: source ~/.bashrc"

@@ -1,0 +1,6 @@
+- hosts: all
+  tasks:
+    - name: Ensure Nginx is installed
+      apt:
+        name: nginx
+        state: present
