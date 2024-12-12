@@ -31,9 +31,10 @@ alias asearch='sudo apt search'
 alias afind='sudo apt search'
 alias ainfo='sudo apt info'     # apti/ainfo (info about packagename)
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
-alias ifconfig='sudo ifconfig'  # Here because 'ifconfig' shows 'command not found' if run without sudo (apt install net-tools)
+alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
-# Jump functions (if functions in .bashrc, do not need to dot source as for scripts)
+
+# As .bashrc is dotsourced, so are these, so operate on the main shell and not a subshell as a script would
 n() { cd ~/new_linux || return; ls; echo; }       # jump to new_linux
 h() { cd ~ || return; ls; echo; }                 # jump to home
 w() { cd ~/192.168.1.29-d || return; ls; echo; }  # jump to 'WHITE' PC SMB share
@@ -42,10 +43,10 @@ v() { cd ~/.vnc || return; ls; echo; }            # jump to .vnc
 # tmux definitions
 alias tt='tmux'
 alias tkk='tmux kill-pane'
-alias t-kill='tmux kill-pane'
-alias t-help='echo -e \"TMUX COMMANDS\n=====\n\n\$(tmux list-commands)\n\nTMUX KEY BINDINGS\n=====\n\n\$(tmux list-keys)\n\n\n\" | less'
-alias t-commands='tmux list-commands | less' # Show tmux commands, with less
-alias t-keys='tmux list-keys | less' # Show key bindings, with less
+alias tkill='tmux kill-pane'
+alias thelp='echo -e \"TMUX COMMANDS\n=====\n\n\$(tmux list-commands)\n\nTMUX KEY BINDINGS\n=====\n\n\$(tmux list-keys)\n\n\n\" | less'
+alias tcommands='tmux list-commands | less' # Show tmux commands, with less
+alias tkeys='tmux list-keys | less' # Show key bindings, with less
 alias tbuffer='tmux copy-mode'      # C-b,[ then up/down, pgup/pgdn
 alias tff='tmux select-pane -t :.+' # Forward toggle through panes, C-b,
 alias tbb='tmux select-pane -t :.-' # Backward toggle through panes
@@ -53,13 +54,14 @@ alias tpl='tmux resize-pane -L 5'   # Pane Resize Left 5
 alias tpr='tmux resize-pane -R 5'   # Pane Resize Right 5
 alias tpu='tmux resize-pane -U 5'   # Pane Resize Up 5
 alias tpd='tmux resize-pane -D 5'   # Pane Resize Down 5
-# 'horizontal' split means panes left-right, 'vertical' split means panes up-down
+# 'horizontal' split means the line is vertical, so panes are left/right
+# 'vertical' split means the line is horizontal, so panes are up/down
 alias thh=\"tmux split-window -h -c '#{pane_current_path}'\"
 alias tvv=\"tmux split-window -v -c '#{pane_current_path}'\"
-trename() { tmux rename-session \$1; }
-tswitch() { tmux switch-client -t \$1; }
-tattach() { tmux attach-session -t \$1; }
-alias tdetach='tmux detach'; alias texit='tdetach'
+trename() { tmux rename-session \$1; };    alias tren='trename'
+tswitch() { tmux switch-client -t \$1; };  alias tswi='tswitch'
+tattach() { tmux attach-session -t \$1; }; alias tatt='tattach'
+alias tdetach='tmux detach';               alias tdet='tdetach'  # C-b, d
 # toggle tmux mouse on/off
 tmm() {
     current_status=\$(tmux show -g mouse | awk '{print \$2}')
