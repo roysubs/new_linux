@@ -10,20 +10,16 @@
 # The results of each command are written to the report file, prefixed with the command that was run.
 # lsblk is in the 'util-linux' package
 
-HOME_DIR="$HOME"
-TOOLS=("smartmontools" "nvme-cli" "hdparm" "util-linux")
 # Ensure the script can find the necessary tools
 export PATH=$PATH:/usr/sbin:/sbin
+# Check if 2 days have passed since the last update
+if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
+HOME_DIR="$HOME"
 
-# Check if the packages are installed
-for package in "${PACKAGES[@]}"; do
-    if ! dpkg-query -l | grep -q "$package"; then
-        echo "$package is not installed."
-        missing_tools+=("$package")
-    else
-        echo "$package is already installed."
-    fi
-done
+# Install tools if not already installed
+PACKAGES=("smartmontools" "nvme-cli" "hdparm" "util-linux")
+install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
+for package in "${PACKAGES[@]}"; do install-if-missing $package; done
 
 # If there are missing tools, install them
 if [ ${#missing_tools[@]} -gt 0 ]; then

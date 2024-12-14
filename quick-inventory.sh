@@ -1,13 +1,16 @@
 #!/bin/bash
 
+# Ensure we're running as root or with sudo (use second line to auto-elevate)
+# if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
+if [ "$(id -u)" -ne 0 ]; then echo "Elevation required; rerunning as sudo..."; sudo "$0" "$@"; exit 0; fi
+
 # Check if 2 days have passed since the last update
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
+
 # Install tools if not already installed
-install-if-missing() { if ! dpkg-query -l "$1" >/dev/null; then sudo apt install -y $1; fi; }
-install-if-missing samba
-install-if-missing smbclient
-install-if-missing nfs-common
-install-if-missing duf
+PACKAGES=("samba" "smbclient" "nfs-kernel-server" "nfs-common" "duf")
+install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
+for package in "${PACKAGES[@]}"; do install-if-missing $package; done
 
 # Function to list all disks and their status
 list_disks() {

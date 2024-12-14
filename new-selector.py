@@ -14,37 +14,54 @@ def list_scripts(folder, prefix="new"):
     return sorted(scripts)
 
 def display_menu(stdscr, options):
-    """Display a list of options with checkboxes and additional commands."""
+    """Display a list of options with checkboxes in a dynamic multi-column layout."""
     curses.curs_set(0)  # Hide cursor
     current_row = 0
     checked = [False] * len(options)
 
     while True:
         stdscr.clear()
+        height, width = stdscr.getmaxyx()
 
-        # Display the menu
+        # Calculate columns and rows
+        max_option_width = max(len(option) for option in options) + 4  # [X] + space + option
+        num_columns = max(1, width // max_option_width)
+        num_rows = (len(options) + num_columns - 1) // num_columns  # Ceiling division
+
+        # Display the menu in a grid layout
         for idx, option in enumerate(options):
+            row = idx % num_rows
+            col = idx // num_rows
+            x = col * max_option_width
+            y = row
+
+            checkbox = "[X]" if checked[idx] else "[ ]"
             if idx == current_row:
                 stdscr.attron(curses.color_pair(1))  # Highlight current selection
-            checkbox = "[X]" if checked[idx] else "[ ]"
-            stdscr.addstr(idx, 0, f"{checkbox} {option}")
-            if idx == current_row:
+                stdscr.addstr(y, x, f"{checkbox} {option}")
                 stdscr.attroff(curses.color_pair(1))
+            else:
+                stdscr.addstr(y, x, f"{checkbox} {option}")
 
         # Display instructions below the options
-        stdscr.addstr(len(options) + 1, 0, "Select scripts to be executed.")
-        stdscr.addstr(len(options) + 2, 0, "Press 'x' to execute selected scripts.")
-        stdscr.addstr(len(options) + 3, 0, "Press 'q' to quit without running any scripts.")
+        footer_row = num_rows + 2
+        stdscr.addstr(footer_row, 0, "Select scripts to be executed.")
+        stdscr.addstr(footer_row + 1, 0, "Press 'x' to execute selected scripts.")
+        stdscr.addstr(footer_row + 2, 0, "Press 'q' to quit without running any scripts.")
         stdscr.refresh()
 
         # Get user input
         key = stdscr.getch()
 
         # Handle user input
-        if key == curses.KEY_UP and current_row > 0:
-            current_row -= 1
-        elif key == curses.KEY_DOWN and current_row < len(options) - 1:
-            current_row += 1
+        if key == curses.KEY_UP:
+            current_row = (current_row - 1) % len(options)
+        elif key == curses.KEY_DOWN:
+            current_row = (current_row + 1) % len(options)
+        elif key == curses.KEY_LEFT:
+            current_row = (current_row - num_rows) % len(options)
+        elif key == curses.KEY_RIGHT:
+            current_row = (current_row + num_rows) % len(options)
         elif key == ord(" "):  # Toggle checkbox
             checked[current_row] = not checked[current_row]
         elif key == ord("x"):  # Execute selected scripts
