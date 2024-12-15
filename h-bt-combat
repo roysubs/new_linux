@@ -1,0 +1,62 @@
+#!/bin/bash
+
+if ! command -v glow >/dev/null 2>&1; then
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt update && sudo apt install glow
+fi
+
+cat <<'EOF' | glow -p
+# BattleTech Combat Process Cheatsheet
+
+## Initiative Phase
+- Roll Initiative: `2d6 + Pilot Skill`
+- Highest roll chooses to act first or second.
+- If a tie, roll again.
+
+## Movement Phase
+- Declare movement: Determine movement mode (Walk, Run, Jump).
+- Movement Cost:
+  - Walk: 1 hex per movement point
+  - Run: 2 hexes per movement point
+  - Jump: Varies by Jump Jets
+- Movement modifiers:
+  - Terrain: Woods, Water, Hills, etc.
+  - Enemy units: Move through engagement zones for penalties.
+- End movement in cover if possible (woods, buildings, etc.).
+
+## Weapon Attack Phase
+- Declare Attacks: Choose targets within range.
+- Weapon selection: Choose from available weapons based on the range to target (Short, Medium, Long).
+- Roll to hit: `2d6 + Target Number (TN)`
+  - Target Numbers depend on:
+    - Range to target
+    - Target movement modifier
+    - Obstructions (cover, terrain)
+    - Piloting skill
+- Determine hit location: `2d6` to determine where the shot hits on the target's body (head, torso, limbs).
+
+## Damage Resolution
+- Apply damage: Check hit location chart to apply damage to specific body parts.
+- Armor check: If the hit location has armor, subtract damage from armor.
+  - If armor is destroyed, apply damage to internal structure.
+- Internal damage: Damage that exceeds armor is applied to internal structure, possibly damaging critical systems (e.g., weapons, movement, sensors).
+- Critical hit check: Roll 2d6 to see if a critical hit occurs on a damaged location.
+  - Roll a 7+ to cause a critical hit, triggering specific system malfunctions (e.g., engine damage, weapon destruction).
+  
+## Heat Phase
+- Heat generation: Add heat for any weapons or movement that generate heat.
+  - Heat penalties: Too much heat causes shutdowns or heat damage.
+- Heat tracking: Keep track of heat levels and monitor for overheating.
+
+## End Phase
+- Check for forced shutdowns: If heat exceeds maximum, forced shutdown occurs.
+- Repair and recovery: Units can repair damaged systems or reheat weapons as needed for future turns.
+- End of round: Begin a new initiative phase and repeat steps.
+
+## Special Rules
+- Mechs with high armor or structure may survive long enough to return fire.
+- Mechs with specialized equipment (e.g., ECM, special movement modes) have unique modifiers.
+EOF
+

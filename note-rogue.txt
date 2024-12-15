@@ -1,0 +1,132 @@
+####################
+#
+# Remember  'dpkg -L <package-name>'   to see where files are
+#
+####################
+checksecurity : basic system security checks (tripwire etc)
+
+
+
+allure : near-future Sci-Fi roguelike and tactical squad game
+angband : Single-player, text-based, dungeon simulation game
+angband-data : Game data for angband
+boohu : Break Out Of Hareka's Underground -- a roguelike game
+crawl : Dungeon Crawl, a text-based roguelike game
+crawl-common : Dungeon Crawl, a text-based roguelike game (data files)
+crawl-tiles : Dungeon Crawl, a roguelike game, tiles version
+crawl-tiles-data : Dungeon Crawl, a text-based roguelike game (tile data files)
+rogue (bsdgames-nonfree) : rogue, the classic dungeon exploration game
+tome : single-player text-based roguelike dungeon simulation game
+tome-gcu to play console (also tome-gtk2, tome-x11)
+
+
+bzflag : 3D first person tank battle game
+
+bzflag-client : 3D first person tank battle game -- client
+
+bzflag-data : 3D first person tank battle game -- data
+
+cataclysm-dda-curses : post-apocalyptic roguelike game - curses interface
+cataclysm-dda-data : post-apocalyptic roguelike game - data files
+cataclysm-dda-sdl : post-apocalyptic roguelike game - SDL interface
+
+chocolate-doom : Doom engines closely-compatible with Vanilla Doom
+
+
+crossfire-client/stable 1.75.0-2 amd64
+  Client for the multiplayer roguelike Crossfire
+
+fnotifystat/stable 0.02.10-1 amd64
+  file activity monitoring tool
+
+forkstat/stable 0.03.01-1 amd64
+  process fork/exec/exit monitoring tool
+
+games-rogue/stable 5 all
+  Debian's roguelike games
+
+gearhead/stable 1.310-3+b1 amd64
+  roguelike mecha role playing game, console version
+
+gearhead-sdl/stable 1.310-3+b1 amd64
+  roguelike mecha role playing game, SDL version
+
+gearhead2/stable 0.701-2 amd64
+  roguelike mecha role playing game in space
+
+gearhead2-sdl/stable 0.701-2 amd64
+  roguelike mecha role playing game in space
+
+hyperrogue/stable 12.0q-1 amd64
+  non-euclidean graphical rogue-like game
+
+hyperrogue-music/stable 12.0q-1 all
+  in-game music for hyperrogue
+
+lambdahack/stable 0.11.0.0-2+b4 amd64
+  tactical squad ASCII roguelike dungeon crawler game engine
+
+libghc-lambdahack-dev/stable 0.11.0.0-2+b4 amd64
+  tactical squad ASCII roguelike dungeon crawler game engine
+
+libghc-lambdahack-doc/stable 0.11.0.0-2 all
+  tactical squad ASCII roguelike dungeon crawler game engine; documentation
+
+libghc-lambdahack-prof/stable 0.11.0.0-2+b4 amd64
+  tactical squad ASCII roguelike dungeon crawler game engine; profiling libraries
+
+libtcod-dev/stable 1.18.1+dfsg-1+b1 amd64
+  development files for the libtcod roguelike library
+
+libtcod1/stable 1.18.1+dfsg-1+b1 amd64
+  graphics and utility library for roguelike developers
+
+libusbguard-dev/stable 1.1.2+ds-3+b1 amd64
+  USB device authorization policy framework - development files
+
+libusbguard1/stable 1.1.2+ds-3+b1 amd64
+  USB device authorization policy framework - shared library
+
+moria/stable 5.7.13-1+b1 amd64
+  Rogue-like game with an infinite dungeon, also known as umoria
+
+omega-rpg/stable 1:0.90-pa9-17+b1 amd64
+  text-based roguelike game
+
+powder/stable 118+dfsg1-3 amd64
+  Graphical dungeon crawling game
+
+quake/stable 73 all
+  classic gothic/horror-themed first person shooter
+
+quake2/stable 73 all
+  classic science-fiction-themed first person shooter
+
+ramond/stable 0.5-4.2 amd64
+  IPv6 Router Advertisement MONitoring Daemon
+
+roguenarok/stable 1.0.1-3 amd64
+  versatile and scalable algorithm for rogue taxon identification
+
+samhain/stable 4.1.4-2+b2 amd64
+  Data integrity and host intrusion alert system
+
+slashem/stable,now 0.0.7E7F3-10+b3 amd64 [installed]
+  variant of Nethack
+
+slashem-gtk/stable 0.0.7E7F3-10+b3 amd64
+  variant of Nethack (Gtk window port)
+
+slashem-sdl/stable 0.0.7E7F3-10+b3 amd64
+  variant of Nethack (SDL window port)
+
+slashem-x11/stable 0.0.7E7F3-10+b3 amd64
+  variant of Nethack (X11 window port)
+
+tmperamental/stable 1.4 amd64
+  LD_PRELOADable library to detect rogue writes to /tmp/
+
+
+zangband : A single-player, text-based, roguelike game
+zangband-data : A single-player, text-based, roguelike game (datafiles)
+

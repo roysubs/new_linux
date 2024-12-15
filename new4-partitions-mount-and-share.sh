@@ -2,9 +2,9 @@
 
 echo "Discover disks and filesystems then mount them under /mnt"
 
-# Ensure we're running as root or with sudo (use second line to auto-elevate)
-# if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
-if [ "$(id -u)" -ne 0 ]; then echo -e "\033[31mElevation required; rerunning as sudo...\033[0m"; sudo "$0" "$@"; exit 0; fi
+# 1st option warns and exits, 2nd auto-elevates with sudo if not running as root
+if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
+# if [ "$(id -u)" -ne 0 ]; then echo -e "\033[31mElevation required; rerunning as sudo...\033[0m"; sudo "$0" "$@"; exit 0; fi
 
 # Check if 2 days have passed since the last update
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
@@ -19,7 +19,7 @@ TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
 BACKUP_FILE="/etc/samba/smb.conf-$TIMESTAMP.bak"
 echo "Backing up existing Samba configuration to $BACKUP_FILE..."
 cp /etc/samba/smb.conf "$BACKUP_FILE"
-CALLING_USER=$(whoami)   # will set to who is running (root or whoever ran sudo)
+CALLING_USER=$(whoami)   # sets this to whoever is running the script (root or whoever ran sudo)
 
 # Function to display storage information
 display_storage() {
@@ -77,10 +77,6 @@ mount_device() {
     create_samba_share "$mount_point"
 }
 
-# Function to share a non-shared mount
-
-
-
 # Function to configure a Samba share for a given directory
 create_samba_share() {
     local mount_point=$1
@@ -108,9 +104,12 @@ create_samba_share() {
         return 0   # 'continue' is only meaningful in a `for', `while', or `until' loop        
     fi
 
+
     echo -e "Would you like to create a Samba share for '$mount_point'? (y/n)"
-    read -r -p "Would you like to create a Samba share for '$mount_point'? (y/n): " choice
-    if [[ ! "$choice" =~ ^[Yy]$ ]]; then    # if [[ "$choice" != "y" && "$choice" != "Y" ]]; then
+    echo 1
+    read -r -p "Would you like to create a Samba share for '$mount_point'? (y/n): " create_share
+    echo 2
+    if [[ ! "$create_share" =~ ^[Yy]$ ]]; then    # if [[ "$choice" != "y" && "$choice" != "Y" ]]; then
         echo "Skipping Samba share creation for '$mount_point'..."
         return 0   # 'continue' is only meaningful in a `for', `while', or `until' loop
     fi
@@ -136,9 +135,24 @@ share_already_mounted_devices() {
     echo -e "\nChecking for already mounted but unshared devices..."
 
     # List all mounted devices with their mount points
-    local mounted_devices=$(lsblk -ln -o NAME,MOUNTPOINT | awk '$2 ~ /^\// {print "/dev/"$1" "$2}')
+    local mounted_devices
+    mounted_devices=$(lsblk -ln -o NAME,MOUNTPOINT | awk '$2 ~ /^\// {print "/dev/"$1" "$2}')
 
-    while read -r device mount_point; do
+    # If no mounted devices, return
+    if [[ -z "$mounted_devices" ]]; then
+        echo "No mounted devices found."
+        return
+    fi
+
+    # Iterate over each device and mount point
+    while IFS=" " read -r device mount_point; do
+        echo -e "\nMountedDevs:\n$mounted_devices"
+        echo "line=$device $mount_point"
+        echo "dev=$device"
+        echo "mount=$mount_point"
+        echo
+
+        # Skip if either device or mount_point is empty
         if [[ -z "$device" || -z "$mount_point" ]]; then
             continue
         fi
@@ -158,28 +172,23 @@ share_already_mounted_devices() {
                 ;;
         esac
 
-        # Check if the share already exists
-        echo "Checking if share for $mount_point exists..."
-        echo "^\[$share_name\] /etc/samba/smb.conf"
-        grep -q "^\[$share_name\]" /etc/samba/smb.conf
-
+        # Check if the share already exists in smb.conf
+        echo "Checking if share '$share_name' exists in smb.conf..."
         if grep -q "^\[$share_name\]" /etc/samba/smb.conf; then
             echo "Samba share for $mount_point already exists. Skipping."
-            continue
-        fi
-
-        echo -e "\nDevice $device is mounted at $mount_point but not shared."
-        echo -e "Would you like to create XX a Samba share for '$mount_point'? (y/n)"
-
-        read -r -p "Would you like to create YY a Sambad share for '$mount_point'? (y/n): " choice
-        if [[ "$choice" =~ ^[Yy]$ ]]; then
-            create_samba_share "$mount_point"
         else
-            echo "Skipping Samba share creation for '$mount_point'..."
-            continue  # Instead of return 0, use continue to proceed to the next device
+            echo -e "\nDevice $device is mounted at $mount_point but not shared."
+echo 123
+            read -p "Would you like to create a Samba share for '$mount_point'? (y/n): " create_already
+            if [[ "$create_already" =~ ^[Yy]$ ]]; then
+                create_samba_share "$mount_point"
+            else
+                echo "Skipping Samba share creation for '$mount_point'..."
+            fi
         fi
     done <<< "$mounted_devices"
 }
+
 
 # Finalize Samba configuration
 samba_finalise() {

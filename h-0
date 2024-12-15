@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if ! command -v glow >/dev/null 2>&1; then
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt update && sudo apt install glow
+fi
+
+cat <<'EOF' | glow -p
+# Basics using Debian
+- Using Microsoft Terminal and right-click > Split tab is often more convenient than tmux (though does not have the advanced features of tmux)
+
+## 1. **Setting Up SSH Keys for Git**
+
+### Generate SSH Key Pair
+- Generate an SSH key with Ed25519 (RSA is also an option):  
+  `ssh-keygen -t ed25519 -C "roysubs@hotmail.com"`
+- Leave the passphrase blank for convenience, or set one for extra security.
+
+EOF
