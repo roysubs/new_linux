@@ -19,14 +19,7 @@ TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
 BACKUP_FILE="/etc/samba/smb.conf-$TIMESTAMP.bak"
 echo "Backing up existing Samba configuration to $BACKUP_FILE..."
 cp /etc/samba/smb.conf "$BACKUP_FILE"
-
-# Get the user who invoked the script using sudo
-if [ -n "$SUDO_USER" ]; then
-    CALLING_USER="$SUDO_USER"
-else
-    echo "Error: Unable to determine the user invoking the script with sudo."
-    exit 1
-fi
+CALLING_USER=$(whoami)   # will set to who is running (root or whoever ran sudo)
 
 # Function to display storage information
 display_storage() {
@@ -116,10 +109,10 @@ create_samba_share() {
     fi
 
     echo -e "Would you like to create a Samba share for '$mount_point'? (y/n)"
-    read -r -p "Would you like to create a Sambad share for '$mount_point'? (y/n): " choice
+    read -r -p "Would you like to create a Samba share for '$mount_point'? (y/n): " choice
     if [[ ! "$choice" =~ ^[Yy]$ ]]; then    # if [[ "$choice" != "y" && "$choice" != "Y" ]]; then
         echo "Skipping Samba share creation for '$mount_point'..."
-        return 0   # 'continue' is only meaningful in a `for', `while', or `until' loop        
+        return 0   # 'continue' is only meaningful in a `for', `while', or `until' loop
     fi
 
     # Add a Samba share for the directory

@@ -1,8 +1,17 @@
 #!/bin/bash
 
 # Jump to defined locations via a menu
-# dotsource the jj.sh script to load the function into the current shell
+# dotsource this jj.sh script to load the function into the current shell
+#    . jj.sh
 # If it is not dotsourced, the function will only execute in a subshell
+
+# Check if 2 days have passed since the last update
+if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
+
+# Install tools if not already installed
+PACKAGES=("dialog")   # "nfs-kernel-server" "nfs-common"
+install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
+for package in "${PACKAGES[@]}"; do install-if-missing $package; done
 
 jj() {
   # Define your list of directories

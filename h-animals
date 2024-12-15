@@ -1,0 +1,74 @@
+#!/bin/bash
+
+if ! command -v glow >/dev/null 2>&1; then
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt update && sudo apt install glow
+fi
+
+cat <<'EOF' | glow -p
+Animal ASCII Art Gallery
+========================
+
+**Brighten your terminal with colorful ASCII animals!**
+
+```plaintext
+1. 🦉 Owl:
+       __  
+   _  (o)>  
+  //\_//)   
+   V_/_    
+
+2. 🐈 Cat:
+   /\_/\  
+  ( o.o )  
+   > ^ <  
+
+3. 🐘 Elephant:
+     /  \\~~~/  \\  
+ ,----(     . .    )  
+/      \\__   _    )  
+\\         /         )  
+ ``-----\\_______/--'  
+
+4. 🦦 Otter:
+     ()_()     
+    ( o o )    
+    > ^ <     
+
+5. 🐕 Dog:
+   / \__
+  (    @\____
+  /         O
+ /   (_____/
+/_____/   U  
+
+6. 🐢 Turtle:
+     _______  
+   _/       \\_  
+  / |       | \  
+ |_/ \\_____/ \_|  
+       \\ |      
+
+7. 🐟 Fish:
+      ><(((('>  
+
+8. 🦜 Parrot:
+     .--.  
+   _(    )    
+  / __ \\     
+    (__)      
+
+9. 🦄 Unicorn:
+            \   ^__^  
+             \  (oo)\_______  
+                (__)\       )\/\  
+                    ||----w |  
+                    ||     ||  
+
+10. 🐀 Mouse:
+   ()_()     
+  ( o o )    
+  > ^ <     
+EOF

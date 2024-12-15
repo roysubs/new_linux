@@ -1,0 +1,70 @@
+#!/bin/bash
+
+if ! command -v glow >/dev/null 2>&1; then
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt update && sudo apt install glow
+fi
+
+cat <<'EOF' | glow -p
+Console Games for Linux
+========================
+
+These are pure console-based games that you can run in a terminal over SSH.
+
+- **Roguelikes**:
+    - **Cataclysm: Dark Days Ahead** (`cataclysm-dda`): Open-world roguelike survival game.
+    - **ADOM (Ancient Domains of Mystery)** (`adom`): Classic roguelike with a rich world and story.
+    - **Dungeon Crawl Stone Soup** (`crawl`): Traditional dungeon crawl with procedurally generated levels.
+    - **Rogue** (`rogue`): The original roguelike that started the genre.
+    - **NetHack** (`nethack`): One of the oldest and most complex roguelikes.
+    - **Angband** (`angband`): A roguelike game based on the works of J.R.R. Tolkien.
+    - **Omega** (`omega`): A dungeon-crawling roguelike with a rich story and exploration.
+    - **Fallen London** (`fallenlondon`): A narrative-driven roguelike set in a Victorian gothic world.
+    - **Crea** (`crea`): A moddable roguelike game with simple mechanics and a large modding community.
+    - **Slash'EM** (`slashem`): A variant of NetHack with new features and improvements.
+    
+- **Text Adventures**:
+    - **Frotz** (`frotz`): Interpreter for Z-Machine interactive fiction games.
+    - **Gargoyle** (`gargoyle`): Cross-platform interpreter for interactive fiction games.
+    - **Adventure** (`adventure`): The first text-based interactive fiction game.
+    - **The Hitchhiker's Guide to the Galaxy** (`hhgg`): Interactive fiction based on the famous book.
+    - **Zork** (`zork`): A classic text adventure game.
+    - **Planetfall** (`planetfall`): A text-based sci-fi adventure game.
+    
+- **Strategy**:
+    - **Battle for Wesnoth** (`wesnoth`): Turn-based strategy game with a fantasy setting.
+    - **Freeciv** (`freeciv`): A free, open-source empire-building game inspired by Civilization.
+    - **Scorched Earth** (`scorched-earth`): A tank battle strategy game where you fire at enemy tanks.
+    - **Warzone 2100** (`warzone2100`): A real-time strategy game focused on resource management and warfare.
+    
+- **Simulations**:
+    - **Dwarf Fortress** (`dwarf-fortress`): A construction and management simulation game with an ASCII interface.
+    - **Lincity-NG** (`lincity-ng`): A city simulation game, managing resources and population growth.
+    
+- **Puzzle Games**:
+    - **Boggle** (`boggle`): A word puzzle game where you find words in a grid of letters.
+    - **Sudoku** (`sudoku`): Classic number puzzle game playable in the terminal.
+    - **Nudoku** (`nudoku`): A terminal-based Sudoku game with customizable difficulty.
+    - **2048** (`2048`): A popular sliding number puzzle.
+    
+- **Board Games**:
+    - **GNU Chess** (`gnuchess`): A chess-playing program for Unix systems.
+    - **Lichess** (`lichess`): A web-based chess game playable in a terminal interface.
+    - **XBoard** (`xboard`): A graphical chess interface for the GNU Chess engine.
+    
+- **Other Console Games**:
+    - **Nethack4** (`nethack4`): A variant of NetHack with modern improvements.
+    - **Frogger** (`frogger`): A simple arcade game where you navigate a frog across a busy road.
+    - **Tetris** (`tetris`): The classic tile-matching puzzle game playable in the terminal.
+    - **Moon-Buggy** (`moon-buggy`): A side-scrolling game where you drive a vehicle on the moon, avoiding obstacles.
+    - **Pac-Man** (`pacman4console`): A terminal-based version of the classic arcade game.
+    
+- **Emulators**:
+    - **VICE** (`vice`): A Commodore 64 emulator for running C64 games in a terminal.
+    - **Fuse** (`fuse`): A ZX Spectrum emulator for running games from the legendary 8-bit computer.
+    - **MAME** (`mame`): Multiple Arcade Machine Emulator for running old arcade games (text interface available).
+
+EOF
+

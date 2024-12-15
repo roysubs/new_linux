@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Display help summary for Bash
+if ! command -v glow >/dev/null 2>&1; then
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt update && sudo apt install glow
+fi
 cat <<'EOF' | glow -p
 Bash Quick Notes
 ================
@@ -13,30 +18,19 @@ Bash Quick Notes
     5. **~/.bashrc**: Used for non-login interactive shells. Often sourced by ~/.bash_profile.
     6. **/etc/bash.bashrc**: System-wide settings for interactive shells.
     7. **Order of reading for interactive non-login shells**:
-       - System-wide /etc/bash.bashrc.
-       - User's ~/.bashrc.
+       - System-wide /etc/bash.bashrc, then user's ~/.bashrc.
 
-    - To manually reapply .bashrc settings:
-      ```bash
-      source ~/.bashrc
-      ```
-
-- **Change Default Shell**:
-    ```bash
-    chsh -s /bin/bash
-    ```
-    - To list available shells:
-      ```bash
-      cat /etc/shells
-      ```
+- Manually reapply .bashrc settings: `source ~/.bashrc`
+- Change Default Shell: `chsh -s /bin/bash`
+- To list available shells: `cat /etc/shells`
 
 - **Special Characters and Usage**:
     - `#`: Comment.
     - `\`: Escape character.
     - `~`: Home directory shortcut.
     - `$`: Denotes a variable (e.g., `$HOME`, `$PATH`).
-    - `` ` ``: Command substitution (e.g., ``result=`ls` ``).
-    - `$()` is preferred over backticks for readability: `result=$(ls)`.
+    - Command substitution (backticks) `` ` `` (e.g., ``result=`ls` ``).
+    - `$()` is preferred over backticks for readability (e.g., `result=$(ls)`).
 
 - **Environment Variables**:
     - Set a variable:
@@ -211,4 +205,3 @@ Bash Quick Notes
 
 
 EOF
-
