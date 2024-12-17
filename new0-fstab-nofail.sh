@@ -4,7 +4,11 @@
 # This is done by applying the nofail option for entries in fstab that we want
 # the OS to be less strict about mounting at boot time.
 
-# Bypassing fstab errors entirely during boot might lead to other issues, as some filesystems may be necessary for proper booting, but in a simple NAS setup, /dev/sdb, /dev/sdc and non-essential network mounts etc are not critical and so this will at least allow the system to continue booting with warnings rather than halting or entering emergency mode.
+# Bypassing fstab errors entirely during boot might lead to other issues, as some
+# filesystems may be necessary for proper booting, but in a simple NAS setup,
+# /dev/sdb, /dev/sdc and non-essential network mounts etc are not critical and so
+# this will at least allow the system to continue booting with warnings rather
+# than halting or entering emergency mode.
 
 # Adding the nofail option to the relevant lines in /etc/fstab.
 

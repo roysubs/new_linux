@@ -203,5 +203,7 @@ Bash Quick Notes
 - `readonly`: Make variables read-only, preventing modification after assignment.
 - `return`: Exit from a function with a specific exit status (not the whole script).
 
+Bash caches the paths to executables for faster lookups. This is stored in Bash's hash table, which remembers the location of previously executed commands. When you move an executable or script, Bash may still attempt to run it from its old location. To clear Bash's cached paths and force it to look up from $PATH:
+`hash -r`
 
 EOF

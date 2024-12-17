@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if command -v lazygit >/dev/null 2>&1; then
+    echo "Lazygit is already installed. Exiting."
+    exit 0
+fi
+echo "Lazygit not found. Proceeding with installation..."
+
 # Update package list and install prerequisites
 sudo apt update && sudo apt install -y wget git unzip
 
