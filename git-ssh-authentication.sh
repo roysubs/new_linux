@@ -63,6 +63,7 @@ echo
 
 # Step 5: Test SSH Connection
 echo "Step 5: Testing the SSH connection to GitHub."
+echo "When prompted by the ssh -T, type yes to perform the test."
 echo -e "Running: ${GREEN}ssh -T git@github.com${NC}"
 ssh -T git@github.com
 echo
