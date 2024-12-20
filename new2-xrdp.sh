@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# Update the system
+# Update the system and install required package
 echo "Updating the system..."
 sudo apt update && sudo apt upgrade -y
-
-# Install necessary packages for OpenSSH, XRDP, and TigerVNC
 echo "Install XRDP..."
 sudo apt install -y xrdp
 

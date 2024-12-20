@@ -20,7 +20,8 @@ alias cd..='cd ..'
 alias ..='cd ..'
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
-alias apti='sudo apt install'  # apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade)
+# apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade)
+alias apti='echo apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade); sudo apt install'
 alias ii='sudo apt install'
 alias aptr='sudo apt remove'
 alias rr='sudo apt remove'
@@ -34,7 +35,7 @@ alias hg='history | grep'       # 'history-grep'. After search, !201 will run it
 alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
 
-# As .bashrc is dotsourced, so are these, so operate on the main shell and not a subshell as a script would
+# Jump functions. Adding to scripts would require dotsource, so add/change as required in .bashrc to include in main shell
 n() { cd ~/new_linux || return; ls; echo; }       # jump to new_linux
 h() { cd ~ || return; ls; echo; }                 # jump to home
 w() { cd ~/192.168.1.29-d || return; ls; echo; }  # jump to 'WHITE' PC SMB share
@@ -139,9 +140,12 @@ while IFS= read -r line; do
         # Add blank lines directly
         echo >> "$BASHRC_FILE"
     fi
-done <<< "$bashrc_block"
+done <<EOF
+$bash_block
+EOF
+# done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vim formatting off
 
-# Remove extra blank lines at the end
+# Blank lines can be introduced by the above; remove them here
 sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"
 
 echo "Finished updating $BASHRC_FILE. To apply changes, run: source ~/.bashrc"

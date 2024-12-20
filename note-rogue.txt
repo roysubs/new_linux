@@ -3,9 +3,6 @@
 # Remember  'dpkg -L <package-name>'   to see where files are
 #
 ####################
-checksecurity : basic system security checks (tripwire etc)
-
-
 
 allure : near-future Sci-Fi roguelike and tactical squad game
 angband : Single-player, text-based, dungeon simulation game
@@ -18,53 +15,26 @@ crawl-tiles-data : Dungeon Crawl, a text-based roguelike game (tile data files)
 rogue (bsdgames-nonfree) : rogue, the classic dungeon exploration game
 tome : single-player text-based roguelike dungeon simulation game
 tome-gcu to play console (also tome-gtk2, tome-x11)
-
-
-bzflag : 3D first person tank battle game
-
-bzflag-client : 3D first person tank battle game -- client
-
-bzflag-data : 3D first person tank battle game -- data
-
 cataclysm-dda-curses : post-apocalyptic roguelike game - curses interface
 cataclysm-dda-data : post-apocalyptic roguelike game - data files
 cataclysm-dda-sdl : post-apocalyptic roguelike game - SDL interface
+crossfire-client : Client for the multiplayer roguelike Crossfire
+games-rogue : Debian's roguelike games
+
+bzflag : 3D first person tank battle game
+bzflag-client : 3D first person tank battle game -- client
+bzflag-data : 3D first person tank battle game -- data
 
 chocolate-doom : Doom engines closely-compatible with Vanilla Doom
 
+gearhead : roguelike mecha role playing game, console version
+gearhead-sdl : roguelike mecha role playing game, SDL version
+gearhead2 : roguelike mecha role playing game in space
+gearhead2-sdl : roguelike mecha role playing game in space
+hyperrogue : non-euclidean graphical rogue-like game
+hyperrogue-music : in-game music for hyperrogue
 
-crossfire-client/stable 1.75.0-2 amd64
-  Client for the multiplayer roguelike Crossfire
-
-fnotifystat/stable 0.02.10-1 amd64
-  file activity monitoring tool
-
-forkstat/stable 0.03.01-1 amd64
-  process fork/exec/exit monitoring tool
-
-games-rogue/stable 5 all
-  Debian's roguelike games
-
-gearhead/stable 1.310-3+b1 amd64
-  roguelike mecha role playing game, console version
-
-gearhead-sdl/stable 1.310-3+b1 amd64
-  roguelike mecha role playing game, SDL version
-
-gearhead2/stable 0.701-2 amd64
-  roguelike mecha role playing game in space
-
-gearhead2-sdl/stable 0.701-2 amd64
-  roguelike mecha role playing game in space
-
-hyperrogue/stable 12.0q-1 amd64
-  non-euclidean graphical rogue-like game
-
-hyperrogue-music/stable 12.0q-1 all
-  in-game music for hyperrogue
-
-lambdahack/stable 0.11.0.0-2+b4 amd64
-  tactical squad ASCII roguelike dungeon crawler game engine
+lambdahack : tactical squad ASCII roguelike dungeon crawler game engine
 
 libghc-lambdahack-dev/stable 0.11.0.0-2+b4 amd64
   tactical squad ASCII roguelike dungeon crawler game engine

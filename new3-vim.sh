@@ -36,6 +36,7 @@ if ! command -v nvim &> /dev/null; then
 else
   echo "Neovim is already installed."
 fi
+[ -f ~/.config/nvim/init.vim ] || mkdir -p ~/.config/nvim && touch ~/.config/nvim/init.vim
 
 # Vim settings and key mappings to apply
 vimrc_block="\" General Vim settings
@@ -95,16 +96,17 @@ update_vimrc() {
     # # Handle lines starting with a comment character
     # elif [[ "$line" =~ ^\" ]]; then
     #   echo "$line" >> "$target_vimrc"
+
     # Add the line only if it doesn't already exist
+    # grep -Fxq:
+    # -F: Match fixed strings (no regex interpretation).
+    # -x: Match the whole line exactly.
+    # -q: Suppress output, suitable for checks.
     elif ! grep -Fxq "$line" "$target_vimrc"; then
       echo "$line" >> "$target_vimrc"
     fi
   done <<< "$vimrc_block"
 
-  # grep -Fxq:
-  # -F: Match fixed strings (no regex interpretation).
-  # -x: Match the whole line exactly.
-  # -q: Suppress output, suitable for checks.
 
   # Remove trailing blank lines
   sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$target_vimrc"
@@ -112,11 +114,15 @@ update_vimrc() {
 }
 
 if [[ "$APPLY_GLOBAL" == true ]]; then
-   update_vimrc "/etc/vim/vimrc"
+  update_vimrc "/etc/vim/vimrc"
 else
-   # Update the normal user's vimrc
-   update_vimrc "$NORMAL_USER_HOME/.vimrc"
-   update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim"
+  # Update the normal user's vimrc
+  if [ -f "$NORMAL_USER_HOME/.vimrc" ]; then
+    update_vimrc "$NORMAL_USER_HOME/.vimrc"
+  fi
+  if [ -f "$NORMAL_USER_HOME/.config/nvim/init.vim" ]; then
+    update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim"
+  fi
 fi
 
 echo -e "\nConfiguration complete! Reopen vi/vim to see the updates."
