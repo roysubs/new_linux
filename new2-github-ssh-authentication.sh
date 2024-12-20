@@ -15,12 +15,34 @@ echo
 # Step 1: Generate SSH Keypair
 echo "Step 1: Generating an SSH keypair."
 echo "We recommend using 'ed25519' for better security and performance."
+echo "Available key types are:"
+echo "  1. ed25519 (default)"
+echo "  2. rsa"
+
+# Prompt user for key type
+read -p "Enter the desired key type (default: ed25519): " key_type
+key_type=${key_type:-ed25519}
+if [[ "$key_type" != "ed25519" && "$key_type" != "rsa" ]]; then
+    echo "Invalid key type. Please choose 'ed25519' or 'rsa'."
+    exit 1
+fi
+
+# Prompt user for key file path
+read -p "Enter the desired key file path (default: ~/.ssh/id_$key_type): " key_path
+key_path=${key_path:-~/.ssh/id_$key_type}
+
+# Check if the key already exists
+if [ -f "$key_path" ]; then
+    echo "An SSH keypair already exists at $key_path. Skipping key generation."
+    exit 0
+fi
+
 echo "Press Enter to continue or CTRL+C to exit."
 read
-echo -e "Running: ${GREEN}ssh-keygen -t ed25519 -C 'your_email@example.com'${NC}"
+echo -e "Running: ${GREEN}ssh-keygen -t $key_type -C 'your_email@example.com' -f $key_path${NC}"
 echo "Please enter your email address (this will be used as a comment in the SSH key):"
 read -p "Email: " user_email
-ssh-keygen -t ed25519 -C "$user_email"
+ssh-keygen -t "$key_type" -C "$user_email" -f "$key_path"
 echo
 echo "SSH keypair created! Moving to the next step."
 echo
@@ -39,20 +61,20 @@ echo "Step 3: Adding your private key to the SSH agent."
 echo "We'll also configure your SSH client to automatically add keys."
 echo -e "Editing ${GREEN}~/.ssh/config${NC} file to include necessary configurations."
 mkdir -p ~/.ssh
-echo -e "Running: ${GREEN}echo -e \"Host *\\n    AddKeysToAgent yes\\n    IdentityFile ~/.ssh/id_ed25519\" > ~/.ssh/config${NC}"
-echo -e "Host *\n    AddKeysToAgent yes\n    IdentityFile ~/.ssh/id_ed25519" > ~/.ssh/config
+echo -e "Running: ${GREEN}echo -e \"Host *\\n    AddKeysToAgent yes\\n    IdentityFile $key_path\" > ~/.ssh/config${NC}"
+echo -e "Host *\n    AddKeysToAgent yes\n    IdentityFile $key_path" > ~/.ssh/config
 echo
 echo "Configuration updated. Adding the private key to the SSH agent."
-echo -e "Running: ${GREEN}ssh-add ~/.ssh/id_ed25519${NC}"
-ssh-add ~/.ssh/id_ed25519
+echo -e "Running: ${GREEN}ssh-add $key_path${NC}"
+ssh-add "$key_path"
 echo "Key added successfully."
 echo
 
 # Step 4: Show Public Key
 echo "Step 4: Displaying your public SSH key."
 echo "This is the key you'll need to add to your GitHub account."
-echo -e "Running: ${GREEN}cat ~/.ssh/id_ed25519.pub${NC}"
-cat ~/.ssh/id_ed25519.pub
+echo -e "Running: ${GREEN}cat $key_path.pub${NC}"
+cat "$key_path.pub"
 echo
 echo "Copy the above key and add it to your GitHub account."
 echo "Go to: https://github.com -> Settings -> SSH and GPG keys -> New SSH key."
@@ -88,7 +110,12 @@ git remote -v
 echo
 
 echo "SSH authentication for this user on this computer is now set up and working with GitHub."
-echo "To setup a repo for SSH authentication, create the repo on GitHub, then clone it here."
-echo -e "e.g.   ${GREEN}git clone git@github.com:user/repo.git${NC}"
-echo "After that, you can then use Git commands 'git add .', 'git commit -m "comment"', 'git push' etc."
+echo "To setup a repo for SSH authentication..."
+echo "Set configuration:"
+echo -e "   ${GREEN}git config --global user.email \"you@example.com\"${NC}"
+echo -e "   ${GREEN}git config --global user.name \"your name\"${NC}"
+echo "Create the repo on GitHub, then clone it here:"
+echo -e "   ${GREEN}git clone git@github.com:<user>/<repo>.git${NC}"
+echo "After that, you can then use Git commands 'git add .', 'git commit -m \"comment\"', 'git push' etc."
+echo
 
