@@ -58,7 +58,7 @@ echo
 # Step 4: Set up GitHub Personal Access Token
 echo "Step 4: Set up a Personal Access Token (PAT) for authentication."
 echo "GitHub requires a Personal Access Token instead of a password for HTTPS operations."
-echo "Generate a PAT at: ${GREEN}https://github.com/settings/tokens${NC}"
+echo -e "Generate a PAT at: ${GREEN}https://github.com/settings/tokens${NC}"
 echo "Ensure the token has the appropriate scopes (e.g., repo, workflow)."
 read -sp "Enter your Personal Access Token: " github_token
 echo

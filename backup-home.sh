@@ -3,10 +3,11 @@
 ####################
 #
 # Safely Backup $HOME to $HOME/backup-home with rsync.
-# Exclude $HOME/backup-home and any dynamically created mounts / shares
-# First backup is full, all others are incremental (hard link inodes).
-# As inodes, any older backups (including the 'full') can be deleted as every backup contains all required information.
-# Finally, the script will copy itself into $HOME/backup-home then setup an hourly cron.
+# Backing up $HOME as a subfolder of $HOME means no issues with TimeShift
+# Must exclude $HOME/backup-home and any dynamically created mounts / shares
+# All backups are full but use space like incremental as they use (hard link inodes).
+# As inodes, any older backups can be deleted as every backup contains all required information.
+# The script will copy itself into $HOME/backup-home and setup an hourly cron.
 #
 ####################
 

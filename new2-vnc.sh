@@ -8,6 +8,7 @@
 # Define output file for passwords
 SCRIPT_NAME=$(basename "$0")
 PASSWORD_FILE="~/.vnc/${SCRIPT_NAME%.sh}-passwords.txt"
+touch $PASSWORD_FILE
 > "$PASSWORD_FILE"   # Clear the contents of this file
 DESKTOP_PACKAGE="task-mate-desktop"      # task-xfce-desktop
 DESKTOP_BINARY="/usr/bin/mate-session"   # /usr/bin/startxfce4
@@ -40,6 +41,7 @@ expect eof
 EOF
 
 echo "VNC passwords set, storing plaintext in $PASSWORD_FILE."
+touch $PASSWORD_FILE
 echo "VNC Password: $VNC_PASSWORD" >> "$PASSWORD_FILE"
 echo "View-only Password: $VIEW_ONLY_PASSWORD" >> "$PASSWORD_FILE"
 
@@ -101,19 +103,20 @@ vncserver
 Message from 'vncserver' should be something like:
 
 ##########
-# New 'X' desktop is hp2:1
+# New 'X' desktop is myhostname:1
 #
 # Starting applications specified in /home/boss/.vnc/xstartup
-# Log file is /home/boss/.vnc/hp2:1.log
+# Log file is /home/boss/.vnc/myhostname.log
 ##########
 
+It may not be possibly to connect by hostname, use ip in that case instead
 
 On Windows system:
 ==========
 
 The 'vncserver' output tells you exactly what to enter into the VNC Viewer on Windows:
-    hp2:1
-    192.168.1.140:1
+    myhostname:1
+    192.168.1.100:1
 
 TightVNC Viewer is simply and creates a good display resolution without tweaking.
 UltraVNC has a good autosize option, and tons of options.

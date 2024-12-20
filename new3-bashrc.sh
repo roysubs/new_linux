@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 BASHRC_FILE="$HOME/.bashrc"
@@ -20,17 +19,51 @@ alias cd..='cd ..'
 alias ..='cd ..'
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
-# apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade)
-alias apti='echo apti/ii (install), aptr/rr (remove), aptu/uu (update-upgrade); sudo apt install'
-alias ii='sudo apt install'
-alias aptr='sudo apt remove'
-alias rr='sudo apt remove'
-alias aptu='sudo apt update; sudo apt upgrade; sudo apt autoremove'   # Quick update / upgrade / autoremove
-alias uu='sudo apt update; sudo apt upgrade; sudo apt autoremove'
-alias apts='sudo apt search'   # apts/asearch/afind (search for packagename)
-alias asearch='sudo apt search'
-alias afind='sudo apt search'
-alias ainfo='sudo apt info'     # apti/ainfo (info about packagename)
+def() {
+    if [ -z \"\$1\" ]; then
+        declare -F
+        printf \"\\nAbove listing is all defined functions 'declare -F' (use def <func-name> to show function contents)\\nType 'alias' to show all aliases (def <alias-nam> to show alias definition, where 'def' uses 'command -V <name>')\\n\\n\"
+    elif type bat >/dev/null 2>&1; then
+        command -V \$1 | bat -pp -l bash
+    else
+        command -V \$1
+    fi
+}
+a() {
+    if [ \$# -eq 0 ]; then
+        echo \"Usage: a [option] <package>\"
+        echo \"Options:\"
+        echo \"  i <package>     Install a package\"
+        echo \"  r <package>     Remove a package\"
+        echo \"  s <package>     Search for a package\"
+        echo \"  u               Update package lists\"
+        echo \"  uu              Update and upgrade packages\"
+        echo \"  v <package>     Show version of a package\"
+        echo \"  info <package>  Show package info (Debian) or show (Linux Mint)\"
+        echo \"  x <package>     Show package dependencies, then contents\"
+        return
+    fi
+    option=\$1
+    package=\$2
+    case \"\$option\" in
+        i) sudo apt install \"\$package\" ;;
+        r) sudo apt remove \"\$package\" ;;
+        s) apt search \"\$package\" ;;
+        u) sudo apt update ;;
+        uu) sudo apt update && sudo apt upgrade && sudo apt autoremove ;;
+        v) apt-cache policy \"\$package\" | grep Installed ;;
+        x)
+            echo; if grep -q \"Mint\" /etc/os-release; then apt show \"\$package\"
+            else apt info \"\$package\"; fi
+            echo; read -n 1 -s -r -p \"Press any key to show package dependencies\"
+            apt-cache depends \"\$package\"
+            echo; read -n 1 -s -r -p \"Press any key to show package contents\"
+            if command -v apt-file >/dev/null 2>&1; then apt-file list \"\$package\"
+            else echo \"Install apt-file to view package contents\" fi
+            ;;
+        *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
+    esac
+}
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
@@ -140,10 +173,25 @@ while IFS= read -r line; do
         # Add blank lines directly
         echo >> "$BASHRC_FILE"
     fi
-done <<EOF
-$bash_block
-EOF
+done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vim formatting off
+# done <<EOF
+# $bash_block
+# EOF
 # done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vim formatting off
+
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    if [[ $ID == "linuxmint" ]]; then
+        sed -i '/^afind=/c\alias afind='"'"'apt show'"'"'' ~/.bashrc
+    elif [[ $ID == "debian" ]]; then
+        sed -i '/^afind=/c\alias afind='"'"'apt info'"'"'' ~/.bashrc
+    else
+        echo "Unrecognized system: $ID"
+    fi
+else
+    echo "/etc/os-release not found. Unable to set 'afind' alias."
+fi
+
 
 # Blank lines can be introduced by the above; remove them here
 sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"

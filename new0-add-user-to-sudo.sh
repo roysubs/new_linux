@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "This script effectively acts as 'sudo without sudo' by running"
-echo "root commands using 'su -c' (the root password must be known of course)."
-echo "When prompted for a password, the root password is required here."
+echo "This script acts as 'sudo without using sudo' by running root"
+echo "commands using 'su -c' (the root password must be known of course)."
+echo "Use the root password when prompted below."
 
 # Get the current username
 USERNAME=$(whoami)

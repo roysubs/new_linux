@@ -1,102 +1,46 @@
 ####################
 #
-# Remember  'dpkg -L <package-name>'   to see where files are
+# 'dpkg -L <package>' / 'apt-file list <package>'  to see where files are
 #
 ####################
 
 allure : near-future Sci-Fi roguelike and tactical squad game
+   Console:  Allure --frontendANSI
 angband : Single-player, text-based, dungeon simulation game
-angband-data : Game data for angband
+   Console:  angband -mgcu
 boohu : Break Out Of Hareka's Underground -- a roguelike game
 crawl : Dungeon Crawl, a text-based roguelike game
-crawl-common : Dungeon Crawl, a text-based roguelike game (data files)
 crawl-tiles : Dungeon Crawl, a roguelike game, tiles version
-crawl-tiles-data : Dungeon Crawl, a text-based roguelike game (tile data files)
 rogue (bsdgames-nonfree) : rogue, the classic dungeon exploration game
 tome : single-player text-based roguelike dungeon simulation game
-tome-gcu to play console (also tome-gtk2, tome-x11)
+   Console:  tome-gcu (also tome-gtk2, tome-x11)
 cataclysm-dda-curses : post-apocalyptic roguelike game - curses interface
 cataclysm-dda-data : post-apocalyptic roguelike game - data files
 cataclysm-dda-sdl : post-apocalyptic roguelike game - SDL interface
 crossfire-client : Client for the multiplayer roguelike Crossfire
 games-rogue : Debian's roguelike games
+hyperrogue : non-euclidean graphical rogue-like game
+hyperrogue-music : in-game music for hyperrogue
+lambdahack : tactical squad ASCII roguelike dungeon crawler game engine
+moria : Rogue-like game with an infinite dungeon, also known as umoria
+omega-rpg : text-based roguelike game
+powder : Graphical dungeon crawling game
+slashem : variant of Nethack
+slashem-gtk : variant of Nethack (Gtk window port)
+slashem-sdl : variant of Nethack (SDL window port)
+slashem-x11 : variant of Nethack (X11 window port)
+zangband : A single-player, text-based, roguelike game
 
 bzflag : 3D first person tank battle game
 bzflag-client : 3D first person tank battle game -- client
 bzflag-data : 3D first person tank battle game -- data
 
 chocolate-doom : Doom engines closely-compatible with Vanilla Doom
+quake : classic gothic/horror-themed first person shooter
+quake2 : classic science-fiction-themed first person shooter
 
 gearhead : roguelike mecha role playing game, console version
 gearhead-sdl : roguelike mecha role playing game, SDL version
 gearhead2 : roguelike mecha role playing game in space
 gearhead2-sdl : roguelike mecha role playing game in space
-hyperrogue : non-euclidean graphical rogue-like game
-hyperrogue-music : in-game music for hyperrogue
-
-lambdahack : tactical squad ASCII roguelike dungeon crawler game engine
-
-libghc-lambdahack-dev/stable 0.11.0.0-2+b4 amd64
-  tactical squad ASCII roguelike dungeon crawler game engine
-
-libghc-lambdahack-doc/stable 0.11.0.0-2 all
-  tactical squad ASCII roguelike dungeon crawler game engine; documentation
-
-libghc-lambdahack-prof/stable 0.11.0.0-2+b4 amd64
-  tactical squad ASCII roguelike dungeon crawler game engine; profiling libraries
-
-libtcod-dev/stable 1.18.1+dfsg-1+b1 amd64
-  development files for the libtcod roguelike library
-
-libtcod1/stable 1.18.1+dfsg-1+b1 amd64
-  graphics and utility library for roguelike developers
-
-libusbguard-dev/stable 1.1.2+ds-3+b1 amd64
-  USB device authorization policy framework - development files
-
-libusbguard1/stable 1.1.2+ds-3+b1 amd64
-  USB device authorization policy framework - shared library
-
-moria/stable 5.7.13-1+b1 amd64
-  Rogue-like game with an infinite dungeon, also known as umoria
-
-omega-rpg/stable 1:0.90-pa9-17+b1 amd64
-  text-based roguelike game
-
-powder/stable 118+dfsg1-3 amd64
-  Graphical dungeon crawling game
-
-quake/stable 73 all
-  classic gothic/horror-themed first person shooter
-
-quake2/stable 73 all
-  classic science-fiction-themed first person shooter
-
-ramond/stable 0.5-4.2 amd64
-  IPv6 Router Advertisement MONitoring Daemon
-
-roguenarok/stable 1.0.1-3 amd64
-  versatile and scalable algorithm for rogue taxon identification
-
-samhain/stable 4.1.4-2+b2 amd64
-  Data integrity and host intrusion alert system
-
-slashem/stable,now 0.0.7E7F3-10+b3 amd64 [installed]
-  variant of Nethack
-
-slashem-gtk/stable 0.0.7E7F3-10+b3 amd64
-  variant of Nethack (Gtk window port)
-
-slashem-sdl/stable 0.0.7E7F3-10+b3 amd64
-  variant of Nethack (SDL window port)
-
-slashem-x11/stable 0.0.7E7F3-10+b3 amd64
-  variant of Nethack (X11 window port)
-
-tmperamental/stable 1.4 amd64
-  LD_PRELOADable library to detect rogue writes to /tmp/
-
-
-zangband : A single-player, text-based, roguelike game
-zangband-data : A single-player, text-based, roguelike game (datafiles)
 
