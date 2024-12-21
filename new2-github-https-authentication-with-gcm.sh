@@ -9,7 +9,7 @@ echo
 echo "This script will guide you step by step to set up secure HTTPS authentication for GitHub."
 echo "Using HTTPS has the following format for cloning and pushing:"
 echo -e "Git clone with HTTPS URL:  ${GREEN}git clone https://github.com/<user>/<repo>.git${NC}"
-echo -e "Git push via HTTPS:        ${GREEN}git push https://github.com/<user>/<repo>.git${NC}"
+echo -e "Git push via HTTPS:        ${GREEN}git push origin main${NC}"
 echo
 
 # Step 1: Install Git (if not installed)
@@ -56,17 +56,12 @@ echo "Git configuration updated with your name and email."
 echo
 
 # Step 4: Set up GitHub Personal Access Token
-echo "Step 4: Set up a Personal Access Token (PAT) for authentication."
-echo "GitHub requires a Personal Access Token instead of a password for HTTPS operations."
-echo -e "Generate a PAT at: ${GREEN}https://github.com/settings/tokens${NC}"
-echo "Ensure the token has the appropriate scopes (e.g., repo, workflow)."
-read -sp "Enter your Personal Access Token: " github_token
-echo
+echo "Step 4: Setting up authentication with GitHub."
+echo -e "Generate a Personal Access Token (PAT) at: ${GREEN}https://github.com/settings/tokens${NC}"
+echo "Ensure the token has scopes like 'repo' for private repositories."
+echo -e "${WHITE}When prompted during 'git push', use your GitHub username and paste the PAT as your password.${NC}"
 git-credential-manager configure
-
-echo "Storing your credentials securely with Git Credential Manager."
-echo "$github_token" | git credential approve
-echo "Credentials stored securely."
+echo "Git Credential Manager is now ready to store credentials securely."
 echo
 
 # Step 5: Clone a repository using HTTPS
@@ -74,9 +69,19 @@ echo "Step 5: Cloning a repository using HTTPS."
 echo "Go to a GitHub repository and select the green 'Code' button."
 echo "Copy the HTTPS URL (e.g., https://github.com/<user>/<repo>.git)."
 read -p "HTTPS URL: " repo_url
-git clone "$repo_url"
-repo_name=$(basename "$repo_url" .git)
-echo "Repository cloned successfully into: $repo_name"
+
+if [[ -z "$repo_url" ]]; then
+    echo "Error: Repository URL cannot be empty."
+    exit 1
+fi
+
+if git clone "$repo_url"; then
+    repo_name=$(basename "$repo_url" .git)
+    echo "Repository cloned successfully into: $repo_name"
+else
+    echo "Error: Failed to clone the repository. Please check the URL and try again."
+    exit 1
+fi
 echo
 
 # Step 6: Test Git operations (push/pull)
@@ -86,8 +91,12 @@ echo "Creating an initial commit."
 touch README.md
 git add README.md
 git commit -m "Initial commit"
-git push
-echo "Push operation completed successfully."
+echo -e "${WHITE}Attempting to push changes...${NC}"
+if git push origin main; then
+    echo -e "${GREEN}Push operation completed successfully.${NC}"
+else
+    echo "Push failed. Ensure the PAT is entered correctly when prompted."
+fi
 echo
 
 echo -e "${GREEN}HTTPS authentication for GitHub is now set up and working on this computer.${NC}"

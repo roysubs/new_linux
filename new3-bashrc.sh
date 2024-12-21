@@ -67,7 +67,49 @@ a() {
         *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
     esac
 }
+h () {
+    if [ \$# -eq 0 ]; then
+        echo \"Usage: h [option]\";
+        echo \"Options:\";
+        echo \"  f <string>     Search history for a specific string\";
+        echo \"  n <number>     Show the last <number> commands\";
+        echo \"  s              Show the full history with line numbers\";
+        echo \"  clear!!!       Clear the history (danger!)\";
+        echo \"  e              Edit the history using your default editor\";
+        echo \"
+history 7 (show last 7 history lines), !51 (run command 51 in history), !-3 (run 3rd last command)
+!! (or !-1) run last command, su -c \\\"!!\\\" root,  switch user to root and run last command
+touch a.txt b.txt c.txt; echo !^; echo !:1; echo !:2; echo !:3; echo !\$; echo !*
+rm !(abc.txt)   remove everything except abc.txt      rm !(*.pdf)   remove everything except pdf files
+!# (retype from current line)    cp /some/long/path/file !#:1 (now press tab and it will expand)
+Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
+!?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
+Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
+!?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
+\";
+        return;
+    fi
+    option=\$1
+    value=\$2
+    case \"\$option\" in
+        f) history | grep --color=auto \"\$value\" ;;
+        n) history | tail -n \"\$value\" ;;
+        s) history ;;
+        clear!!!) history -c; echo \"History cleared.\" ;;
+        e) history -w; \${EDITOR:-vi} ~/.bash_history ;;
+        *) if [[ \"\$option\" =~ ^[0-9]+$ ]]; then history | tail -n \"\$option\";
+           else echo \"Invalid option. Use 'h' without arguments to see usage.\";
+           fi ;;
+    esac
+}
+
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
+shopt -s checkwinsize   # At every prompt check if the window size has changed
+shopt -s histappend;   # Append commands to the bash history (~/.bash_history) instead of overwriting it   # https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
+export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time when run 'history'
+# Word Designatores: ls /etc/, cd !!:1 (:0 is the initial word), !!:1*, !!:1-$, !!:*     'cat /etc/hosst', then type '^hosst^hosts^' will immediately run the fixed command.
+# Modifiers: 'cat /etc/hosts', cd !!:$:h (will cd into /etc/ as :h chops the 'head' off, :t, 'tail' will remove 'cat /etc/', :r to remove trailing extension, :r:r to remove .tar.gz, :p is just to 'print', 'find ~ -name \"file1\"', try !119:0:p / !119:2*:p
+
 alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
 
