@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "
 # Prevent Debian from entering emergency mode when there are errors in /etc/fstab.
 # This is done by applying the nofail option for entries in fstab that we want
 # the OS to be less strict about mounting at boot time.
@@ -11,10 +12,10 @@
 # than halting or entering emergency mode.
 
 # Adding the nofail option to the relevant lines in /etc/fstab.
+"
 
 # Ensure the script is run as root
 if [ "$EUID" -ne 0 ]; then echo "Please run as root."; exit 1; fi
-
 
 # Define the file location and backup before modifying
 FSTAB="/etc/fstab"

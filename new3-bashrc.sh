@@ -19,6 +19,7 @@ alias cd..='cd ..'
 alias ..='cd ..'
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
+# def: Get definitions, expand alias and function definitions that match \$1 
 def() {
     if [ -z \"\$1\" ]; then
         declare -F
@@ -29,24 +30,26 @@ def() {
         command -V \$1
     fi
 }
+# a: Fast apt, with concise history 'h' and detailed info/depends/contents 'x'
 a() {
     if [ \$# -eq 0 ]; then
         echo \"Usage: a [option] <package>\"
         echo \"Options:\"
         echo \"  i <package>     Install a package\"
+        echo \"  h               History install/remove/upgrade\"
         echo \"  r <package>     Remove a package\"
         echo \"  s <package>     Search for a package\"
         echo \"  u               Update package lists\"
         echo \"  uu              Update and upgrade packages\"
         echo \"  v <package>     Show version of a package\"
-        echo \"  info <package>  Show package info (Debian) or show (Linux Mint)\"
-        echo \"  x <package>     Show package dependencies, then contents\"
+        echo \"  x <package>     Show package info, dependencies, and contents\"
         return
     fi
     option=\$1
     package=\$2
     case \"\$option\" in
         i) sudo apt install \"\$package\" ;;
+        h) zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;
         r) sudo apt remove \"\$package\" ;;
         s) apt search \"\$package\" ;;
         u) sudo apt update ;;
@@ -59,7 +62,7 @@ a() {
             apt-cache depends \"\$package\"
             echo; read -n 1 -s -r -p \"Press any key to show package contents\"
             if command -v apt-file >/dev/null 2>&1; then apt-file list \"\$package\"
-            else echo \"Install apt-file to view package contents\" fi
+            else echo \"Install apt-file to view package contents\"; fi
             ;;
         *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
     esac
@@ -177,23 +180,24 @@ done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vi
 # done <<EOF
 # $bash_block
 # EOF
-# done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vim formatting off
 
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    if [[ $ID == "linuxmint" ]]; then
-        sed -i '/^afind=/c\alias afind='"'"'apt show'"'"'' ~/.bashrc
-    elif [[ $ID == "debian" ]]; then
-        sed -i '/^afind=/c\alias afind='"'"'apt info'"'"'' ~/.bashrc
-    else
-        echo "Unrecognized system: $ID"
-    fi
-else
-    echo "/etc/os-release not found. Unable to set 'afind' alias."
-fi
-
-
-# Blank lines can be introduced by the above; remove them here
+# Blank lines can be introduced if run multiple times; remove them here
 sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"
 
 echo "Finished updating $BASHRC_FILE. To apply changes, run: source ~/.bashrc"
+
+
+# a h option: zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;
+# zgrep history.log* is used instead of grep history.log to also look inside rotated logs
+# First sed:   sed -n '/^Start-Date/{h;n;s/^Commandline:
+# Combines Start-Date with the following Commandline
+#    h: Store the Start-Date line in the hold space.
+#    n: Move to the next line (Commandline).
+#    s/^Commandline: //: Remove the Commandline: prefix.
+#    H: Append the processed line to the hold space.
+#    x: Exchange hold and pattern space to combine lines.
+#    s/\n/ /: Replace the newline between Start-Date and Commandline with a space.
+#    p: Print the result.
+# Second sed:
+# Cleans up the output by: Removing Start-Date:. Removing /usr/bin/apt.
+# Final grep: removes redundant lines containing 'Start-Date:'

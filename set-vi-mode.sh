@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Only run this script if it is sourced
-(return 0 2>/dev/null) || { echo "This script should be run sourced (e.g., '. ./set-vi-mode.sh' to change to vi mode)"; exit 1; }
+(return 0 2>/dev/null) || { echo "Only run this script sourced (i.e., '. ./set-vi-mode.sh' to change to vi mode)"; exit 1; }
 
 echo
 echo "set -o vi"
 set -o vi
 echo "
-To switch back to the default (emacs) mode, use:   set -o emacs
+To switch back to (the default) emacs mode, use:   set -o emacs
 
 Using vi Mode:
-Once vi mode is enabled, you'll notice that when you're editing the command line, you have two modes:
+Once vi mode is enabled, there are two command line modes:
 
 Command Mode (Press Esc to enter):
 In this mode, you can navigate through the command line with vi-like keys, such as:

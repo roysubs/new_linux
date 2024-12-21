@@ -11,10 +11,11 @@ cat <<'EOF' | glow -p
 # Linux `find` Command Cheatsheet
 
 ## Basics
-- Find files by name: `find /path -name "filename"`
-- Find files (case-insensitive): `find /path -iname "filename"`
-- Find directories only: `find /path -type d`
-- Find files only: `find /path -type f`
+`find /path/to -name "name"`  # Find filename 'name' under path '/path/to'
+`find /path -iname "name"`    # As above but case-insensitive search
+`find /path -type d`          # Only find directories
+`find /path -type f`          # Only find files
+`find / -name "my*file*" 2>/dev/null`   # When searching / use this to suppress system folder errors
 
 ## Filters
 - By size: `find /path -size +10M` (larger than 10MB), `find /path -size -1G` (smaller than 1GB)

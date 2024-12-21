@@ -4,31 +4,43 @@
 #
 ####################
 
+games-rogue : Debian's roguelike games
+   Installs all of: allure, angband, boohu, cataclysm-dda-sdl, crawl,
+   gearhead, gearhead2, hearse, hyperrogue, lambdahack, meritous,
+   moria, nethack-x11, omega-rpg, slashem
+bsdgames-nonfree : Installs rogue, the classic dungeon exploration game
+
 allure : near-future Sci-Fi roguelike and tactical squad game
-   Console:  Allure --frontendANSI
+   Console:  Allure --frontendANSI , Allure --frontendTeletype
 angband : Single-player, text-based, dungeon simulation game
    Console:  angband -mgcu
 boohu : Break Out Of Hareka's Underground -- a roguelike game
 crawl : Dungeon Crawl, a text-based roguelike game
 crawl-tiles : Dungeon Crawl, a roguelike game, tiles version
-rogue (bsdgames-nonfree) : rogue, the classic dungeon exploration game
-tome : single-player text-based roguelike dungeon simulation game
-   Console:  tome-gcu (also tome-gtk2, tome-x11)
 cataclysm-dda-curses : post-apocalyptic roguelike game - curses interface
-cataclysm-dda-data : post-apocalyptic roguelike game - data files
 cataclysm-dda-sdl : post-apocalyptic roguelike game - SDL interface
 crossfire-client : Client for the multiplayer roguelike Crossfire
-games-rogue : Debian's roguelike games
+gearhead : roguelike mecha role playing game, console version
+gearhead-sdl : roguelike mecha role playing game, SDL version
+gearhead2 : roguelike mecha role playing game in space
+gearhead2-sdl : roguelike mecha role playing game in space
+hearse : exchange Nethack bones files with other players
 hyperrogue : non-euclidean graphical rogue-like game
 hyperrogue-music : in-game music for hyperrogue
 lambdahack : tactical squad ASCII roguelike dungeon crawler game engine
+meritous : action-adventure dungeon crawl game
 moria : Rogue-like game with an infinite dungeon, also known as umoria
+nethack-console : dungeon crawl game - text-based interface
+nethack-qt : dungeon crawl game - Qt interface
+nethack-x11 : dungeon crawl game - X11 interface
 omega-rpg : text-based roguelike game
 powder : Graphical dungeon crawling game
 slashem : variant of Nethack
 slashem-gtk : variant of Nethack (Gtk window port)
 slashem-sdl : variant of Nethack (SDL window port)
 slashem-x11 : variant of Nethack (X11 window port)
+tome : single-player text-based roguelike dungeon simulation game
+   Console:  tome-gcu (also tome-gtk2, tome-x11)
 zangband : A single-player, text-based, roguelike game
 
 bzflag : 3D first person tank battle game
@@ -39,8 +51,4 @@ chocolate-doom : Doom engines closely-compatible with Vanilla Doom
 quake : classic gothic/horror-themed first person shooter
 quake2 : classic science-fiction-themed first person shooter
 
-gearhead : roguelike mecha role playing game, console version
-gearhead-sdl : roguelike mecha role playing game, SDL version
-gearhead2 : roguelike mecha role playing game in space
-gearhead2-sdl : roguelike mecha role playing game in space
 
