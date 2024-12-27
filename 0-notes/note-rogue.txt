@@ -4,6 +4,22 @@
 #
 ####################
 
+Console colours often mess up after leaving most roguelike games that have colour.
+1. 'reset'  # This command reinitializes the terminal and should fix any color or formatting issues.
+2. Some terminal emulators have shortcuts to reset the terminal. For example:
+GNOME Terminal: Ctrl+Shift+K, Konsole: Ctrl+Shift+X
+3. Force monochrome mode (could be -M, see the roguelikes manual)
+4. Redirect Output to Restore Colors:   zangband; reset
+5. Verify Terminal Settings Post-Exit:  stty -a
+   To reset them to sane defaults:      stty sane
+6. Use screen or tmux as a Sandbox
+Try running zangband inside a screen or tmux session to isolate it from your main terminal.
+If the game alters the terminal state, you can simply detach or kill the session to restore normal behavior:
+
+screen zangband
+# or
+tmux new-session -s zangband
+
 games-rogue : Debian's roguelike games
    Installs all of: allure, angband, boohu, cataclysm-dda-sdl, crawl,
    gearhead, gearhead2, hearse, hyperrogue, lambdahack, meritous,
@@ -42,6 +58,7 @@ slashem-x11 : variant of Nethack (X11 window port)
 tome : single-player text-based roguelike dungeon simulation game
    Console:  tome-gcu (also tome-gtk2, tome-x11)
 zangband : A single-player, text-based, roguelike game
+   Save / exit: Ctrl+X
 
 bzflag : 3D first person tank battle game
 bzflag-client : 3D first person tank battle game -- client

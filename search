@@ -1,9 +1,8 @@
-boss@mina:/usr/local/bin$ cat /usr/local/bin/search
 #!/bin/bash
 
 function usage
 {
-    echo """
+    echo "
 Usage:
 
     To search for something simply use 'search for':
@@ -26,7 +25,7 @@ Usage:
         search in ../ for Keyword --case-sensitive
 
         search -s in ../ for keyword
-"""
+"
 }
 
 directory=.

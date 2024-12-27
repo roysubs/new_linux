@@ -103,7 +103,7 @@ else
   exit 1
 fi
 
-echo "Script completed successfully."
+echo "Script completed successfully. 7zip password used was '1234'."
 
 # sendmail requires a bit more effort to create the email body with attachment headers manually:
 #   sudo apt install sendmail

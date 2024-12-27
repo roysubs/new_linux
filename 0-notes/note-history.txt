@@ -1,135 +1,57 @@
-
-History Search and Navigation
-Ctrl-r
-
-Incremental reverse search in history: start typing to find commands that match.
-If your target is near the end of a string, type distinctive keywords to locate it.
-Ctrl-s
-
-Incremental forward search (useful after Ctrl-r to move forward through matches).
+History:
+!!     Re-run last command
+!531   Re-run command 531 in history
+Ctrl-r Incremental reverse search in history: start typing to find commands that match.
+Ctrl-s If your target is near the end of a string, type distinctive keywords to locate it.
+       Incremental forward search (useful after Ctrl-r to move forward through matches).
 Note: This may require disabling terminal flow control (stty -ixon).
-Ctrl-p
+Ctrl-p Navigate up through the history (same as the Up arrow).
+Ctrl-n Navigate down through the history (same as the Down arrow).
+Alt-.  Reuse the last argument of the previous command (similar to !$).
+Ctrl-o Execute the next command in history without typing it.
+Ctrl-g Cancel an ongoing Ctrl-r search.
 
-Navigate up through the history (same as the Up arrow).
-Ctrl-n
+Editing Commands:
+Ctrl-a Move to the beginning of the command line.
+Ctrl-e Move to the end of the command line.
+Ctrl-u Delete everything before the cursor on the current line.
+Ctrl-k Delete everything after the cursor on the current line.
+Ctrl-w Delete the word before the cursor.
+Alt-d  Delete the word after the cursor.
 
-Navigate down through the history (same as the Down arrow).
-Alt-.
-
-Reuse the last argument of the previous command (similar to !$).
-Ctrl-o
-
-Execute the next command in history without typing it.
-Ctrl-g
-
-Cancel an ongoing Ctrl-r search.
-Editing Commands
-Ctrl-a
-
-Move to the beginning of the command line.
-Ctrl-e
-
-Move to the end of the command line.
-Ctrl-u
-
-Delete everything before the cursor on the current line.
-Ctrl-k
-
-Delete everything after the cursor on the current line.
-Ctrl-w
-
-Delete the word before the cursor.
-Alt-d
-
-Delete the word after the cursor.
 Miscellaneous
-Ctrl-l
-
-Clear the screen (like clear command).
-Alt-r
-
-Revert changes made to the current command line.
-Ctrl-y
-
-Paste the last cut text back at the cursor (yank).
-Ctrl-x, Ctrl-e
-
-Open the current command in your default editor for multi-line editing.
-Ctrl-t
-
-Swap the last two characters before the cursor.
-Alt-.
-
-Cycle through previous arguments in history for substitution.
-Alt-< and Alt->
-
-Move to the first and last entries in the history, respectively.
+Ctrl-l Clear the screen (does not clear buffer, clean screen with cursor at top).
+Alt-r  Revert changes made to the current command line.
+Ctrl-y Paste the last cut text back at the cursor (yank).
+Ctrl-x, Ctrl-e Open the current command in your default editor for multi-line editing.
+Ctrl-t Swap the last two characters before the cursor.
+Alt-.  Cycle through previous arguments in history for substitution.
+Alt-< and Alt-> Move to the first and last entries in the history, respectively.
 
 
 
 
 
 
-View all history:
-history
+history View all history
+history | grep <keyword> Search for a specific term 
+fc   Fix Command, opens the editor ($EDITOR) with the previous command, and after editing, it re-executes the command. 
+     To list a range of commands from history, use fc -l [first] [last].
+     To edit and re-execute a specific command number, use fc [command_number].
+fc -l -10   # Edit the last 10 commands
+fc 20       # Edit and execute command number 20:
+Let me know if you need further assistance or more examples!
+history -c   Clear history
+history -d   <line_num>  Delete a specific command from history
+!<string>    Run the last command starting with a specific string
+history -a   Append history from the current session to .bash_history
 
+export HISTCONTROL=ignoredups   # Ignore duplicate commands in history (add to .bashrc)
+export HISTSIZE=1000            # Limit the history size to 1000 commands
 
-Search for a specific term:
-history | grep <keyword>
-
-
-Repeat the last command:
-!!
-
-
-Run a specific command by history number:
-!<number>
-
-
-Search history incrementally:
-Press Ctrl + r and type the keyword.
-
-
-Edit the last command:
-fc
-
-
-Clear history:
-history -c
-
-
-Run the last command starting with a specific string:
-!<string>
-
-
-Append history from the current session to .bash_history:
-history -a
-
-
-Ignore duplicate commands in history:
-Add this to .bashrc:
-export HISTCONTROL=ignoredups
-
-
-Limit the history size:
-export HISTSIZE=1000
-
-
-Delete a specific command from history:
-history -d <line_number>
-
-
-Execute the last command with substitution:
-!!:s/old/new/
-
-
-Repeat the last argument of the previous command:
-!$
-
-
-Use the argument of the previous command in the current one:
-cp file.txt !$
-
+!!:s/old/new/  Execute the last command with substitution:
+!$             Repeat the last argument of the previous command:
+cp file.txt !$ Use the argument of the previous command in the current one:
 
 List unique commands from history:
 history | awk '{CMD[$2]++;count++} END {for (a in CMD) print CMD[a] " " a}' | sort -rn

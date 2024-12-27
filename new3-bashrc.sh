@@ -9,6 +9,10 @@ cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
 bashrc_block="
 # user alias/function/export definitions
 export EDITOR=vi
+export PAGER=less
+export LESS='-RFX'   # -R (ANSI colour), -F (exit if fit on one screen), X (disable clearing screen on exit)
+export MANPAGER=less   # Set pager for 'man'
+# git config --global core.pager less   # Set pager for 'git'
 alias vimrc='vi ~/.vimrc'
 alias bashrc='vi ~/.bashrc'
 alias nvimrc='vi ~/.config/nvim/init.vim'
@@ -17,13 +21,15 @@ alias vimrcroot='sudo vi /etc/vim/vimrc'
 alias vimrcsudo='sudo vi /etc/vim/vimrc'
 alias cd..='cd ..'
 alias ..='cd ..'
+alias cx='chmod +x'               # chmod add execute
+alias cx!='chmod +x \"\$(!!:2)\"'  # chmod add execute to the file that you just edited with vi or nano
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
 # def: Get definitions, expand alias and function definitions that match \$1 
 def() {
     if [ -z \"\$1\" ]; then
         declare -F
-        printf \"\\nAbove listing is all defined functions 'declare -F' (use def <func-name> to show function contents)\\nType 'alias' to show all aliases (def <alias-nam> to show alias definition, where 'def' uses 'command -V <name>')\\n\\n\"
+        printf \"\\nAbove are all defined functions 'declare -F' (use def <func-name> to show function contents)\\nType 'alias' to show all aliases (def <alias-name> to show alias definition (using 'command -V <name>')\\n\\n\"
     elif type bat >/dev/null 2>&1; then
         command -V \$1 | bat -pp -l bash
     else
@@ -35,38 +41,40 @@ a() {
     if [ \$# -eq 0 ]; then
         echo \"Usage: a [option] <package>\"
         echo \"Options:\"
+        echo \"  d <package>     Depends, find packages that depend upon a package\"
         echo \"  i <package>     Install a package\"
         echo \"  h               History install/remove/upgrade\"
         echo \"  r <package>     Remove a package\"
         echo \"  s <package>     Search for a package\"
         echo \"  u               Update package lists\"
         echo \"  uu              Update and upgrade packages\"
-        echo \"  v <package>     Show version of a package\"
-        echo \"  x <package>     Show package info, dependencies, and contents\"
+        echo \"  v <package>     View/info. Version, dependencies, package contents, etc\"
         return
     fi
     option=\$1
     package=\$2
     case \"\$option\" in
-        i) sudo apt install \"\$package\" ;;
-        h) zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;
-        r) sudo apt remove \"\$package\" ;;
-        s) apt search \"\$package\" ;;
-        u) sudo apt update ;;
+        d)  apt-cache rdepends \"\$package\" ;;
+        i)  sudo apt install \"\$package\" ;;
+        h)  zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;
+        r)  sudo apt remove \"\$package\" ;;
+        s)  apt search \"\$package\" ;;
+        u)  sudo apt update ;;
         uu) sudo apt update && sudo apt upgrade && sudo apt autoremove ;;
-        v) apt-cache policy \"\$package\" | grep Installed ;;
-        x)
+        v)  echo -e \"apt version \$package\napt-cache policy \$package\napt show(Mint)|info(Debian) \$package\n\n\" ;;
             echo; if grep -q \"Mint\" /etc/os-release; then apt show \"\$package\"
             else apt info \"\$package\"; fi
             echo; read -n 1 -s -r -p \"Press any key to show package dependencies\"
             apt-cache depends \"\$package\"
             echo; read -n 1 -s -r -p \"Press any key to show package contents\"
             if command -v apt-file >/dev/null 2>&1; then apt-file list \"\$package\"
-            else echo \"Install apt-file to view package contents\"; fi
-            ;;
+            else echo \"Install apt-file to view package contents\"; fi ;;
         *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
     esac
 }
+alias ai='a i'
+alias av='a v'
+alias ah='a h'
 h () {
     if [ \$# -eq 0 ]; then
         echo \"Usage: h [option]\";
@@ -114,8 +122,8 @@ alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run with
 alias ipconfig='sudo ifconfig'  # Windows typo
 
 # Jump functions. Adding to scripts would require dotsource, so add/change as required in .bashrc to include in main shell
+# h() { cd ~ || return; ls; echo; }                 # jump to home, commented as using 'h' for history and can use 'cd' for home
 n() { cd ~/new_linux || return; ls; echo; }       # jump to new_linux
-h() { cd ~ || return; ls; echo; }                 # jump to home
 w() { cd ~/192.168.1.29-d || return; ls; echo; }  # jump to 'WHITE' PC SMB share
 v() { cd ~/.vnc || return; ls; echo; }            # jump to .vnc
 
@@ -139,7 +147,7 @@ alias thh=\"tmux split-window -h -c '#{pane_current_path}'\"
 alias tvv=\"tmux split-window -v -c '#{pane_current_path}'\"
 trename() { tmux rename-session \$1; };    alias tren='trename'
 tswitch() { tmux switch-client -t \$1; };  alias tswi='tswitch'
-tattach() { tmux attach-session -t \$1; }; alias tatt='tattach'
+tattach() { tmux attach-session -t \$1; }; alias tatt='tmux attach' # just attach to last active
 alias tdetach='tmux detach';               alias tdet='tdetach'  # C-b, d
 # toggle tmux mouse on/off
 tmm() {

@@ -1,5 +1,5 @@
 ---
-- name: Configure a new Debian system
+- name: Configure a new Debian-based system
   hosts: localhost
   become: true
   tasks:
