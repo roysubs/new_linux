@@ -14,6 +14,7 @@ pacman4console, myman (custom install)
 
 bastet
 sudoku
+nudoku
 2048
 greed
 moon buggy
@@ -25,3 +26,55 @@ mrrescue : Mr Rescue is an arcade 2d action game centered around evacuating
  civilians from burning buildings. The game features fast paced fire
  extinguishing action, intense boss battles, a catchy soundtrack and lots of
  throwing people around in pseudo-randomly generated buildings.
+
+https://sourceforge.net/projects/coterminalapps/
+https://www.gamingonlinux.com/
+lutris
+
+advent
+tic-80
+ascii sector
+
+
+
+
+
+7. Drauger OS
+Drauger OS 7.5.1
+Based on Ubuntu 20.04 LTS, Drauger OS aims to provide a platform for gamers and “make it easy for anyone to game, whether they use a keyboard and mouse, or some sort of controller”.
+
+Please keep in mind that Drauger OS is NOT for everyday use. It doesn’t come with other Linux applications essential for day-to-day activities like office suite, video editors, audio tools etc.
+
+Drauger OS
+8. Bazzite
+bazzite
+Bazzite is a Fedora-based distribution custom-made for gaming on Linux desktops and Steam Deck.
+
+On top of the latest stable Fedora release, it adds expanded hardware support in the form of more drivers. So, a new gamer trying a Linux platform like Bazzite should have a hassle-free user experience.
+
+Additionally, you get some pre-installed apps and controller support by default.
+
+Bazzite
+9. batocera.linux (for retro gaming with console feel)
+
+batocera.linux is a Linux distro for retro game lovers. You can play retro games from Atari, Super Nintendo, SEGA, Dreamcast, some GameBoy Advance games, and a lot more. However, you need to own the games in order to play them.
+
+You do not need to install the OS by partitioning your hard drive, you just need a USB stick and you can boot directly from it to play the games you own. It also comes with Kodi Media Center integrated, so that you can switch to watching movies when you get bored with games.
+
+batocera.linux
+10. Nobara
+nobara gaming distro
+Nobara project is yet another distribution that offers a gaming-focused experience on top of Fedora with customizations.
+
+It is an unofficial Fedora spin that comes with Lutris, Steam, OBS Studio, and Kdenlive pre-installed. So, you get some "streamer" and "gamer" essential applications loaded out of the box.
+
+Nobara
+11. Lakka OS (convert old computer to retro gaming console)
+This is a lightweight Linux distro that transforms a computer into a full-blown game console.
+
+Lakka OS
+Lakka OS can emulate a wide variety of consoles. It brings all these console emulators under the gorgeous front end of RetroArch.
+
+All the emulators are compiled with the best optimizations possible, and so Lakka OS runs the games more smoothly than the normal emulators. Most games will require very little hardware resource, except for the PlayStation or Xbox games.
+
+The key features of Lakka OS are multiplayer, save states, shaders, netplay, rewind, and support for wireless joypads.

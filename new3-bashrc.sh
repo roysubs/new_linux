@@ -29,9 +29,9 @@ alias ll.='ls -ald .*'
 def() {
     if [ -z \"\$1\" ]; then
         declare -F
-        printf \"\\nAbove are all defined functions 'declare -F' (use def <func-name> to show function contents)\\nType 'alias' to show all aliases (def <alias-name> to show alias definition (using 'command -V <name>')\\n\\n\"
-    elif type bat >/dev/null 2>&1; then
-        command -V \$1 | bat -pp -l bash
+        printf \"\\nAll defined functions ('declare -F').\\'def <func-name>' to show function definition\\n'def <alias-name>' to show alias definitions ('command -V <alias-name>')\\n\\n\"
+    elif type batcat >/dev/null 2>&1; then
+        command -V \$1 | batcat -pp -l bash
     else
         command -V \$1
     fi
@@ -61,14 +61,15 @@ a() {
         s)  apt search \"\$package\" ;;
         u)  sudo apt update ;;
         uu) sudo apt update && sudo apt upgrade && sudo apt autoremove ;;
-        v)  echo -e \"apt version \$package\napt-cache policy \$package\napt show(Mint)|info(Debian) \$package\n\n\" ;;
+        v)  echo -e \"apt version \$package\napt-cache policy \$package\napt show(Mint)|info(Debian) \$package\n\n\"
             echo; if grep -q \"Mint\" /etc/os-release; then apt show \"\$package\"
             else apt info \"\$package\"; fi
             echo; read -n 1 -s -r -p \"Press any key to show package dependencies\"
             apt-cache depends \"\$package\"
             echo; read -n 1 -s -r -p \"Press any key to show package contents\"
-            if command -v apt-file >/dev/null 2>&1; then apt-file list \"\$package\"
-            else echo \"Install apt-file to view package contents\"; fi ;;
+            if dpkg -s \"\$package\" >/dev/null 2>&1; then dpkg -L \"\$package\"
+            elif command -v apt-file >/dev/null 2>&1; then apt-file list \"\$package\"
+            else echo \"Install apt-file to view contents of a package that is not currently installed.\"; fi ;;
         *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
     esac
 }
