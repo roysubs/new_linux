@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Add current user to sudo group (without requiring sudo), and update /etc/sudoers
+
 echo "This script acts as 'sudo without using sudo' by running root"
 echo "commands using 'su -c' (the root password must be known of course)."
 echo "Use the root password when prompted below."

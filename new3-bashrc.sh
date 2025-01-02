@@ -1,17 +1,29 @@
 #!/bin/bash
 
-BASHRC_FILE="$HOME/.bashrc"
+# Each line in 'bashrc_block' will be tested against .bashrc
+# If that item exists with a different value, it will not alter it.
+# It does not check the whole line, e.g. for 'export EDITOR=vi'
+# if this was set to 'export EDITOR=emacs' or 'nano' this will not
+# be changed as it will check for 'eport EDITOR=' and if that is
+# found it will skip to the next entry.
+# Multi-line functions are treated as a single block; again, if a
+# function with the name exists, it will leave that, but if not,
+# the whole multi-line function from bashrc_block will be added
+# to .bashrc
 
 # Backup ~/.bashrc before making changes
+BASHRC_FILE="$HOME/.bashrc"
 cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
 
-# Block of text to add
+# Block of text to check and add to .bashrc
+# Make sure to escape " and \ in the below (change " to \" and change \n to \\n).
 bashrc_block="
 # user alias/function/export definitions
 export EDITOR=vi
 export PAGER=less
 export LESS='-RFX'   # -R (ANSI colour), -F (exit if fit on one screen), X (disable clearing screen on exit)
 export MANPAGER=less   # Set pager for 'man'
+export CHEATCOLOR=true
 # git config --global core.pager less   # Set pager for 'git'
 alias vimrc='vi ~/.vimrc'
 alias bashrc='vi ~/.bashrc'
@@ -39,37 +51,39 @@ def() {
 # a: Fast apt, with concise history 'h' and detailed info/depends/contents 'x'
 a() {
     if [ \$# -eq 0 ]; then
-        echo \"Usage: a [option] <package>\"
+        echo \"Usage: a [option] <package(s)>\"
         echo \"Options:\"
-        echo \"  d <package>     Depends, find packages that depend upon a package\"
-        echo \"  i <package>     Install a package\"
-        echo \"  h               History install/remove/upgrade\"
-        echo \"  r <package>     Remove a package\"
-        echo \"  s <package>     Search for a package\"
-        echo \"  u               Update package lists\"
-        echo \"  uu              Update and upgrade packages\"
-        echo \"  v <package>     View/info. Version, dependencies, package contents, etc\"
+        echo \"  d <package(s)>  Depends: find packages that depend upon the specified package(s)\"
+        echo \"  i <package(s)>  Install the specified package(s)\"
+        echo \"  h               History: show install/remove/upgrade history\"
+        echo \"  r <package(s)>  Remove the specified package(s)\"
+        echo \"  s <package(s)>  Search for the specified package(s)\"
+        echo \"  u               Update, upgrade, and autoremove packages\"
+        echo \"  v <package(s)>  View info: version, dependencies, package contents, etc.\"
         return
     fi
-    option=\$1
-    package=\$2
+    option=\$1; shift  # Shift to access package arguments
     case \"\$option\" in
-        d)  apt-cache rdepends \"\$package\" ;;
-        i)  sudo apt install \"\$package\" ;;
-        h)  zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;
-        r)  sudo apt remove \"\$package\" ;;
-        s)  apt search \"\$package\" ;;
-        u)  sudo apt update ;;
-        uu) sudo apt update && sudo apt upgrade && sudo apt autoremove ;;
-        v)  echo -e \"apt version \$package\napt-cache policy \$package\napt show(Mint)|info(Debian) \$package\n\n\"
-            echo; if grep -q \"Mint\" /etc/os-release; then apt show \"\$package\"
-            else apt info \"\$package\"; fi
-            echo; read -n 1 -s -r -p \"Press any key to show package dependencies\"
-            apt-cache depends \"\$package\"
-            echo; read -n 1 -s -r -p \"Press any key to show package contents\"
-            if dpkg -s \"\$package\" >/dev/null 2>&1; then dpkg -L \"\$package\"
-            elif command -v apt-file >/dev/null 2>&1; then apt-file list \"\$package\"
-            else echo \"Install apt-file to view contents of a package that is not currently installed.\"; fi ;;
+        d) for package in \"\$@\"; do echo \"Dependencies for \$package:\"; apt-cache rdepends \"\$package\"; echo; done ;;
+        i) sudo apt install \"\$@\" ;;
+        h) zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* |
+               sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' |
+               sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' |
+               grep --color=auto -v 'Start-Date:' ;;
+        r) sudo apt remove \"\$@\" ;;
+        s) for package in \"\$@\"; do echo \"Search results for \$package:\"; apt search \"\$package\"; echo; done ;;
+        u) sudo apt update && sudo apt upgrade && sudo apt autoremove ;;
+        v) for package in \"\$@\"; do
+               echo \"Information for '\$package' (apt info in Debian, apt show in Mint):\\n\"
+               if grep --color=auto -q \"Mint\" /etc/os-release; then apt show \"\$package\"; else apt info \"\$package\"; fi; echo
+               read -n 1 -s -r -p \"Press any key to show package dependencies for \$package\"; echo
+               apt-cache depends \"\$package\"; echo
+               read -n 1 -s -r -p \"Press any key to show package contents for \$package\"; echo
+               if dpkg -s \"\$package\" > /dev/null 2>&1; then dpkg -L \"\$package\"
+               else if command -v apt-file > /dev/null 2>&1; then apt-file list \"\$package\"
+               else echo \"Install apt-file to view contents of a package that is not currently installed.\"; fi
+               fi; echo
+            done ;;
         *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
     esac
 }
@@ -121,12 +135,13 @@ export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups H
 
 alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
+alias find1='find /etc /usr /opt /var ~ \\( -type d -o -name \"*.conf\" -o -name \"*.cfg\" -o -name \"*.sh\" -o -name \"*.bin\" -o -name \"*.exe\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.doc\" \\) 2>/dev/null
 
 # Jump functions. Adding to scripts would require dotsource, so add/change as required in .bashrc to include in main shell
-# h() { cd ~ || return; ls; echo; }                 # jump to home, commented as using 'h' for history and can use 'cd' for home
-n() { cd ~/new_linux || return; ls; echo; }       # jump to new_linux
-w() { cd ~/192.168.1.29-d || return; ls; echo; }  # jump to 'WHITE' PC SMB share
-v() { cd ~/.vnc || return; ls; echo; }            # jump to .vnc
+# h() { cd ~ || return; ls; }                 # jump to home, commented as using 'h' for history and can use 'cd' for home
+n() { cd ~/new_linux || return; ls; }       # jump to new_linux
+w() { cd ~/192.168.1.29-d || return; ls; }  # jump to 'WHITE' PC SMB share
+v() { cd ~/.vnc || return; ls; }            # jump to .vnc
 
 # tmux definitions
 alias tt='tmux'

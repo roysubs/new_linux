@@ -1,7 +1,8 @@
-netstat   # sudo apt install net-tools
-ifconfig  # sudo apt install net-tools
-telnet    # sudo apt install telnetd
-hollywood # fun visual console app
-robotfindskitten
-terminus
+#!/bin/bash
+sudo apt install net-tools telnetd   # netstat, ifconfig, telnet
+sudo apt install git
+sudo apt install btop htop
+sudo apt install duf                 # Modern alternative to du and df
 
+# Toys
+hollywood          # fun visual console app

@@ -7,31 +7,20 @@ if ! command -v glow >/dev/null 2>&1; then
     sudo apt update && sudo apt install glow
 fi
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 Samba Quick Notes
 ===============
 
-- **Install Samba**:
-    - For Debian-based systems (e.g., Ubuntu):
-      ```bash
-      sudo apt update
-      sudo apt install samba samba-common
-      ```
+- **Install and check Samba**:
+    - For Debian-based systems (includes Ubuntu, Mint, etc):
+      `sudo apt install samba samba-client samba-common`
     - For Red Hat-based systems (e.g., Fedora):
-      ```bash
-      sudo dnf install samba samba-client samba-common
-      ```
-
-- **Check Samba Version**:
-    ```bash
-    samba --version
-    ```
+      `sudo dnf install samba samba-client samba-common`
+    - Check Samba Version:
+      `samba --version`
 
 - **Configure Samba**:
-    - Edit the Samba configuration file:
-      ```bash
-      sudo nano /etc/samba/smb.conf
-      ```
+    - Edit the Samba configuration file: `sudo nano /etc/samba/smb.conf`
     - Example share configuration:
       ```ini
       [ShareName]
@@ -42,63 +31,43 @@ Samba Quick Notes
     - Save and close the file.
 
 - **Set Samba User**:
-    - Add a user to Samba:
-      ```bash
-      sudo smbpasswd -a username
-      ```
-    - Enable the user:
-      ```bash
-      sudo smbpasswd -e username
-      ```
+    - Add a user to Samba: `sudo smbpasswd -a username`
+    - Enable the user: `sudo smbpasswd -e username`
 
 - **Restart Samba**:
     - Restart Samba service to apply changes:
-      ```bash
-      sudo systemctl restart smbd
-      ```
+      `sudo systemctl restart smbd`
 
 - **Allow Samba Through Firewall**:
     - For UFW (Uncomplicated Firewall):
-      ```bash
-      sudo ufw allow samba
-      ```
+      `sudo ufw allow samba`
     - For Firewalld (Fedora/CentOS):
-      ```bash
-      sudo firewall-cmd --permanent --add-service=samba
-      sudo firewall-cmd --reload
-      ```
+      `sudo firewall-cmd --permanent --add-service=samba`
+      `sudo firewall-cmd --reload`
 
 - **Access Samba Shares**:
     - **From Linux**: Use the `smb://` URL:
-      ```bash
-      nautilus smb://server-ip/share-name
-      ```
+      e.g. `nautilus smb://server-ip/share-name`
     - **From Windows**: Open File Explorer and type:
-      ```
-      \\server-ip\share-name
-      ```
+      `\\server-ip\share-name`
+    - **Always check Windows status**
+      If there are open shares, may need to remove them:
+      `net view 192.168.0.100`
+      `net use`
+      If there are open shares:
+      `net use x: /d`
+      If these are not removed, new connections after a configuration change on the Linux system may not connect.
 
 - **Mount Samba Share on Linux**:
     - Mount the share manually:
-      ```bash
-      sudo mount -t cifs //server-ip/share-name /mnt/point -o user=username
-      ```
+      `sudo mount -t cifs //server-ip/share-name /mnt/point -o user=username`
 
 - **Check Samba Shares**:
-    - List shares on a server:
-      ```bash
-      smbclient -L server-ip -U username
-      ```
+    - List shares on a server: `smbclient -L server-ip -U username`
 
 - **Samba Troubleshooting**:
-    - Check Samba service status:
-      ```bash
-      sudo systemctl status smbd
-      ```
-    - Check Samba logs:
-      ```bash
-      sudo tail -f /var/log/samba/log.smbd
-      ```
+    - Check Samba service status: `sudo systemctl status smbd`
+    - Check Samba logs: `sudo tail -f /var/log/samba/log.smbd`
 
 EOF
 

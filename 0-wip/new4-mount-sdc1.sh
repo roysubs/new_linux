@@ -33,5 +33,4 @@ echo "$PARTITION $MOUNT_POINT ext4 defaults 0 0" >> /etc/fstab
 # Step 7: Confirm everything is set up
 echo "Partition $PARTITION has been created, formatted, and mounted at $MOUNT_POINT."
 echo "Entry added to /etc/fstab for persistence."
-
-# (hint) your fstab has been modified, but systemd still uses the old version; use 'systemctl daemon-reload' to reload.
+echo "your fstab has been modified, but systemd still uses the old version; use 'systemctl daemon-reload' to reload."
