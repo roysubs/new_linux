@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Create a replica of /new_linux at /new_linu_bak
+# Useful for when doing possible breaking changes to have a quick
+# local restore available
+
 # Source and destination directories
 SOURCE_DIR=~/new_linux/
 DEST_DIR=~/new_linux_bak/

@@ -1,0 +1,13 @@
+To start the minitest, run
+
+% dMagnetic -mag minitest.mag -gfx minitest.gfx
+
+It should print a headline, saying "ROOM X". Then there should be
+a picture, depicting an X on a blue background.
+
+Finally, there should be a text, saying 
+Virtual machine is running. Please press Enter.
+
+followed by the prompt >. Pressing Enter should close dMagnetic.
+
+

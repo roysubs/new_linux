@@ -1,0 +1,481 @@
+.\" Process this file with
+.\" groff -man -Tascii dMagnetic.6
+.\"
+.Dd January 22nd, 2023
+.Os OpenBSD 
+.Dt dMagnetic 6
+.
+.Sh NAME
+.Nm dMagnetic
+.Nd A Magnetic Scrolls Interpreter
+.
+.
+.Sh INTRODUCTION
+You wake up on a sunny August morning with birds singing, and the air fresh and clear. However, your joints are stiff and you have not woken up in your bedroom as you would have expected. Trying to recall what happened the night before, you manage to piece together a few brief glimpses to give the following account...
+.Sh SYNOPSIS
+.
+.Nm
+.Op Fl mag Ar MAGFILE.mag
+.Op Fl gfx Ar GFXFILE.gfx
+.br
+.Nm
+.Op Fl msdosdir Ar DIRECTORY/
+.Op Fl vmode Ar high_ansi2
+.br
+.Nm
+.Op Fl tworsc Ar DIRECTORY/TWO.RSC
+.Op Fl vmode Ar high_ansi
+.br
+.Nm
+.Op Fl d64 Ar DIRECTORY/FILE1.d64,DIRECTORY/FILE2.d64
+.Op Fl vmode Ar sixel
+.br
+.Nm
+.Op Fl amstradcpc Ar DIRECTORY/FILE1.DSK,DIRECTORY/FILE2.DSK
+.Op Fl vmode Ar utf
+.br
+.Nm
+.Op Fl spectrum Ar DIRECTORY/DISKIMAGE.DSK
+.Op Fl vmode Ar none
+.br
+.Nm
+.Op Fl archimedes Ar DIRECTORY/DISKIMAGE.adf
+.br
+.Nm
+.Op Fl atarixl Ar DIRECTORY/FILE1.ATR,DIRECTORY/FILE2.ATR
+.br
+.Nm
+.Op Fl appleii Ar 1.NIB,2.2MG,3.WOZ
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vrows Ar ROWS
+.Op Fl vcols Ar COLUMNS
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar none
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar monochrome
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar low_ansi
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar low_ansi2
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar high_ansi
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar high_ansi2
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar utf
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar sixel
+.Op Fl sres Ar 1024x768
+.Op Fl sforce
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl valign Ar left
+.br
+.Nm
+.Op Fl savegames Ar advanced
+.br
+.Nm
+.Op Fl savegames Ar classic
+.br
+.Nm
+.Op Fl vlog Ar LOGFILE 
+.Op Fl vecho
+.Nm
+.Op Fl help
+.Op Fl helpini
+.Op Fl nodoc
+.Op Fl v
+.Op Fl bsd
+.Sh DESCRIPTION
+.Nm
+is an interpreter for classic text adventure games, or interactive fiction, such as "The Pawn" and "The Guild of Thieves". The following games are being supported:
+.Bl -tag -width 10
+.It "The Pawn"
+.It "The Guild of Thieves"
+.It "Jinxter"
+.It "Fish!"
+.It "Myth"
+.It "Corruption"
+.It "Wonderland"
+.El
+.
+.Sh GAME BINARIES
+Currently, binaries in the .mag and .gfx format from the 
+magnetic scrolls memorial at
+https://msmemorial.if-legends.org/memorial.php 
+are being supported. 
+Once downloaded, their position has to be made available to 
+.Nm
+by editing dMagnetic.ini first. 
+.br
+Other possibilities are loading the games from original releases, such as
+.Bl -tag -width 10
+.It the MS-DOS binaries
+.It the Magnetic Windows Resource Files
+.It the Commodore C64 images in the d64 format
+.It Amstrad CPC and Spectrum128 images in the DSK format
+.It Acorn Archimedes images in the ADF/ADL (aka ADFS) format
+.It AtariXL/Atari800 images in the ATR format
+.It Apple II images in the 2MG, NIB or WOZ format
+.El
+.
+.Sh STARTING THE GAME
+Once the game(s) have been downloaded, the .mag and .gfx files can be provided via
+.Pp
+.Nm
+-mag pawn.mag -gfx pawn.gfx
+.Pp
+Alternatively, binaries from the MSDOS version of 
+"The Pawn"
+or
+"The Guild of Thieves"
+can be used. The directory, in which they are, has to be provided via
+.Pp
+.Nm
+-msdosdir DIRECTORY/ -vmode high_ansi
+.Pp 
+It is recommended to use the 
+.Op Fl vmode Ar high_ansi2
+option, since this renders the half-tone images slightly different.
+.Pp
+A third option is to use the resource files from "Wonderland" or the magnetic scrolls collection. For this, the location of the file ending with "TWO.RSC" has to be provided.
+.Pp
+.Nm
+-tworsc DIRECTORY/TWO.RSC -vmode high_ansi
+.br
+.Nm
+-tworsc DIRECTORY/GTWO.RSC -vmode high_ansi -ega
+.br
+The names of the other resource files is being calculated from that. With the optional parameter -ega, the EGA versions of the pictures are being shown.
+.Pp
+A fourth option is to use D64 image files from the Commodore 64 releases. They come in pairs, since both sides of the floppy disk were occupied. So the parameter requires a list of them, separated by komma:
+.Pp
+.Nm
+-d64 DIRECTORY/FILE1.d64,DIRECTORY/FILE2.d64 -vmode sixel
+.Pp
+A fifth option is to use DSK image files from the Amstrad CPC releases. They come in pairs, since noth sides of the floppy disk were occupied. So the parameter requires a list of them, separated by komma:
+.Pp
+.Nm
+-amstradcpc DIRECTORY/FILE1.DSK,DIRECTORY/FILE2.DSK -vmode sixel
+.Pp
+A sixth option is to use DSK image files from the Spectrum releases. Since this platform did not have the pictures, a single floppy disk was enough:
+.Pp
+.Nm
+-spectrum DIRECTORY/DISKIMAGE.DSK -vmode none
+.Pp
+A seventh option is to use ADF/ADL/ADFS image files from the Acorn Archimedes releases. 
+.Pp
+.Nm
+-archimedes DIRECTORY/DISKIMAGE.ADF 
+.Pp
+An eigth option is to use ATR image files from the AtariXL/Atari800 releases. Those come in pairs.
+.Pp
+.Nm
+-atarixl DIRECTORY/FILE1.ATR,DIRECTORY/FILE2.ATR
+.Pp
+An ninth option is to use image files from the Apple II releases.
+.Nm
+can handle NIB, 2MG and WOZ. For this platform, up to three disks were used, so three floppy images are required.
+.br
+.Pp
+.Nm
+-appleii 1.NIB,2.NIB,3.NIB
+.br
+.Nm
+-appleii 1.2MG,2.2MG,3.2MG
+.br
+.Nm
+-appleii 1.WOZ,2.WOZ,3.WOZ
+.br
+.Pp
+It is also possible to edit the dMagnetic.ini file and start a specific game, by using one of
+.Pp
+.Nm
+-ini dMagnetic.ini pawn
+.br
+.Nm
+-ini dMagnetic.ini guild
+.br
+.Nm
+-ini dMagnetic.ini jinxter
+.br
+.Nm
+-ini dMagnetic.ini corruption
+.br
+.Nm
+-ini dMagnetic.ini fish
+.br
+.Nm
+-ini dMagnetic.ini myth
+.br
+.Nm
+-ini dMagnetic.ini wonderland
+.Pp
+When you see the prompt, the game is ready to accept your commands. For example EXAMINE CLOTHES. Or GO EAST. Or ASK KRONOS ABOUT THE WRISTBAND.
+.br
+.Sh LEAVING THE GAME
+Type in "QUIT". Duh!
+.Sh SAVING/LOADING PROGRESS
+The game can be saved at any type by typing SAVE, and loaded by typing LOAD. Followed by a filename.
+.Pp
+SAVE myprogress1.sav
+.br
+LOAD myprogress1.sav
+.Sh TEXT ALIGNMENT
+Changing the alignment of the output text can be done with the .ini file or the commandline.
+.br
+.Nm Fl valign Ar left
+.br
+.Nm Fl valign Ar block
+.br
+.Nm Fl valign Ar right
+.br
+.Sh GRAPHIC MODES
+.Nm
+has been developed with ANSI-consoles in mind. To select a video output that best suits your needs, please try one of the following
+.
+.Pp
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar none
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar monochrome
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar monochrome_inv
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar low_ansi
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar low_ansi2
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar high_ansi
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar high_ansi2
+.br
+.Nm
+.Op Fl ini Ar ini-file
+.Op GAME
+.Op Fl vmode Ar utf
+.Pp
+.br
+To change the number of rows/columns to render the images, use
+.Pp
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vcols Ar COLUMNS
+.br
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vrows Ar ROWS
+.Pp
+Sixels are a signalling mode for some terminal emulators (like mlterm, or xterm -ti vt340
+, for example), that offer the possibility of drawing high resolution images. It can be selected with
+.Pp
+.Nm
+.Op Fl ini Ar ini-file 
+.Op GAME
+.Op Fl vmode Ar sixel
+.Op Fl sres Ar 1024x768
+.Op Fl sforce
+.Pp
+where the -sres 
+option offers a way to scale the images. The maximum allowed width is 4096 pixels. Instead of automatically using a matching aspect ratio, the -sforce
+option can be used to force the resolution.
+.Sh GRAPHICS IN WONDERLAND AND THE MAGNETIC SCROLLS COLLECTION
+Before you can see the beautiful graphics in "Wonderland", or from the Magnetic Scrolls Collection, you have to type in "graphics" to enable them.
+.Sh COMMAND LINE OPTIONS
+.Op Fl bsd
+.br
+Shows the license.
+.Pp
+.Op Fl Fl help
+.br
+Shows the detailed help.
+.Pp
+.Op Fl Fl helpini
+.br
+Shows an example for a working dMagnetic.ini file.
+.Pp
+.Op Fl nodoc
+.br
+Allows playing without the original documentation.
+.Pp
+.Op Fl mag Ar MAGFILE.mag
+.Op Fl gfx Ar GFXFILE.gfx
+.br
+.Op Fl msdosdir Ar DIRECTORY/
+.br
+.Op Fl tworsc Ar DIRECTORY/TWO.RSC
+.br
+.Op Fl d64 Ar DIRECTORY/FILE1.d64,DIRECTORY/FILE2.d64
+.br
+.Op Fl amstradcpc Ar DIRECTORY/FILE1.DSK,DIRECTORY/FILE2.DSK
+.br
+.Op Fl spectrum Ar DIRECTORY/DISKIMAGES.DSK
+.br
+.Op Fl archimedes Ar DIRECTORY/DISKIMAGES.ADF
+.br
+.Op Fl atarixl Ar DIRECTORY/FILE1.ATR,DIRECTORY/FILE2.ATR
+.br
+.Op Fl appleii Ar 1.NIB,2.2MG,3.WOZ
+.br
+.Nm
+is a Magnetic Scrolls Interpreter. To actually play the games, their binaries have to be provided. Either in the .mag and .gfx format from https://msmemorial.if-legends.org/magnetic.php, as the name of the directory in which the original MS-DOS version can be found, the location and the name of the second resource file TWO.RSC, as D64-images from the Commodore 64 releases, 
+as DSK-images from the Amstrad/Schneider CPC releases,
+as DSK-images from the Spectrum releases,
+as ADF/ADL/ADFS images from the Acorn Archimedes releases,
+as ATR images from the AtariXL/Atari800 releases,
+or even as NIB/2MG/WOZ images from the Apple II releases.
+.Pp
+.Op Fl ini Ar dMagnetic.ini pawn
+.br
+.Op Fl ini Ar dMagnetic.ini guild
+.br
+.Op Fl ini Ar dMagnetic.ini jinxter
+.br
+.Op Fl ini Ar dMagnetic.ini corruption
+.br
+.Op Fl ini Ar dMagnetic.ini fish
+.br
+.Op Fl ini Ar dMagnetic.ini pawn
+.br
+.Op Fl ini Ar dMagnetic.ini myth
+.br
+.Op Fl ini Ar dMagnetic.ini wonderland
+.br
+An alternative way to provide the location of the .mag and .gfx, the image files or the directory name, is through a dMagnetic.ini file. See helpini or
+.Xr dMagneticini 5
+for an example of a working dMagnetic.ini file.
+.br
+IT SHOULD BE NOTED that the default location for dMagnetic.ini is in the user's home directory. If the file is located there, "The Pawn", for example, can be started by typing
+.br
+.Nm
+pawn
+.br
+.Pp
+.Op Fl rmode Ar pseudo
+.Op Fl rseed Ar SEED
+.br
+.Op Fl rmode Ar real
+.br
+Certain elements of the game rely on chance. For this, the virtual machine within
+.Nm
+offers two possibilities: Playing against a "pseudo" random generator, which results in a certain degree of determinism. On the other hand, playing with "real" random values from the operating system, allows for a completely new experience. 
+.Pp
+.Op Fl savegames Ar advanced
+.br
+.Op Fl savegames Ar classic
+.br
+Saving and restoring game states is a major part of playing interactive fiction.
+.Nm
+is capable of loading the "classic" formats, to allow players to continue their 30 year old game. However, it prefers the "advanced" format, which is more robust. 
+.Pp
+.Op Fl vrows Ar ROWS
+.br
+.Op Fl vcols Ar COLUMNS
+.br
+.Nm
+has been designed with terminal windows as main output in mind. The terminal window has a fixed number of rows and columns to print out text. Its size is limited, but it is used by 
+.Nm
+to render the beautiful BEAUTIFUL pictures as well. To restrict the space in which they are rendered (in glorious ANSI art), those options can be used to set the upper limits.
+.br
+.Pp
+.Op Fl vecho
+.br
+When trying to run
+.Nm
+and redirecting the output into a file, the inputs are missing. This option reprints what was typed in, to allow for a spoilery script.
+.Pp
+.Op Fl vlog Ar LOGFILE.log
+.br
+Sort of a travel journal, this option lets you write the commands that where typed into a file.
+.br
+.Pp
+.Op Fl vmode Ar none
+.br
+.Op Fl vmode Ar monochrome
+.br
+.Op Fl vmode Ar low_ansi
+.br
+.Op Fl vmode Ar low_ansi2
+.br
+.Op Fl vmode Ar high_ansi
+.br
+.Op Fl vmode Ar high_ansi2
+.br
+.Op Fl vmode Ar utf
+.br
+.Op Fl vmode Ar sixel
+.Op Fl sres Ar 1024x768
+.Op Fl sforce
+.br
+This option allows for selecting a different mode to render the images, should the actual one prove to be unsuitable for the preferred terminal program.
+.br
+.Pp
+.Op Fl version
+.br
+Shows the current version of
+.Nm
+.
+.Sh BUGS
+Report bugs to
+.An Aq dettus@dettus.net .
+Make sure to include DMAGNETIC somewhere in the subject.
+.Sh AUTHOR
+Written by
+.An Thomas Dettbarn
+.Sh SEE ALSO
+.Xr dMagneticini 5

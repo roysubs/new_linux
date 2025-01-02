@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Ensure we're running as root or with sudo (use second line to auto-elevate)
+# First line checks running as root or with sudo (exit 1 if not). Second line auto-elevates the script as sudo.
 # if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
 if [ "$(id -u)" -ne 0 ]; then echo "Elevation required; rerunning as sudo..."; sudo "$0" "$@"; exit 0; fi
 
-# Check if 2 days have passed since the last update
+# Check if at least 2 days have passed since the last apt update (to avoid constant updates)
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
 
 # Install tools if not already installed

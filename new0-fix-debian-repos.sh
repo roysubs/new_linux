@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fix Debian /etc/apt/sources.list
+# Temporary fix for Debian /etc/apt/sources.list (bookworm main => bookworm main contrib non-free non-free-firmware).
 # Current distro (2024-12) has distro setup that creates warnings
 # Fix by changing:   bookworm main => bookworm main contrib non-free non-free-firmware
 
@@ -23,8 +23,6 @@ echo "Updated $sources_list. A backup was saved as ${sources_list}.bak."
 sudo apt update
 
 echo -e "\nRepository configuration $sources_list updated. The warning about 'non-free-firmware' should no longer appear.\n"
-
-
 
 # Fix the Microsoft repo left over by pwsh7 (PowerShell) installation
 # leaving a repo that is not properly setup in some cases.

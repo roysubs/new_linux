@@ -7,9 +7,10 @@ cat <<'EOF' | glow -p
 
 ### Recover the Last Version of a Deleted File from Remote
 - If you accidentally delete a file (e.g., `g-git-notes`), you can recover it from the latest commit on the remote repository by running:  
-`git checkout origin/main -- h-git-notes`
+`git checkout origin/main -- h-git-notes`   # Retrieve from git.com
 - `origin/main` refers to the main branch of the remote repository.
 - `-- README.md` specifies the file to recover from the latest commit on the `origin/main` branch.
+`git checkout HEAD -- ./0-help/0-ls`        # Retrieves from latest commit (could be local)
 
 ### Check Which Branch You're On
 - If you're unsure about the branch you're currently on, use: `git branch`

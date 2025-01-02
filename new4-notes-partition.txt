@@ -1,0 +1,9 @@
+The systemctl daemon-reload command is used to notify the systemd system and service manager to reload its configuration files. Here's why and when you'd use it:
+
+Configuration Changes: If changes are made to unit files (like *.service, *.mount, or *.timer files) or to /etc/fstab (as in this script), systemd won't automatically recognize them. Running systemctl daemon-reload ensures that systemd reloads its internal state to include the new or modified configuration.
+
+Mount Points: In this script, entries are added to /etc/fstab to persistently mount the newly created partitions. After modifying /etc/fstab, systemctl daemon-reload ensures these new entries are recognized by systemd without requiring a reboot.
+
+Dynamic Changes: It avoids downtime or the need to reboot the system, making it a key tool when managing services or mount points dynamically.
+
+In this context, after the script updates /etc/fstab, it reminds the user to run systemctl daemon-reload to ensure the system reflects the changes.

@@ -1,0 +1,381 @@
+.\" Process this file with
+.\" groff -man -Tascii dMagneticini.5
+.\"
+.
+.Dd January 22nd, 2023
+.Os OpenBSD 
+.Dt dMagneticini 5
+.
+.Sh NAME
+.Nm dMagnetic.ini
+.Nd Configuration file for dMagnetic.
+.
+.
+.Sh SHORTCUT
+Run dMagnetic -helpini to see an example.
+.Sh SYNOPSIS
+The configuration for 
+.Xr dMagnetic 6
+, and the location of the game binaries is stored in a .ini file.
+.Sh ELEMENTS
+The elements within the .ini files are
+.Bl -tag -width 10
+.It Sections 
+Sections are in square brackets.
+.Pp
+[FILE]
+.Pp
+[DEFAULTGUI]
+.
+.It Entries  
+entries have a = in them.
+.Pp
+rows=40
+.Pp
+pawnmag=/usr/local/share/games/magneticscrolls/pawn.mag
+.
+.It Comments 
+;This is a comment
+.Pp
+.
+Comments start with a ;
+.Pp
+To use a ; in an entry, it has to be preceded by a backslash
+\\;
+.br
+Consequently, using a backslash requires preceding it with a backslash as well.
+\\\\
+.Pp
+.El
+.Sh SECTION [FILE]
+Like any .ini file, it is broken down into sections, each section contains entries. One section has to be [FILES]. It should contain the names of the game binaries, so that the game engine can find them.
+For example:
+.br
+[FILES]
+.br
+pawnmag=/usr/local/share/games/magneticscrolls/pawn.mag
+.br
+pawngfx=/home/games/magneticscrolls/pawn.gfx
+.br
+;pawnmsdos=/home/games/magneticscrolls/msdosversions/PAWN
+.Pp
+The .mag and .gfx packages can be downloaded from https://msmemorial.if-legends.org/memorial.php, btw. If you are lucky enough to have a copy of the MSDOS version stored on your harddrive, you can provide the directory with the pawnmsdos entry.
+.Pp
+;wonderlandtworsc=/games/magneticscrolls/wonderland/TWO.RSC
+.br
+;guildtworsc=/games/magneticscrolls/MSC/GTWO.RSC
+.br
+;corruptiontworsc=/games/magneticscrolls/MSC/CTWO.RSC
+.br
+;fishtworsc=/games/magneticscrolls/MSC/FTWO.RSC
+.Pp
+"Wonderland", and the "Magnetic Scrolls Collections" used a different framework, called "Magnetic Windows". This framework utilized a collection of resource files. By providing the name and the location of the second resource file "TWO.RSC", the names of the other ones can be computed.
+.Pp
+Another option comes in the form of using .d64 images from the Commodore 64 release of the games. Those image files come in pairs, since the games occupied both sides of the floppy. A komma is used to separate those two.
+.br
+;pawnd64=/games/d64/pawn1.d64, /games/d64/pawn2.d64
+.br
+;guildd64=/games/d64/guild1.d64, /games/d64/guild2.d64
+.br
+;jinxterd64=/games/d64/jinxter1.d64, /games/d64/jinxter2.d64
+.br
+;corruptiond64=/games/d64/corruption1.d64, /games/d64/corruption2.d64
+.br
+;fishd64=/games/d64/fish1.d64, /games/d64/fish2.d64
+.br
+;mythd64=/games/d64/myth.d64
+.Pp
+One other option is to use .DSK images from the Amstrad/Schneider CPC releases of the games. Just as the D64 images, they have to be provided as a pair.
+.br
+;pawnamstradcpc=/games/amstradcpc/pawn1.DSK, /games/amstradcpc/pawn2.DSK
+.br
+;guildamstradcpc=/games/amstradcpc/guild1.DSK, /games/amstradcpc/guild2.DSK
+.br
+;jinxteramstradcpc=/games/amstradcpc/jinxter1.DSK, /games/amstradcpc/jinxter2.DSK
+.br
+;corruptionamstradcpc=/games/amstradcpc/corruption1.DSK, /games/amstradcpc/corruption2.DSK
+.br
+.Pp
+There is also the option to use .DSK images from the Spectrum releases of the games. This platform did not have the pictures, so the games were shipped in single floppies. Thus, only one DSK file is needed
+.br
+;pawnspectrum=/games/spectrum/thepawn.DSK
+.br
+;guildspectrum=/games/spectrum/theguildofthieves.DSK
+.br
+;jinxterspectrum=/games/spectrum/jinxter.DSK
+.br
+;corruptionspectrum=/games/spectrum/corruption.DSK
+.br
+;fishspectrum=/games/spectrum/fish.DSK
+.br
+;mythspectrum=/games/spectrum/myth.DSK
+.br
+.Pp
+To use ADF/ADL/ADFS images from the Acorn Archimedes releases, the parameters are as followed:
+.br
+;pawnarchimedes=/games/archimedes/thepawn.ADF
+.br
+;guildarchimedes=/games/archimedes/theguildofthieves.ADF
+.br
+;jinxterarchimedes=/games/archimedes/jinxter.ADF
+.br
+;corruptionarchimedes=/games/archimedes/corruption.ADF
+.br
+;fisharchimedes=/games/archimedes/fish.ADF
+.br
+;mytharchimedes=/games/archimedes/myth.ADF
+.br
+.Pp
+To use ATR images from the AtariXL/Atari800 releases, the parameters are as followed:
+.br
+;pawnatarixl=/atr/PAWN1.ATR,/atr/PAWN2.ATR
+.br
+;guildatarixl=/atr/GUILD1.ATR,/atr/GUILD2.ATR
+.br
+;jinxteratarixl=/atr/JINXTER1.ATR,/atr/JINXTER2.ATR
+.br
+.Pp
+To use NIB,2MG or WOZ images from the Apple II releases, the parameters are as followed:
+.br
+;pawnappleii=/nib/pawn.nib
+.br
+;guildappleii=/2mg/guild.2mg
+.br
+;jinxterappleii=/nib/jinxter1.nib,/nib/jinxter2.nib
+.br
+;corruptionappleii=/woz/corruptA.woz,/woz/corruptB.woz,/woz/corruptC.woz
+.Pp
+To avoid any form of misunderstanding, it is recommended to make sure that the .ini file is providing only one of the five methods. The other four should be commented out.
+.Sh SECTION [RANDOM]
+This section configures the random number generator.
+.Pp
+.br
+mode=pseudo
+.br
+;mode=real
+.br
+seed=12345
+.Pp
+The mode can be one of two: "pseudo" or "real". Each one of them offers a different experience whilst playing. When testing the software, or playing with scripts, the "pseudo" option should be chosen. This offers a certain degree of determinsm.
+.br
+Legal values for seed are in the range of 1 to 2147483647.
+.Pp
+.Sh SECTION [DEFAULTGUI]
+This section is configuring the default output Interface. 
+.Pp
+.br
+[DEFAULTGUI]
+.br
+rows=40
+.br
+columns=100
+.br
+;align=left
+.br
+align=block
+.br
+;align=right
+.br
+;mode=none
+.br
+;mode=monochrome
+.br
+;mode=low_ansi
+.br
+;mode=low_ansi2
+.br
+mode=high_ansi
+.br
+;mode=high_ansi2
+.br
+;mode=sixel
+.br
+low_ansi_characters=\\\\/=|\\;
+.br
+monochrome_characters= .:-=+*x#@$X
+.br
+sixel_resolution=1024x768
+.br
+sixel_forceresolution=No
+.Pp
+Changing the numbers of rows will make pictures longer, changing the number of columns makes them wider. To change the output mode, comment it in, and comment the current one out.
+.br
+The characters that will be used in the low ansi rendering mode can be configured with the low_ansi_characters entry. Note that the backslash and semicolon need to be escaped.
+.br
+The monochrome_characters entry is a the actual shade that will be displayed. The leftmost part start with the lowest intensity, it goes up until the right.
+.br
+The sixel resolution is setting the amount of pixels in which the images are being rendered with sixel mode.
+.br
+Not forcing the resolution will render the pictures with the actual aspect ratio.
+.br
+.Sh EXAMPLE
+.Pp
+.br
+;you can download the files from https://msmemorial.if-legends.org/magnetic.php
+.br
+[FILES]
+.br
+pawnmag=/usr/local/share/games/magneticscrolls/pawn.mag
+.br
+pawngfx=/usr/local/share/games/magneticscrolls/pawn.gfx
+.br
+;pawnmsdos=/usr/local/share/games/magneticscrolls/msdosversions/PAWN
+.br
+;pawnd64=/d64/PAWN1.d64,/d64/PAWN2.d64
+.br
+;pawnamstradcpc=/dsk/PAWN1.DSK,/dsk/PAWN2.DSK
+.br
+;pawnspectrum=/dsk/PAWNspectrum.DSK
+.br
+;pawnarchimedes=/adf/PAWNarchimedes.adf
+.br
+;pawnatarixl=/atr/PAWN1.ATR,/atr/PAWN2.ATR
+.br
+;pawnappleii=/nib/pawn.nib
+.br
+guildmag=/usr/local/share/games/magneticscrolls/guild.mag
+.br
+guildgfx=/usr/local/share/games/magneticscrolls/guild.gfx
+.br
+;guildmsdos=/usr/local/share/games/magneticscrolls/msdosversions/GUILD
+.br
+;guildtworsc=/usr/local/share/games/magneticscrolls/MSC/GTWO.RSC
+.br
+;guild64=/d64/GUILD1.d64,/d64/GUILD2.d64
+.br
+;guildamstradcpc=/dsk/GUILD1.DSK,/dsk/GUILD2.DSK
+.br
+;guildspectrum=/dsk/GUILDspectrum.DSK
+.br
+;guildarchimedes=/adf/GUILDarchimedes.adf
+.br
+;guildatarixl=/atr/GUILD1.ATR,/atr/GUILD2.ATR
+.br
+;guildappleii=/nib/guild.nib
+.br
+jinxtermag=/usr/local/share/games/magneticscrolls/jinxter.mag
+.br
+jinxtergfx=/usr/local/share/games/magneticscrolls/jinxter.gfx
+.br
+;jinxtermsdos=/usr/local/share/games/magneticscrolls/msdosversions/JINXTER
+.br
+;jinxterd64=/d64/JINXTER1.d64,/d64/JINXTER2.d64
+.br
+;jinxteramstradcpc=/dsk/JINXTER1.DSK,/dsk/JINXTER2.DSK
+.br
+;jinxterspectrum=/dsk/JINXTERspectrum.DSK
+.br
+;jinxterarchimedes=/adf/JINXTERarchimedes.adf
+.br
+;jinxteratarixl=/atr/JINXTER1.ATR,/atr/JINXTER2.ATR
+.br
+;jinxterappleii=/nib/jinxter1.nib,/nib/jinxter2.nib
+.br
+corruptionmag=/usr/local/share/games/magneticscrolls/ccorrupt.mag
+.br
+corruptiongfx=/usr/local/share/games/magneticscrolls/ccorrupt.gfx
+.br
+;corruptionmsdos=/usr/local/share/games/magneticscrolls/msdosversions/CORRUPT
+.br
+;corruptiontworsc=/usr/local/share/games/magneticscrolls/MSC/CTWO.RSC
+.br
+;corruptiond64=/d64/CORRUPT1.d64,/d64/CORRUPT2.d64
+.br
+;corruptionamstradcpc=/dsk/CORRUPTION1.DSK,/dsk/CORRUPTION2.DSK
+.br
+;corruptionspectrum=/dsk/CORRUPTIONspectrum.DSK
+.br
+;corruptionarchimedes=/adf/CORRUPTIONarchimedes.adf
+.br
+;corruptionappleii=/woz/corruptA.woz,/woz/corruptB.woz,/woz/corruptC.woz
+.br
+fishmag=/usr/local/share/games/magneticscrolls/fish.mag
+.br
+fishgfx=/usr/local/share/games/magneticscrolls/fish.gfx
+.br
+;fishmsdos=/usr/local/share/games/magneticscrolls/msdosversions/FISH
+.br
+;fishtworsc=/usr/local/share/games/magneticscrolls/MSC/FTWO.RSC
+.br
+;fishd64=/d64/FISH1.d64,/d64/FISH2.d64
+.br
+;fishamstradcpc=/dsk/FISH1.DSK,/dsk/FISH2.DSK
+.br
+;fishspectrum=/dsk/FISHspectrum.DSK
+.br
+;fisharchimedes=/adf/FISHarchimedes.adf
+.br
+mythmag=/usr/local/share/games/magneticscrolls/myth.mag
+.br
+mythgfx=/usr/local/share/games/magneticscrolls/myth.gfx
+.br
+;mythmsdos=/usr/local/share/games/magneticscrolls/msdosversions/MYTH
+.br
+;mythd64=/usr/local/share/games/magneticscrolls/MYTH.d64
+.br
+;mythamstradcpc=/dsk/MYTH1.DSK,/dsk/MYTH2.DSK
+.br
+;mythspectrum=/dsk/MYTHspectrum.DSK
+.br
+;mytharchimedes=/adf/MYTHarchimedes.adf
+.br
+wonderlandmag=/usr/local/share/games/magneticscrolls/wonder.mag
+.br
+wonderlandgfx=/usr/local/share/games/magneticscrolls/wonder.gfx
+.br
+;wonderlandtworsc=/usr/local/share/games/magneticscrolls/WONDER/TWO.RSC
+.br
+[RANDOM]
+.br
+mode=pseudo
+.br
+;mode=real
+.br
+seed=12345
+.br
+[DEFAULTGUI]
+.br
+rows=40
+.br
+columns=120
+.br
+;align=left
+.br
+align=block
+.br
+;align=right
+.br
+;mode=none
+.br
+;mode=monochrome
+.br
+;mode=monochrome_inv
+.br
+;mode=low_ansi
+.br
+mode=low_ansi2
+.br
+;mode=high_ansi
+.br
+;mode=high_ansi2
+.br
+;mode=sixel
+.br
+low_ansi_characters=\\/|=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+.br
+monochrome_characters= .-=+*x#@$X
+.br
+sixel_resolution=800x600
+.br
+sixel_forceresolution=No
+.br
+.Pp
+.Sh BUGS
+Report bugs to
+.An Aq dettus@dettus.net .
+Make sure to include DMAGNETIC somewhere in the subject.
+.Sh AUTHOR
+Written by
+.An Thomas Dettbarn
+.Sh SEE ALSO
+.Xr dMagnetic 6

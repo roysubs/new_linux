@@ -1,0 +1,4 @@
+#!/bin/bash
+sudo apt install hollywood   # Screensaver, Hollywood idea of what a hacker does
+sudo apt install bb          # ASCII-art demo
+

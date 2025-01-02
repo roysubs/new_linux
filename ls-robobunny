@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Work in progress, try to use robobunny bargraph to display ls output
+
 # Check if robobunny bargraph is installed (check URL or local path to the tool)
 BARGRAPH_URL="https://robobunny.com/projects/bargraph/html/"
 

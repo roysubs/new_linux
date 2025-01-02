@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Add ~/new_linux to PATH in both current session (if sourced) and in .bashrc
+
 # Check if the script is sourced (can enable this line to prevent running if not sourced)
 # (return 0 2>/dev/null) || { echo "This script must be sourced (e.g. prefix with '.' or 'source')"; exit 1; }
 
@@ -79,7 +81,7 @@ Summary of Key Files
 
 Debugging Tip:
 To trace exactly what is loaded in your environment:
-echo $0          # Check the current shell
+echo \$0          # Check the current shell
 bash -x --login  # Debug login shell startup scripts
 bash -x          # Debug non-login shell startup scripts
 "

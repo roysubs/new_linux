@@ -43,4 +43,3 @@ cat <<'EOF' | glow -p
 - Pipe into `less`: `ls -l | less` for scrolling output.
 - Combine with `grep`: `ls -l | grep <pattern>` to filter results.
 EOF
-

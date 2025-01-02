@@ -1,6 +1,0 @@
-git
-btop
-net-tools  # ifconfig, netstat
-telnetd    # telnet
-duf        # Modern alternative to du and df
-
