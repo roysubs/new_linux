@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Git Practical Tips Cheatsheet
 
 ## 1. **Recovering a Deleted File**

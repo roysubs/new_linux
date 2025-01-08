@@ -16,17 +16,19 @@ if [ "$(id -u)" -ne 0 ]; then
     exec sudo "$0" "$@"
 fi
 
+# Display current lsblk including UUID
+run_command lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,UUID,MOUNTPOINTS
+echo "# RM (Removable drive), RO (Read-only)"
+
 # Check if device argument is provided
 if [ -z "$1" ]; then
+    echo
     echo -e "Usage: $0 /dev/sdX"
+    echo
     exit 1
 fi
 
 device=$1
-
-# Step 0: Display the current disk layout using lsblk
-echo "Step 0: Displaying current disk layout using lsblk"
-run_command lsblk
 
 echo
 read -p "Do you want to delete all components from $device? (y/n): " answer
@@ -91,19 +93,38 @@ else
     done
 fi
 
+# # Step 5: Remove all references to the device in /etc/fstab
+# echo "Step 5: Removing all references from /etc/fstab"
+# fstab_entry=$(grep -i "$device" /etc/fstab)
+# if [ -z "$fstab_entry" ]; then
+#     echo "No references to $device found in /etc/fstab."
+# else
+#     echo "Found the following references to $device in /etc/fstab:"
+#     echo "$fstab_entry"
+#     # run_command sed -i "\|${device}|d" /etc/fstab
+#     # Have not been able to get this sed expression to work via run_command
+#     echo -e "\033[34msed -i \"\|\${device}\|d\" /etc/fstab\033[0m"
+#     sed -i "\|${device}|d" /etc/fstab
+#     echo "References removed from /etc/fstab."
+# fi
 # Step 5: Remove all references to the device in /etc/fstab
 echo "Step 5: Removing all references from /etc/fstab"
-fstab_entry=$(grep -i "$device" /etc/fstab)
-if [ -z "$fstab_entry" ]; then
-    echo "No references to $device found in /etc/fstab."
+# Get the UUID of the device
+uuid=$(blkid -s UUID -o value "$device")
+if [ -z "$uuid" ]; then
+    echo "No UUID found for $device. Cannot proceed with removing entries from /etc/fstab."
 else
-    echo "Found the following references to $device in /etc/fstab:"
-    echo "$fstab_entry"
-    # run_command sed -i "\|${device}|d" /etc/fstab
-    # Have not been able to get this sed expression to work via run_command
-    echo -e "\033[34msed -i \"\|\${device}\|d\" /etc/fstab\033[0m"
-    sed -i "\|${device}|d" /etc/fstab
-    echo "References removed from /etc/fstab."
+    # Search for the UUID in /etc/fstab and remove matching lines
+    fstab_entry=$(grep -i "$uuid" /etc/fstab)
+    if [ -z "$fstab_entry" ]; then
+        echo "No references to UUID $uuid found in /etc/fstab."
+    else
+        echo "Found the following references to UUID $uuid in /etc/fstab:"
+        echo "$fstab_entry"
+        # Use sed to remove the references based on UUID
+        sed -i "\|$uuid|d" /etc/fstab
+        echo "References to UUID $uuid removed from /etc/fstab."
+    fi
 fi
 
 # Wipe the partition table after removing all partitions
@@ -116,6 +137,7 @@ run_command systemctl daemon-reload
 
 # Final message
 echo "Disk $device has been completely stripped down."
+run_command lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,UUID,MOUNTPOINTS
 
 # read example with y/n
 # read -p "Do you want to remove all references to $device from /etc/fstab? (y/n): " answer

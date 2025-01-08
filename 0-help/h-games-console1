@@ -9,7 +9,7 @@ keyrings/charm.gpg
     sudo apt update && sudo apt install glow
 fi
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Classic Roguelikes & Dungeon Crawlers:
 
 Angband (angband) : A classic dungeon-crawling roguelike with complex mechanics.

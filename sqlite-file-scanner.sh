@@ -37,8 +37,25 @@ start_time=$(date +%s)
 export -f process_directory
 export db_path
 
-# Find all directories and process them
-find "$user_home" -path "$user_home/.sqlite-home" -prune -o -type d -exec bash -c 'process_directory "$0"' {} \;
+# Find all directories and process them, excluding specified ones
+find "$user_home" \( \
+  -path "$user_home/.sqlite-home" -o \
+  -path "$user_home/backup*" -o \
+  -path "$user_home/.backup*" -o \
+  -path "$user_home/.cache" -o \
+  -path "$user_home/.thumbnails" -o \
+  -path "$user_home/.local/share/Trash" -o \
+  -path "$user_home/venv" -o \
+  -path "$user_home/.virtualenvs" -o \
+  -path "$user_home/Downloads" -o \
+  -path "$user_home/.mozilla" -o \
+  -path "$user_home/.config/google-chrome" -o \
+  -path "$user_home/.config/chromium" -o \
+  -path "$user_home/.config" -o \
+  -path "$user_home/.gnupg" -o \
+  -path "$user_home/.ssh" \
+\) -prune -o \
+-type d -exec bash -c 'process_directory "$0"' {} \;
 
 # End time and duration
 end_time=$(date +%s)

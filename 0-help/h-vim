@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Display help summary for Vim
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 Vim Quick Notes
 ===============
 
@@ -10,7 +10,7 @@ Vim Quick Notes
     - Example: In Neovim, try `:%s/Text/Replace/` to see live previews of replacements across all affected lines.
 
 - **Breaking Out to Shell**:
-    - **Ctrl+Z**: Suspends Vim/Neovim and sends it to the background. Use `fg` to bring it back.
+    - **Ctrl+Z**: Suspends Vim (or any app) and sends it to the background. Use `fg` to bring it back.
     - **:sh**: Opens a new shell inside Vim. Use `Ctrl+D` to exit the shell (if opened with `:sh`).
     - **Note**: If not in a shell, `:sh` won't exit Vim/Neovim.
 

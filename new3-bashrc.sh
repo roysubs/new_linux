@@ -23,7 +23,8 @@ export EDITOR=vi
 export PAGER=less
 export LESS='-RFX'   # -R (ANSI colour), -F (exit if fit on one screen), X (disable clearing screen on exit)
 export MANPAGER=less   # Set pager for 'man'
-export CHEATCOLOR=true
+export CHEAT_PATHS=\"~/.cheat\"
+export CHEAT_COLORS=true
 # git config --global core.pager less   # Set pager for 'git'
 alias vimrc='vi ~/.vimrc'
 alias bashrc='vi ~/.bashrc'
@@ -33,8 +34,9 @@ alias vimrcroot='sudo vi /etc/vim/vimrc'
 alias vimrcsudo='sudo vi /etc/vim/vimrc'
 alias cd..='cd ..'
 alias ..='cd ..'
-alias cx='chmod +x'               # chmod add execute
-alias cx!='chmod +x \"\$(!!:2)\"'  # chmod add execute to the file that you just edited with vi or nano
+alias cx='chmod +x'                # chmod add execute
+cxx() { chmod +x \$1; ./\$1; }     # chmod \$1 and then run it
+alias cx!='chmod +x \"\$(!!:2)\"'  # chmod add execute to the file that you just edited (e.g., with vi or nano)
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
 # def: Get definitions, expand alias and function definitions that match \$1 
@@ -51,14 +53,14 @@ def() {
 # a: Fast apt, with concise history 'h' and detailed info/depends/contents 'x'
 a() {
     if [ \$# -eq 0 ]; then
-        echo \"Usage: a [option] <package(s)>\"
+        echo \"Apt Tool. Usage: a [option] <package(s)>\"
         echo \"Options:\"
         echo \"  d <package(s)>  Depends: find packages that depend upon the specified package(s)\"
-        echo \"  i <package(s)>  Install the specified package(s)\"
+        echo \"  i <package(s)>  Install the specified package(s) with sudo\"
         echo \"  h               History: show install/remove/upgrade history\"
-        echo \"  r <package(s)>  Remove the specified package(s)\"
+        echo \"  r <package(s)>  Remove the specified package(s) with sudo\"
         echo \"  s <package(s)>  Search for the specified package(s)\"
-        echo \"  u               Update, upgrade, and autoremove packages\"
+        echo \"  u               Update, upgrade, and autoremove packages with sudo\"
         echo \"  v <package(s)>  View info: version, dependencies, package contents, etc.\"
         return
     fi
@@ -66,7 +68,7 @@ a() {
     case \"\$option\" in
         d) for package in \"\$@\"; do echo \"Dependencies for \$package:\"; apt-cache rdepends \"\$package\"; echo; done ;;
         i) sudo apt install \"\$@\" ;;
-        h) zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* |
+        h) zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log.1.gz |
                sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' |
                sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' |
                grep --color=auto -v 'Start-Date:' ;;
@@ -90,42 +92,117 @@ a() {
 alias ai='a i'
 alias av='a v'
 alias ah='a h'
-h () {
+h() {
     if [ \$# -eq 0 ]; then
-        echo \"Usage: h [option]\";
-        echo \"Options:\";
-        echo \"  f <string>     Search history for a specific string\";
-        echo \"  n <number>     Show the last <number> commands\";
-        echo \"  s              Show the full history with line numbers\";
-        echo \"  clear!!!       Clear the history (danger!)\";
-        echo \"  e              Edit the history using your default editor\";
-        echo \"
-history 7 (show last 7 history lines), !51 (run command 51 in history), !-3 (run 3rd last command)
-!! (or !-1) run last command, su -c \\\"!!\\\" root,  switch user to root and run last command
-touch a.txt b.txt c.txt; echo !^; echo !:1; echo !:2; echo !:3; echo !\$; echo !*
-rm !(abc.txt)   remove everything except abc.txt      rm !(*.pdf)   remove everything except pdf files
-!# (retype from current line)    cp /some/long/path/file !#:1 (now press tab and it will expand)
-Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
-!?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
-Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
-!?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
-\";
+        echo \"History Tool. Usage: h [option] [arguments]\"; \\
+        echo \"Options:\"; \\
+        echo \"  clear!         Clear the history (danger; will wipe everything)\"; \\
+        echo \"  e              Edit the history using your default editor\"; \\
+        echo \"  f <string>     Search history for a specific string\"; \\
+        echo \"  n <number>     Show the last <number> commands\"; \\
+        echo \"  s              Show the full history with line numbers\"; \\
+        echo \"  help           Display additional helpful history tips\"; \\
+        echo \"\"; \\
+        echo \"Examples:\"; \\
+        echo \"  history 7          # Show last 7 history lines\"; \\
+        echo \"  !51                # Run command 51 in history\"; \\
+        echo \"  !!                 # Run last command\"; \\
+        echo \"  sudo !!            # Run last command with sudo\"; \\
+        echo \"  su -c \\\"!!\\\" root   # Run last command as root\"; \\
+        echo \"  rm !(abc.txt)      # Remove everything except abc.txt\"; \\
+        echo \"  cp /path/file !#:1 # Expand first argument of the current line\"; \\
         return;
     fi
+
     option=\$1
     value=\$2
+
     case \"\$option\" in
+        clear!) history -c; echo \"History cleared (wipes everything).\" ;;
+        e) history -w; \${EDITOR:-vi} ~/.bash_history ;;
         f) history | grep --color=auto \"\$value\" ;;
         n) history | tail -n \"\$value\" ;;
         s) history ;;
-        clear!!!) history -c; echo \"History cleared.\" ;;
-        e) history -w; \${EDITOR:-vi} ~/.bash_history ;;
-        *) if [[ \"\$option\" =~ ^[0-9]+$ ]]; then history | tail -n \"\$option\";
-           else echo \"Invalid option. Use 'h' without arguments to see usage.\";
-           fi ;;
+        help)
+            echo \"Helpful History Tips:\"; \\
+            echo \"  !!                 # Run last command, often used e.g. 'sudo !!' to rerun with sudo\"; \\
+            echo \"  su -c \\\"!!\\\" root  # Switch user to root and run last command\"; \\
+            echo \"  !<number>          # Run specific command from history, e.g. !51\"; \\
+            echo \"  !-<number>         # Run command relative to the last command, e.g. !-3 3rd last\"; \\
+            echo \"  !?<string>?        # Run last command containing 'string', e.g. !?grep?\"; \\
+            echo \"  !*                 # Insert parameters from previous command\"; \\
+            echo \"    e.g. touch file1 file2 file3\"; \\
+            echo \"         chmod +x !*   =>   chmod +x file1 file2 file3\"; \\
+            echo \"    touch a.txt b.txt c.txt; echo !^; echo !:1; echo !:2; echo !:3; echo !\$; echo !*\"; \\
+            echo \"  ^old^new           # Repeat last command, replacing 'old' with 'new'\"; \\
+            echo \"  history -d <num>   # Delete a specific history entry\"; \\
+            echo \"  HISTTIMEFORMAT=    # Temporarily clear history timestamp format\"; \\
+            echo \"  fc -e <editor>     # Edit the last command in the editor\"; \\
+            ;;
+        *)
+            if [[ \"\$option\" =~ ^[0-9]+$ ]]; then 
+                history | tail -n \"\$option\"; 
+            else 
+                echo \"Invalid option. Use 'h' without arguments to see usage.\"; 
+            fi ;;
     esac
 }
+# rm !(abc.txt)  # Remove everything except abc.txt
+# rm !(*.pdf)    # Remove everything except pdf files
+# !#             # Retype from current line)
+# cp /some/long/path/file !#:1 (now press tab and it will expand)
+# Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
+# !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
+# Event Designators:
+# !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
+# !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
+#!/bin/bash
+size () {
+    local path=$(realpath \"\${1:-.}\")
+    local start_time=$(date +%s.%N)
+    if [[ -f \"\$path\" ]]; then echo \"'\$path' is in \$(dirname \"\$path\")\"; path=$(dirname \"\$path\"); fi
+    if [[ -d \"\$path\" ]]; then
+        local size_info=$(du -hsc \"\$path\" 2> /dev/null | tail -n 1)
+        local df_output=$(df -h \"\$path\" | tail -n 1)
+        local device=$(echo \"\$df_output\" | awk '{print \$1}')
+        local size=$(echo \"\$df_output\" | awk '{print \$2}')
+        local used=$(echo \"\$df_output\" | awk '{print \$3}')
+        local available=$(echo \"\$df_output\" | awk '{print \$4}')
+        local use_percent=$(echo \"\$df_output\" | awk '{print \$5}')
+        local end_time=$(date +%s.%N); local elapsed_time=$(echo \"\$end_time - \$start_time\" | bc)
+        if (( \$(echo \"\$elapsed_time >= 5\" | bc -l) )); then
+            echo -e \"\$path size: \${size_info:-Permission denied}  (took \${elapsed_time}s to run)\"
+        else
+            echo -e \"\$path size: \${size_info:-Permission denied}\"
+        fi
+        echo -e \"Located on \$device, \$use_percent used (\$used) of \$size volume\"
+        read -rp \"Count directories and files recursively? (y/n) \" choice
+        if [[ \"\$choice\" =~ ^[Yy]\$ ]]; then
+            local dirs_start=\$(date +%s.%N)
+            local dir_count=\$(find \"\$path\" -type d 2>/dev/null | wc -l)
+            local dirs_end=\$(date +%s.%N)
+            local dirs_elapsed=\$(echo \"\$dirs_end - \$dirs_start\" | bc)
+            local files_start=\$(date +%s.%N)
+            local file_count=\$(find \"\$path\" -type f 2>/dev/null | wc -l)
+            local files_end=\$(date +%s.%N)
+            local files_elapsed=\$(echo \"\$files_end - \$files_start\" | bc)
+            if (( \$(echo \"\$dirs_elapsed >= 5\" | bc -l) )); then
+                echo \"\$path contains \$dir_count directories (took \${dirs_elapsed}s to run)\"
+            else
+                echo \"\$path contains \$dir_count directories\"
+            fi
 
+            # Show file count with elapsed time
+            if (( \$(echo \"\$files_elapsed >= 5\" | bc -l) )); then
+                echo \"\$path contains \$file_count files (took \${files_elapsed}s to run)\"
+            else
+                echo \"\$path contains \$file_count files\"
+            fi
+        fi
+    else
+        echo \"size: Warning: '\$1' is not a directory\"
+    fi
+}
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 shopt -s checkwinsize   # At every prompt check if the window size has changed
 shopt -s histappend;   # Append commands to the bash history (~/.bash_history) instead of overwriting it   # https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
@@ -135,13 +212,17 @@ export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups H
 
 alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
-alias find1='find /etc /usr /opt /var ~ \\( -type d -o -name \"*.conf\" -o -name \"*.cfg\" -o -name \"*.sh\" -o -name \"*.bin\" -o -name \"*.exe\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.doc\" \\) 2>/dev/null
+alias find1='find /etc /usr /opt /var ~ \\( -type d -o -name \"*.conf\" -o -name \"*.cfg\" -o -name \"*.sh\" -o -name \"*.bin\" -o -name \"*.exe\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.doc\" \\) 2>/dev/null'
 
 # Jump functions. Adding to scripts would require dotsource, so add/change as required in .bashrc to include in main shell
-# h() { cd ~ || return; ls; }                 # jump to home, commented as using 'h' for history and can use 'cd' for home
-n() { cd ~/new_linux || return; ls; }       # jump to new_linux
-w() { cd ~/192.168.1.29-d || return; ls; }  # jump to 'WHITE' PC SMB share
-v() { cd ~/.vnc || return; ls; }            # jump to .vnc
+# h() { cd ~ || return; ls; }                     # jump to home, commented as using 'h' for history and can use 'cd' for home
+n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
+0h() { cd ~/new_linux/0-help || return; ls; }     # jump to new_linux/0-help
+0i() { cd ~/new_linux/0-install || return; ls; }  # jump to new_linux/0-install
+0n() { cd ~/new_linux/0-notes || return; ls; }    # jump to new_linux/0-notes
+0n() { cd ~/new_linux/0-wip || return; ls; }      # jump to new_linux/0-wip
+w()  { cd ~/192.168.1.29-d || return; ls; }       # jump to 'WHITE' PC SMB share
+v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
 
 # tmux definitions
 alias tt='tmux'
@@ -250,7 +331,18 @@ done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vi
 # Blank lines can be introduced if run multiple times; remove them here
 sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"
 
-echo "Finished updating $BASHRC_FILE. To apply changes, run: source ~/.bashrc"
+echo
+echo "Finished updating $BASHRC_FILE."
+
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  # Script is sourced
+  echo "This script is sourced, so will update environment now..."
+  source ~/.bashrc
+else
+  # Script is executed
+  echo "This script is not sourced, so to apply changes, run: source ~/.bashrc"
+fi
+
 
 
 # a h option: zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;

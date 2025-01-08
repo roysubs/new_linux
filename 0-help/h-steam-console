@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Managing Steam Collection from Console
 
 SteamCMD is the main tool for managing Steam games from the console.

@@ -9,6 +9,7 @@ https://inconsolation.wordpress.com/
 rogue is in bsdgames-nonfree, hack is in bsdgames
    Note that bsdgames-nonfree only contains 'rogue' and no other package
 angband, crawl, gearhead, moria, nethack, nethack-console, tome
+ssh nethack@alt.org   # Online server, can watch live games
 
 games-console meta-package:
    2048, an, angband, animals, asciijump, bastet, bombardier, bsdgames,

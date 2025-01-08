@@ -1,7 +1,7 @@
 #!/bin/bash
 if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Understanding `[ ]` and `[[ ]]` in Shell Scripting
 
 This document explores the differences between `[ ]` and `[[ ]]` in shell scripting, details the test types available for each, and provides examples for better understanding. These constructs are used for testing conditions in shell scripts.

@@ -1,4 +1,3 @@
-
 sudo apt update
 sudo apt tmux
 sudo apt net-tools   # ifconfig
