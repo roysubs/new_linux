@@ -1,0 +1,13 @@
+# In cron, the syntax "0 * * * *" means:
+# 0 in the minute field: Execute at minute 0 (the start of the hour).
+# * in the hour field: Any hour (0-23).
+# * in the day of month field: Any day of the month (1-31).
+# * in the month field: Any month (1-12).
+# * in the day of the week field: Any day of the week (0-7, where both 0 and 7 represent Sunday).
+# crontab -e   # Edit the crontab in a text editor; to disable a specific job, comment it out with #
+# crontab -l   # Displays all scheduled jobs for the current user.
+# crontab -r   # remove all cron jobs
+# User cron jobs are stored in /var/spool/cron/crontabs/<username> (do not ever touch these)
+# sudo systemctl stop cron   # Stop cron (until next reboot
+# sudo systemctl start cron  # Start cron
+# cat /etc/crontab           # List system-wide cron jobs

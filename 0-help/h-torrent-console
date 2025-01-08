@@ -9,7 +9,7 @@ keyrings/charm.gpg
     sudo apt update && sudo apt install glow
 fi
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Torrents on console (Transmission, qBittorrent)
 
 Both apps are well-suited for headless, console-based torrenting. Transmission can be managed via the `transmission-remote` command or the transmission-daemon for remote control. You can also use transmission-web for a simple web UI. qBittorrent is can running in a headless mode with qbittorrent-nox, and supports a TUI interface via `qbtcli` for a more interactive, curses-based experience.

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+count=false
+path="."
+
+while getopts ":c" opt; do
+    case ${opt} in
+        c)
+            count=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND -1))
+
+if [[ -n $1 ]]; then
+    path=$(realpath "$1")
+else
+    path=$(realpath "$path")
+fi
+
+start_time=$(date +%s.%N)  # Set start time to the current time
+
+if [[ -f "$path" ]]; then
+    echo "'$path' is in $(dirname "$path")"
+    path=.
+fi
+if [[ -d "$path" ]]; then
+    size_info=$(du -sh "$path" 2>/dev/null | awk '{print $1}')
+    df_output=$(df -h "$path" 2>/dev/null)  # Use human-readable format
+    device=$(echo "$df_output" | awk 'NR==2 {print $1}')
+    size=$(echo "$df_output" | awk 'NR==2 {print $2}')
+    used=$(echo "$df_output" | awk 'NR==2 {print $3}')
+    available=$(echo "$df_output" | awk 'NR==2 {print $4}')
+    use_percent=$(echo "$df_output" | awk 'NR==2 {print $5}')
+    end_time=$(date +%s.%N)  # Set end time to the current time
+    elapsed_time=$(echo "$end_time - $start_time" | bc)  # Calculate elapsed time
+
+    if (( $(echo "$elapsed_time >= 5" | bc -l) )); then
+        echo -e "$path size: ${size_info:-Permission denied}  (took ${elapsed_time}s to run)"
+    else
+        echo -e "$path size: ${size_info:-Permission denied}"
+    fi
+    echo -e "Located on $device, $use_percent used ($used) of $size"
+
+    if [ "$count" = true ]; then
+        dirs_start=$(date +%s.%N)
+        dir_count=$(find "$path" -type d 2> /dev/null | wc -l)
+        dirs_end=$(date +%s.%N)
+        dirs_elapsed=$(echo "$dirs_end - $dirs_start" | bc)
+        files_start=$(date +%s.%N)
+        file_count=$(find "$path" -type f 2> /dev/null | wc -l)
+        files_end=$(date +%s.%N)
+        files_elapsed=$(echo "$files_end - $files_start" | bc)
+
+        if (( $(echo "$dirs_elapsed >= 5" | bc -l) )); then
+            echo "$path contains $dir_count directories (took ${dirs_elapsed}s to run)"
+        else
+            echo "$path contains $dir_count directories"
+        fi
+        if (( $(echo "$files_elapsed >= 5" | bc -l) )); then
+            echo "$path contains $file_count files (took ${files_elapsed}s to run)"
+        else
+            echo "$path contains $file_count files"
+        fi
+    fi
+else
+    echo "size: Warning: '$path' is not a directory"
+fi
+

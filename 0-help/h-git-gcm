@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Git Credential Manager (GCM) Cheatsheet
 
 ## 1. **Setting Up Git Credential Manager (GCM)**

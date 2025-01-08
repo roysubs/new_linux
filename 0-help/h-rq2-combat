@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # RuneQuest 2 Combat Process Cheatsheet
 
 ## Combat Sequence

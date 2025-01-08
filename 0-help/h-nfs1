@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Linux NFS Configuration Cheatsheet
 
 ## Introduction

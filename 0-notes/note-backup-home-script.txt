@@ -1,10 +1,9 @@
-you can delete the older folders, including the Full backup, as long as you are using hard links properly in your incremental backups.
+you can delete the older folders, including the Full backup, as each rsync copy uses
+hard like inodes, so all backups are both full and incremental.
 
-Here's how hard links work in this context:
-Hard links:
+A hard link is essentially another pointer to the same data on disk. It doesn't create
+a new copy of the file, but rather a new reference to the same data.
 
-A hard link is essentially another pointer to the same data on disk. It doesn't create a new copy of the file, but rather a new reference to the same data.
-If you have a Full backup and create Incremental backups that use hard links to the unchanged files, the Incremental backups will continue to point to the same data stored in the Full backup.
 How hard links affect your backups:
 
 If you delete the Full backup folder (or its files), all hard links to the data in that folder will be broken.
@@ -19,37 +18,16 @@ Ensure your Incremental backup is complete and contains all necessary hard links
 Just make sure that when you delete the Full backup, the Incremental backup folders still contain all of the necessary files, as hard links will only point to the data, not duplicate it.
 
 
+rsync is inherently capable of performing incremental backups, and it's one of the most efficient tools for this purpose. The way rsync handles incremental backups is by transferring only the files that have changed since the last backup, based on file modifications (e.g., timestamps and sizes). This makes it highly efficient because it avoids duplicating data and only updates the changes.
+ 
+How rsync Does Incremental Backups:
+File Comparison: rsync compares the source files to the destination files. If a file in the source directory is newer (based on timestamp or size), rsync will copy it to the destination.
+Efficient Transfer: For files that haven't changed, rsync uses hard links to create a reference in the backup directory without physically copying the data again.
+Preserving File Structure: rsync preserves the directory structure, permissions, and file metadata.
+Key Options for Incremental Backups with rsync:
+--archive (-a): Preserves the directory structure, symlinks, permissions, and timestamps.
+--link-dest: Used for incremental backups by comparing the current backup to a previous one and reusing unchanged files by creating hard links.
 
-# In cron, the syntax "0 * * * *" means:
-# 0 in the minute field: Execute at minute 0 (the start of the hour).
-# * in the hour field: Any hour (0-23).
-# * in the day of month field: Any day of the month (1-31).
-# * in the month field: Any month (1-12).
-# * in the day of the week field: Any day of the week (0-7, where both 0 and 7 represent Sunday).
-# crontab -e   # Edit the crontab in a text editor; to disable a specific job, comment it out with #
-# crontab -l   # Displays all scheduled jobs for the current user.
-# crontab -r   # remove all cron jobs
-# User cron jobs are stored in /var/spool/cron/crontabs/<username> (do not ever touch these)
-# sudo systemctl stop cron   # Stop cron (until next reboot
-# sudo systemctl start cron  # Start cron
-# cat /etc/crontab           # List system-wide cron jobs
-
-
-
-# rsync is inherently capable of performing incremental backups, and it's one of the most efficient tools for this purpose. The way rsync handles incremental backups is by transferring only the files that have changed since the last backup, based on file modifications (e.g., timestamps and sizes). This makes it highly efficient because it avoids duplicating data and only updates the changes.
-# 
-# How rsync Does Incremental Backups:
-# File Comparison: rsync compares the source files to the destination files. If a file in the source directory is newer (based on timestamp or size), rsync will copy it to the destination.
-# Efficient Transfer: For files that haven't changed, rsync uses hard links to create a reference in the backup directory without physically copying the data again.
-# Preserving File Structure: rsync preserves the directory structure, permissions, and file metadata.
-# Key Options for Incremental Backups with rsync:
-# --archive (-a): Preserves the directory structure, symlinks, permissions, and timestamps.
-# --link-dest: Used for incremental backups by comparing the current backup to a previous one and reusing unchanged files by creating hard links.
-# Basic Syntax for an Incremental Backup with rsync:
-# Here’s a step-by-step breakdown of how you can use rsync for incremental backups:
-# 
-# bash
-# Copy code
 # rsync -av --link-dest=/path/to/previous_backup /path/to/source/ /path/to/backup/
 # Explanation of the options:
 # -a (--archive): This option ensures that rsync preserves the file permissions, symlinks, timestamps, and directory structure.

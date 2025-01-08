@@ -1,3 +1,7 @@
+#!/bin/bash
+if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
+
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Kindle File Management via WiFi
 
 This guide explains how to manage files on a Kindle when USB file transfer is broken. It details how to copy a `.mobi` file to your Kindle or delete a file from it using WiFi.
@@ -71,4 +75,4 @@ If you cannot access your Kindle over USB, use these methods to delete files:
 
 Using the "Send to Kindle" feature via email is a reliable alternative to USB file transfer. For file deletions, the Kindle interface or Amazon’s management tools provide viable solutions.
 
-
+EOF

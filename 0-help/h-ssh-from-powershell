@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # SSH on PowerShell - Connecting to Debian and Working with SSH
 
 Connecting to a Debian server from PowerShell using SSH, working with SSH features (such as key management, X11 forwarding, and port forwarding), and includes practical tips for interacting with the console using the mouse, clipboard, and Vim. It also covers advanced features like multiplexing and troubleshooting SSH connections.

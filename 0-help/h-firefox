@@ -7,7 +7,7 @@ if ! command -v glow >/dev/null 2>&1; then
     sudo apt update && sudo apt install glow
 fi
 
-cat <<'EOF' | glow -p
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Firefox Keyboard Shortcuts and Tech Tricks
 
 ## Keyboard Shortcuts

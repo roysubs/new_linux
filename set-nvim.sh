@@ -38,6 +38,14 @@ fi
 
 alias vi='nvim'
 
+echo "
+Notes:
+- nvim does not use ~/.vimrc, and instead uses ~/.config/nvim/init.vim
+- nvim takes over the mouse-select-right-click function, instead of that it will
+  offer the nvim menu. If this is not wanted, use ':set mouse=' to turn it off.
+  Add that to the ~/.config/nvim/init.vim to make this the default behaviour.
+"
+
 # nvim Common Installation Locations
 #   /usr/bin/nvim
 #   /usr/local/bin/nvim
