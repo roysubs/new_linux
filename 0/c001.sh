@@ -171,12 +171,69 @@ fi
 if command -v smbclient &>/dev/null; then
     smb_conf="/etc/samba/smb.conf"
     share_name="share_$(basename "$new_partition")"
-    echo -e "[$share_name]\n  path = $mount_point\n  read only = no\n  browsable = yes\n" >> "$smb_conf"
-    run_command systemctl restart smbd
-    echo "Samba share $share_name created."
+
+    # Check if the share already exists
+    if grep -q "^\[$share_name\]" "$smb_conf"; then
+        echo "Samba share $share_name already exists. It will not be updated."
+    else
+        # Add new Samba share
+        echo -e "\n" >> "$smb_conf"
+        echo -e "[$share_name]" >> "$smb_conf"
+        echo -e "  path = $mount_point" >> "$smb_conf"
+        echo -e "  read only = no" >> "$smb_conf"
+        echo -e "  browsable = yes" >> "$smb_conf"
+        echo -e "  guest ok = yes" >> "$smb_conf"
+        echo -e "  create mask = 0755" >> "$smb_conf"
+        echo -e "  directory mask = 0775" >> "$smb_conf"
+        echo -e "  comment = Added by script" >> "$smb_conf"
+
+        # Restart Samba services
+        run_command systemctl restart smbd
+        run_Command systemctl restart nmbd
+
+        echo "Samba share $share_name created."
+    fi
 else
     echo "Samba tools not installed. Skipping Samba share creation."
 fi
+
+# path = /mnt/sdb1
+# valid users = boss
+# read only = no
+# browsable = yes
+# guest ok = no
+# create mask = 0775
+# directory mask = 0775
+# comment = Added by script
+#     echo -e "
+#   [$share_name]
+#   path = $mount_point
+#   read only = no
+#   browsable = yes
+#   guest ok = yes
+#   create mask = 0755
+#   directory mask = 0775
+#   comment = Added by script
+# " >> "$smb_conf"
+#
+# Additional Samba Settings and Explanations:
+# valid users: Specifies users allowed to access the share. E.g., valid users = boss john.
+# write list: Specifies users allowed to write to the share, overriding read only. E.g., write list = john.
+# force user: Forces all file operations to use a specific user account. E.g., force user = sambauser.
+# force group: Similar to force user but applies to the group. E.g., force group = sambagroup.
+# vfs objects: Enables additional Samba features like recycle bins. E.g., vfs objects = recycle.
+# hide files: Hides files matching a pattern. E.g., hide files = /desktop.ini/Thumbs.db/.
+# inherit permissions: Ensures new files inherit the parent directory's permissions. E.g., inherit permissions = yes.
+# max connections: Limits the number of simultaneous connections. E.g., max connections = 5.
+# hosts allow: Restricts access to specific IPs. E.g., hosts allow = 192.168.1.0/24.
+# log file: Specifies the Samba log file location. E.g., log file = /var/log/samba/log.%m.
+#
+# smbd vs nmbd
+# smbd: Handles file sharing, printing, and authentication for SMB/CIFS clients.
+# nmbd: Manages NetBIOS name resolution and browsing. Required if your network relies on NetBIOS.
+# For most modern setups, restarting both smbd and nmbd is necessary to ensure complete functionality. If your network uses DNS instead of NetBIOS, nmbd may not be required.
+
+
 
 echo "Summary:"
 echo

@@ -157,52 +157,6 @@ h() {
 # !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
 # !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
 #!/bin/bash
-size () {
-    local path=$(realpath \"\${1:-.}\")
-    local start_time=$(date +%s.%N)
-    if [[ -f \"\$path\" ]]; then echo \"'\$path' is in \$(dirname \"\$path\")\"; path=$(dirname \"\$path\"); fi
-    if [[ -d \"\$path\" ]]; then
-        local size_info=$(du -hsc \"\$path\" 2> /dev/null | tail -n 1)
-        local df_output=$(df -h \"\$path\" | tail -n 1)
-        local device=$(echo \"\$df_output\" | awk '{print \$1}')
-        local size=$(echo \"\$df_output\" | awk '{print \$2}')
-        local used=$(echo \"\$df_output\" | awk '{print \$3}')
-        local available=$(echo \"\$df_output\" | awk '{print \$4}')
-        local use_percent=$(echo \"\$df_output\" | awk '{print \$5}')
-        local end_time=$(date +%s.%N); local elapsed_time=$(echo \"\$end_time - \$start_time\" | bc)
-        if (( \$(echo \"\$elapsed_time >= 5\" | bc -l) )); then
-            echo -e \"\$path size: \${size_info:-Permission denied}  (took \${elapsed_time}s to run)\"
-        else
-            echo -e \"\$path size: \${size_info:-Permission denied}\"
-        fi
-        echo -e \"Located on \$device, \$use_percent used (\$used) of \$size volume\"
-        read -rp \"Count directories and files recursively? (y/n) \" choice
-        if [[ \"\$choice\" =~ ^[Yy]\$ ]]; then
-            local dirs_start=\$(date +%s.%N)
-            local dir_count=\$(find \"\$path\" -type d 2>/dev/null | wc -l)
-            local dirs_end=\$(date +%s.%N)
-            local dirs_elapsed=\$(echo \"\$dirs_end - \$dirs_start\" | bc)
-            local files_start=\$(date +%s.%N)
-            local file_count=\$(find \"\$path\" -type f 2>/dev/null | wc -l)
-            local files_end=\$(date +%s.%N)
-            local files_elapsed=\$(echo \"\$files_end - \$files_start\" | bc)
-            if (( \$(echo \"\$dirs_elapsed >= 5\" | bc -l) )); then
-                echo \"\$path contains \$dir_count directories (took \${dirs_elapsed}s to run)\"
-            else
-                echo \"\$path contains \$dir_count directories\"
-            fi
-
-            # Show file count with elapsed time
-            if (( \$(echo \"\$files_elapsed >= 5\" | bc -l) )); then
-                echo \"\$path contains \$file_count files (took \${files_elapsed}s to run)\"
-            else
-                echo \"\$path contains \$file_count files\"
-            fi
-        fi
-    else
-        echo \"size: Warning: '\$1' is not a directory\"
-    fi
-}
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 shopt -s checkwinsize   # At every prompt check if the window size has changed
 shopt -s histappend;   # Append commands to the bash history (~/.bash_history) instead of overwriting it   # https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
