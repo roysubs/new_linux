@@ -1,0 +1,38 @@
+#!/bin/bash
+# def: Get definitions of functions / aliases / built-ins / external scripts that match $1
+
+if [ -z "$1" ]; then
+    declare -F
+    printf "\nAll defined functions ('declare -F').\n'def <func-name>' to show function definition\n'def <alias-name>' to show alias definitions ('command -V <alias-name>')\n\n"
+elif type batcat >/dev/null 2>&1; then
+    # Check if it's a function or alias first
+    if command -v "$1" >/dev/null 2>&1; then
+        # Check if the command is a function
+        if type "$1" | grep -q 'function'; then
+            # If it's a function, show the function definition
+            command -V "$1" | batcat -pp -l bash
+        fi
+        
+        # Check if the command is a script (a file on the path)
+        script_path=$(command -v "$1")
+        if [[ -f "$script_path" ]]; then
+            # If a script exists, notify the user about the function precedence
+            echo -e "\033[0;31mFunction '$1' takes precedence, but script '$script_path' also exists.\033[0m"
+            # Show the script with batcat
+            batcat -pp -l bash "$script_path"
+        fi
+    else
+        # If command is not found, show the function or alias definition
+        command -V "$1" | batcat -pp -l bash
+    fi
+else
+    # If batcat is not installed, just show the command definition
+    command -V "$1"
+fi
+
+# Precedence Hierarchy:
+# Shell Functions – Functions defined in the shell take precedence.
+# Aliases – Aliases are expanded after functions.
+# Built-in Commands – Commands built into the shell (e.g., cd, echo).
+# External Commands/Files (Scripts) – These are found in the directories listed in your $PATH.
+

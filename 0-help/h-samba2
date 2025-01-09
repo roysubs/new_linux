@@ -44,7 +44,7 @@ Secure the file:
 Apply changes:
 `sudo mount -a`
 
-Access Samba Share on Windows
+Access the Samba Share from a Windows host
 Create a local user matching the Samba user:
 ```powershell
 $password = Read-Host -AsSecureString

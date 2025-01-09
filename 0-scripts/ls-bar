@@ -11,6 +11,10 @@ for arg in "$@"; do
         SORT=true
         shift
         ;;
+        -s)
+        SORT=true
+        shift
+        ;;
         *)
         DIRECTORY="$arg"
         shift
@@ -41,7 +45,7 @@ max_filename_length=$(echo "$file_sizes" | awk '{$1=""; print substr($0,2)}' | a
 # Function to convert bytes to human-readable format
 human_readable_size() {
     local size=$1
-    if [ $size -lt 1024 ]; then         echo "${size} B"
+    if   [ $size -lt 1024 ]; then       echo "${size} B"
     elif [ $size -lt 1048576 ]; then    printf "%.1f K" "$(echo "scale=1; $size/1024" | bc)"
     elif [ $size -lt 1073741824 ]; then printf "%.1f M" "$(echo "scale=1; $size/1048576" | bc)"
     else                                printf "%.1f G" "$(echo "scale=1; $size/1073741824" | bc)"

@@ -15,20 +15,22 @@ fi
 # Remove every h-* file in /usr/local/bin that contains "glow -p"
 for file in /usr/local/bin/h-*; do
     if [ -f "$file" ] && grep -q "glow -p" "$file"; then
+        echo "Remove: $file"
         sudo rm -f "$file"
     fi
 done
 
 # Ensure every ./0-help/h-* is chmod +x
-for file in ./0-help/h-*; do
+for file in ~/new_linux/0-help/h-*; do
     if [ -f "$file" ]; then
         chmod +x "$file"
     fi
 done
 
 # Copy every ./0-help/h-* to /usr/local/bin
-for file in ./0-help/h-*; do
+for file in ~/new_linux/0-help/h-*; do
     if [ -f "$file" ]; then
+        echo "Add to PATH: $file"
         sudo cp -f "$file" /usr/local/bin/
     fi
 done

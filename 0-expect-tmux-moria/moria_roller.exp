@@ -3,6 +3,7 @@
 # Start session with 'tmux new -s moria_session'.
 # Start moria and get to the character stat rolling screen.
 # C-b d (detach from session).
+# Run this script, written in 'expect'.
 # After Expect completes, 'tmux attach' to return to the session.
 #
 # To watch the progress within tmux:
@@ -37,7 +38,40 @@ proc log_message {log_path message} {
     }
 }
 
-# Function to capture pane output and reroll
+proc extract_concise_info {pane_output failed_attempts} {
+    set concise_output ""
+
+    # Initialize variables with default values
+    set age "N/A"
+    set height "N/A"
+    set weight "N/A"
+    set social_class "N/A"
+    set str "N/A"
+    set int "N/A"
+    set wis "N/A"
+    set dex "N/A"
+    set con "N/A"
+    set chr "N/A"
+    set to_hit "N/A"
+    set to_damage "N/A"
+    set to_ac "N/A"
+    set total_ac "N/A"
+
+    # Extract values (use regex as before)
+    regexp {Age\s*:\s*(\d+).*?Height\s*:\s*(\d+).*?Weight\s*:\s*(\d+).*?Social Class\s*:\s*(\d+)} $pane_output -> age height weight social_class
+    regexp {STR\s*:\s*(\S+).*?INT\s*:\s*(\S+).*?WIS\s*:\s*(\S+).*?DEX\s*:\s*(\S+).*?CON\s*:\s*(\S+).*?CHR\s*:\s*(\S+)} $pane_output -> str int wis dex con chr
+    regexp {\+ To Hit\s*:\s*(-?\d+).*?\+ To Damage\s*:\s*(-?\d+).*?\+ To AC\s*:\s*(-?\d+).*?Total AC\s*:\s*(-?\d+)} $pane_output -> to_hit to_damage to_ac total_ac
+
+    # Include datetime and failed_attempts
+    set datetime [clock format [clock seconds] -format "%Y-%m-%d_%H-%M-%S"]
+    append concise_output "$datetime, Attempt: $failed_attempts\n"
+    append concise_output "Age: $age, Height: $height, Weight: $weight, Social Class: $social_class\n"
+    append concise_output "STR: $str, INT: $int, WIS: $wis, DEX: $dex, CON: $con, CHR: $chr\n"
+    append concise_output "+ To Hit: $to_hit, + To Damage: $to_damage, + To AC: $to_ac, Total AC: $total_ac\n"
+
+    return $concise_output
+}
+
 proc reroll {log_path failed_attempts} {
     # Capture the current tmux pane output
     set pane_output [exec tmux capture-pane -t moria_session -p]
@@ -45,37 +79,63 @@ proc reroll {log_path failed_attempts} {
     # Debug: Log the raw pane output
     # log_message $log_path "[timestamp] Raw Pane Output:\n$pane_output\n"
 
-    # Extract the INT value if present
-    if {[regexp {INT\s+:\s+18\/([0-9]{2})} $pane_output match int_value]} {
-        # Log the timestamp and INT value
-        set log_entry "[timestamp] INT=18/$int_value\n"
-        log_message $log_path $log_entry
+    # Extract concise information
+    set concise_output [extract_concise_info $pane_output $failed_attempts]
+    log_message $log_path $concise_output
 
-        # Convert the extracted value to a number and check if it's >= 19
-        set int_value_num [expr {[scan $int_value %d]}]
-        if {$int_value_num >= 19} {
-            send_user "Value of '18/$int_value' found. Stopping.\n"
-            return 1  ;# Indicating success
-        }
-
-        # # Convert the extracted value to a number and check if it's >= 19
-        # set int_value_num [expr {$int_value + 0}]
-        # if {$int_value_num >= 19} {
-        #     send_user "Value of '18/$int_value' found. Stopping.\n"
-        #     return 1  ;# Indicating success
-        # }
-    } else {
-        # Log if no INT value is found
-        log_message $log_path "[timestamp] No valid INT found in this roll.\n"
+    # Check for the desired stat (e.g., INT 18/20 or higher)
+    if {[regexp {INT\s*:\s*18/([2-9][0-9])} $pane_output]} {
+        send_user "Desired INT found. Stopping.\n"
+        return 1  ;# Indicating success
     }
 
-    # If not found, send space to reroll
+    # If not found, send space to reroll and increment the counter
     log_message $log_path "[timestamp] Sending space key to tmux."
     exec tmux send-keys -t moria_session " " C-m
 
-    # Increment the failed attempts counter
+    incr failed_attempts
     return $failed_attempts
 }
+
+# # Function to capture pane output and reroll
+# proc reroll {log_path failed_attempts} {
+#     # Capture the current tmux pane output
+#     set pane_output [exec tmux capture-pane -t moria_session -p]
+# 
+#     # Debug: Log the raw pane output
+#     # log_message $log_path "[timestamp] Raw Pane Output:\n$pane_output\n"
+# 
+#     # Extract the INT value if present
+#     if {[regexp {INT\s+:\s+18\/([0-9]{2})} $pane_output match int_value]} {
+#         # Log the timestamp and INT value
+#         set log_entry "[timestamp] INT=18/$int_value\n"
+#         log_message $log_path $log_entry
+# 
+#         # Convert the extracted value to a number and check if it's >= 20
+#         set int_value_num [expr {[scan $int_value %d]}]
+#         if {$int_value_num >= 20} {
+#             send_user "Value of '18/$int_value' found. Stopping.\n"
+#             return 1  ;# Indicating success
+#         }
+# 
+#         # # Convert the extracted value to a number and check if it's >= 19
+#         # set int_value_num [expr {$int_value + 0}]
+#         # if {$int_value_num >= 19} {
+#         #     send_user "Value of '18/$int_value' found. Stopping.\n"
+#         #     return 1  ;# Indicating success
+#         # }
+#     } else {
+#         # Log if no INT value is found
+#         log_message $log_path "[timestamp] No valid INT found in this roll.\n"
+#     }
+# 
+#     # If not found, send space to reroll
+#     log_message $log_path "[timestamp] Sending space key to tmux."
+#     exec tmux send-keys -t moria_session " " C-m
+# 
+#     # Increment the failed attempts counter
+#     incr $failed_attempts
+# }
 
 # Initialize counters for failed attempts and start time
 set failed_attempts 0

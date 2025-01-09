@@ -1,0 +1,45 @@
+#!/bin/bash
+# rms: rm safe (save files with trash-cli so can be recovered)
+# Dependencies: trash-cli must be installed
+# v2 - compatible with rm syntax using getopts
+
+# Parse options
+recursive=false
+force=false
+verbose=false
+
+while getopts "rfv" opt; do
+    case $opt in
+        r) recursive=true ;;
+        f) force=true ;;
+        v) verbose=true ;;
+        *) echo "Usage: rms [-rfv] <file(s)/directory>"; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: rms [-rfv] <file(s)/directory>"
+    exit 1
+fi
+
+# Process files and directories
+for item in "$@"; do
+    if [[ -e "$item" ]]; then
+        if [[ -d "$item" && $recursive != true ]]; then
+            echo "rms: cannot remove '$item': Is a directory (use -r to remove recursively)"
+            continue
+        fi
+        if [[ $verbose == true ]]; then
+            echo "rms: trashing '$item'"
+        fi
+        trash-put "$item"
+    else
+        if [[ $force == true ]]; then
+            [[ $verbose == true ]] && echo "rms: '$item' does not exist, skipping"
+            continue
+        fi
+        echo "rms: cannot remove '$item': No such file or directory"
+    fi
+done
+

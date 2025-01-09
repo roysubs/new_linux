@@ -12,5 +12,6 @@ Examples:
 fortune | cowsay | lolcat
 fortune | ponysay
 echo "1234567890" | toilet | lolcat
+showfigfonts   # show all fonts
 
 "

@@ -26,6 +26,13 @@ export MANPAGER=less   # Set pager for 'man'
 export CHEAT_PATHS=\"~/.cheat\"
 export CHEAT_COLORS=true
 # git config --global core.pager less   # Set pager for 'git'
+# Set glob expansion for vi, e.g. vi *text* then tab will expand *text* to matching file
+complete -o filenames -o nospace -o bashdefault -o default vi
+# shopt for immediate glob expansion
+# shopt -s extglob
+# Use Escape Characters to Force Expansion
+# When typing vi *select-*, explicitly force globbing by adding a space before pressing tab. e.g. 'vi *text* ' then tab
+vi *select-*
 alias vimrc='vi ~/.vimrc'
 alias bashrc='vi ~/.bashrc'
 alias nvimrc='vi ~/.config/nvim/init.vim'
@@ -50,103 +57,9 @@ def() {
         command -V \$1
     fi
 }
-# a: Fast apt, with concise history 'h' and detailed info/depends/contents 'x'
-a() {
-    if [ \$# -eq 0 ]; then
-        echo \"Apt Tool. Usage: a [option] <package(s)>\"
-        echo \"Options:\"
-        echo \"  d <package(s)>  Depends: find packages that depend upon the specified package(s)\"
-        echo \"  i <package(s)>  Install the specified package(s) with sudo\"
-        echo \"  h               History: show install/remove/upgrade history\"
-        echo \"  r <package(s)>  Remove the specified package(s) with sudo\"
-        echo \"  s <package(s)>  Search for the specified package(s)\"
-        echo \"  u               Update, upgrade, and autoremove packages with sudo\"
-        echo \"  v <package(s)>  View info: version, dependencies, package contents, etc.\"
-        return
-    fi
-    option=\$1; shift  # Shift to access package arguments
-    case \"\$option\" in
-        d) for package in \"\$@\"; do echo \"Dependencies for \$package:\"; apt-cache rdepends \"\$package\"; echo; done ;;
-        i) sudo apt install \"\$@\" ;;
-        h) zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log.1.gz |
-               sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' |
-               sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' |
-               grep --color=auto -v 'Start-Date:' ;;
-        r) sudo apt remove \"\$@\" ;;
-        s) for package in \"\$@\"; do echo \"Search results for \$package:\"; apt search \"\$package\"; echo; done ;;
-        u) sudo apt update && sudo apt upgrade && sudo apt autoremove ;;
-        v) for package in \"\$@\"; do
-               echo \"Information for '\$package' (apt info in Debian, apt show in Mint):\\n\"
-               if grep --color=auto -q \"Mint\" /etc/os-release; then apt show \"\$package\"; else apt info \"\$package\"; fi; echo
-               read -n 1 -s -r -p \"Press any key to show package dependencies for \$package\"; echo
-               apt-cache depends \"\$package\"; echo
-               read -n 1 -s -r -p \"Press any key to show package contents for \$package\"; echo
-               if dpkg -s \"\$package\" > /dev/null 2>&1; then dpkg -L \"\$package\"
-               else if command -v apt-file > /dev/null 2>&1; then apt-file list \"\$package\"
-               else echo \"Install apt-file to view contents of a package that is not currently installed.\"; fi
-               fi; echo
-            done ;;
-        *) echo \"Invalid option. Use 'a' without arguments to see usage.\" ;;
-    esac
-}
 alias ai='a i'
 alias av='a v'
 alias ah='a h'
-h() {
-    if [ \$# -eq 0 ]; then
-        echo \"History Tool. Usage: h [option] [arguments]\"; \\
-        echo \"Options:\"; \\
-        echo \"  clear!         Clear the history (danger; will wipe everything)\"; \\
-        echo \"  e              Edit the history using your default editor\"; \\
-        echo \"  f <string>     Search history for a specific string\"; \\
-        echo \"  n <number>     Show the last <number> commands\"; \\
-        echo \"  s              Show the full history with line numbers\"; \\
-        echo \"  help           Display additional helpful history tips\"; \\
-        echo \"\"; \\
-        echo \"Examples:\"; \\
-        echo \"  history 7          # Show last 7 history lines\"; \\
-        echo \"  !51                # Run command 51 in history\"; \\
-        echo \"  !!                 # Run last command\"; \\
-        echo \"  sudo !!            # Run last command with sudo\"; \\
-        echo \"  su -c \\\"!!\\\" root   # Run last command as root\"; \\
-        echo \"  rm !(abc.txt)      # Remove everything except abc.txt\"; \\
-        echo \"  cp /path/file !#:1 # Expand first argument of the current line\"; \\
-        return;
-    fi
-
-    option=\$1
-    value=\$2
-
-    case \"\$option\" in
-        clear!) history -c; echo \"History cleared (wipes everything).\" ;;
-        e) history -w; \${EDITOR:-vi} ~/.bash_history ;;
-        f) history | grep --color=auto \"\$value\" ;;
-        n) history | tail -n \"\$value\" ;;
-        s) history ;;
-        help)
-            echo \"Helpful History Tips:\"; \\
-            echo \"  !!                 # Run last command, often used e.g. 'sudo !!' to rerun with sudo\"; \\
-            echo \"  su -c \\\"!!\\\" root  # Switch user to root and run last command\"; \\
-            echo \"  !<number>          # Run specific command from history, e.g. !51\"; \\
-            echo \"  !-<number>         # Run command relative to the last command, e.g. !-3 3rd last\"; \\
-            echo \"  !?<string>?        # Run last command containing 'string', e.g. !?grep?\"; \\
-            echo \"  !*                 # Insert parameters from previous command\"; \\
-            echo \"    e.g. touch file1 file2 file3\"; \\
-            echo \"         chmod +x !*   =>   chmod +x file1 file2 file3\"; \\
-            echo \"    touch a.txt b.txt c.txt; echo !^; echo !:1; echo !:2; echo !:3; echo !\$; echo !*\"; \\
-            echo \"  ^old^new           # Repeat last command, replacing 'old' with 'new'\"; \\
-            echo \"  history -d <num>   # Delete a specific history entry\"; \\
-            echo \"  HISTTIMEFORMAT=    # Temporarily clear history timestamp format\"; \\
-            echo \"  fc -e <editor>     # Edit the last command in the editor\"; \\
-            ;;
-        *)
-            if [[ \"\$option\" =~ ^[0-9]+$ ]]; then 
-                history | tail -n \"\$option\"; 
-            else 
-                echo \"Invalid option. Use 'h' without arguments to see usage.\"; 
-            fi ;;
-    esac
-}
 # rm !(abc.txt)  # Remove everything except abc.txt
 # rm !(*.pdf)    # Remove everything except pdf files
 # !#             # Retype from current line)
@@ -156,7 +69,6 @@ h() {
 # Event Designators:
 # !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
 # !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
-#!/bin/bash
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 shopt -s checkwinsize   # At every prompt check if the window size has changed
 shopt -s histappend;   # Append commands to the bash history (~/.bash_history) instead of overwriting it   # https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
@@ -174,9 +86,11 @@ n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
 0h() { cd ~/new_linux/0-help || return; ls; }     # jump to new_linux/0-help
 0i() { cd ~/new_linux/0-install || return; ls; }  # jump to new_linux/0-install
 0n() { cd ~/new_linux/0-notes || return; ls; }    # jump to new_linux/0-notes
-0n() { cd ~/new_linux/0-wip || return; ls; }      # jump to new_linux/0-wip
-w()  { cd ~/192.168.1.29-d || return; ls; }       # jump to 'WHITE' PC SMB share
+0ns() { cd ~/new_linux/0-new-system || return; ls; } # jump to new_linux/0-new-system
+0s() { cd ~/new_linux/0-scripts || return; ls; }  # jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
+w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
+white()  { cd ~/192.168.1.29-d || return; ls; }   # jump to 'WHITE' PC SMB share
 
 # tmux definitions
 alias tt='tmux'

@@ -39,7 +39,8 @@ fi
 [ -f ~/.config/nvim/init.vim ] || mkdir -p ~/.config/nvim && touch ~/.config/nvim/init.vim
 
 # Vim settings and key mappings to apply
-vimrc_block="\" General Vim settings
+vimrc_block="
+\" General Vim settings
 syntax on          \" Syntax highlighting
 colorscheme desert \" Syntax highlighting scheme
 \" Available themes:
@@ -78,9 +79,16 @@ nnoremap <C-Left> <Esc><C-V>h  \" Ctrl-cursor-left   : Visual Block mode and sel
 cnoremap w!! execute 'silent! write !sudo tee % >/dev/null' <bar> edit
 "
 
+# Neovim-specific settings block
+nvim_block="
+\" Neovim-specific settings
+set mouse=
+"
+
 update_vimrc() {
   local target_vimrc="$1"
-  echo "Updating $target_vimrc..."
+  local source_vim_block="$2"
+  echo "Updating $target_vimrc with $source_vim_block..."
   
   # Ensure the target file exists
   if [ ! -f "$target_vimrc" ]; then
@@ -105,8 +113,7 @@ update_vimrc() {
     elif ! grep -Fxq "$line" "$target_vimrc"; then
       echo "$line" >> "$target_vimrc"
     fi
-  done <<< "$vimrc_block"
-
+  done <<< "$source_vim_block"
 
   # Remove trailing blank lines
   sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$target_vimrc"
@@ -118,11 +125,16 @@ if [[ "$APPLY_GLOBAL" == true ]]; then
 else
   # Update the normal user's vimrc
   if [ -f "$NORMAL_USER_HOME/.vimrc" ]; then
-    update_vimrc "$NORMAL_USER_HOME/.vimrc"
+    update_vimrc "$NORMAL_USER_HOME/.vimrc" "$vim_block"
   fi
   if [ -f "$NORMAL_USER_HOME/.config/nvim/init.vim" ]; then
-    update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim"
+    update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim" "$vim_block"
   fi
+  # Update Neovim-specific settings with extra block
+  if [ -f "$NORMAL_USER_HOME/.config/nvim/init.vim" ]; then
+    update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim" "$nvim_block"
+  fi
+
 fi
 
 echo -e "\nConfiguration complete! Reopen vi/vim to see the updates."
