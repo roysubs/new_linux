@@ -21,13 +21,16 @@ backupPath="$backupDir/$dateTime"
 
 # Find the most recent backup directory, excluding the current backupPath
 lastBackup=$(find "$backupDir" -mindepth 1 -maxdepth 1 -type d | grep -v "$backupPath" | sort | tail -n 1)
+# lastBackup=$(find "$backupDir" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)
 
-# Define exclusions with explanations
+# Define exclusions; note that descriptions cannot be on same line as the exclude
 excludes=(
     # Exclude the backup-home directory as it is the target of the backup
     "--exclude='backup-home/'"
     # .cache (contains temporary cache files)
     "--exclude='.cache/'"
+    # nvim shada folder is volatile session state data
+    "--exclude='.local/state/nvim'"
     # .mozilla (contains browser data that can be recreated)
     "--exclude='.mozilla/'"
     # .local/share/Trash (Trash folder)
@@ -47,7 +50,7 @@ while IFS= read -r share; do
     if [[ -n "$share" ]]; then  # Only add non-empty shares
         excludes+=("--exclude='$share/'")
     fi
-done <<< "$mountedShares"A
+done <<< "$mountedShares"
 
 # Injecting ${excludes[@]} directly to the rsync command always ignored all excludes, even though
 # printing the command showed the correct syntax *and* running that command worked.
@@ -61,31 +64,48 @@ excludesStr=$(echo "$excludesStr" | tr -s ' ')
 rsyncFull="rsync -avi --checksum $excludesStr \"$HOME/\" \"$backupPath\""
 rsyncIncremental="rsync -avi --checksum --link-dest=\"$lastBackup\" $excludesStr \"$HOME/\" \"$backupPath\""
 
-# Print the constructed rsync command for debugging
-echo "Debug: $rsyncCommand"
-
 # Run the rsync command
 # copiedItems=$(eval $rsyncCommand | tee /dev/tty)
-
-
 
 # Perform backup
 if [ -z "$lastBackup" ]; then
   backupType="Full"
   echo "$dateTime No previous backup found. Performing a full backup..."
   echo "$dateTime $backupType backup started." >> "$logFile"
-  echo "Debug: $rsyncFull"
-  # exit 1
+  echo -e "Full command:\n$rsyncFull"
   copiedItems=$(eval $rsyncFull | tee /dev/tty)
-  # copiedItems=$(rsync -avi --checksum ${excludes[@]} "$HOME/" "$backupPath")
 else
   backupType="Incremental"
   echo "$dateTime Performing an incremental backup using hard links..."
   echo "$dateTime $backupType started." >> "$logFile"
-  echo "Debug: $rsyncIncremental"
-  # exit 1
+  echo -e "Full command:\n$rsyncIncremental"
   copiedItems=$(eval $rsyncIncremental | tee /dev/tty)
-  # copiedItems=$(rsync -avi --checksum --link-dest="$lastBackup" ${excludes[@]} "$HOME/" "$backupPath")
+fi
+
+# # After backup, use rsync --dry-run to compare the backup
+# echo "$dateTime Comparing the latest backup with the previous one..."
+# if rsync -avi --dry-run --checksum --link-dest="$lastBackup" $excludesStr "$HOME/" "$backupPath" | grep -q "^"; then
+#     echo "$dateTime The latest backup contains changes so will be kept." >> "$logFile"
+# else
+#     echo "$dateTime The latest backup is identical to the previous one. Deleting redundant backup..."
+#     rm -rf "$backupPath"
+#     echo "$dateTime Redundant backup deleted." >> "$logFile"
+# fi
+
+compare_backups() {
+    local previous="$1"
+    local current="$2"
+
+    # Compare using rsync dry-run
+    rsync --dry-run --checksum -avi "$previous/" "$current/" | grep -q "^>" || return 0  # Identical
+    return 1  # Changes detected
+}
+
+if compare_backups "$lastBackup" "$newBackup"; then
+    echo "No changes detected. Removing redundant backup: $newBackup"
+    rm -rf "$newBackup"
+else
+    echo "The latest backup contains changes so will be kept."
 fi
 
 # Calculate the size of the backup
@@ -139,8 +159,11 @@ cronJobExists=$(crontab -l 2>/dev/null | grep -F "$scriptCron")   # Check if the
 # if the job is already in cron, then nothing will happen.
 # if the job is not in cron, first, get all entries "crontab -l", then add the new entry, then pipe to "crontab -"
 if [[ -z "$cronJobExists" ]]; then
-    (crontab -l 2>/dev/null; echo "0 * * * * $scriptCron") | crontab -
-    echo "$scriptCron added to cron to run every hour on the hour."
+    (crontab -l 2>/dev/null; echo "*/5 * * * * $scriptCron") | crontab -  # Every 5 minutes
+    # (crontab -l 2>/dev/null; echo "*/10 * * * * $scriptCron") | crontab - # Every 10 minutes
+    # (crontab -l 2>/dev/null; echo "0 * * * * $scriptCron") | crontab -    # Every hour
+    echo "$scriptCron added to cron:"
+    crontab -l
 else
     echo "$scriptCron already exists in cron."
 fi

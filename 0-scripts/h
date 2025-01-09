@@ -1,0 +1,70 @@
+#!/bin/bash
+# History Tool Script
+# Provides utility options for managing and viewing command history.
+
+if [ $# -eq 0 ]; then
+    echo "History Tool. Usage: h [option] [arguments]"
+    echo "Options:"
+    echo "  clear!         Clear the history (danger; will wipe everything)"
+    echo "  e              Edit the history using your default editor"
+    echo "  f <string>     Search history for a specific string"
+    echo "  n <number>     Show the last <number> commands"
+    echo "  s              Show the full history with line numbers"
+    echo "  help           Display additional helpful history tips"
+    echo ""
+    echo "Examples:"
+    echo "  history 7          # Show last 7 history lines"
+    echo "  !51                # Run command 51 in history"
+    echo "  !!                 # Run last command"
+    echo "  sudo !!            # Run last command with sudo"
+    echo "  su -c \"!!\" root   # Run last command as root"
+    echo "  rm !(abc.txt)      # Remove everything except abc.txt"
+    echo "  cp /path/file !#:1 # Expand first argument of the current line"
+    exit 0
+fi
+
+option=$1
+value=$2
+
+case "$option" in
+    clear!)
+        history -c
+        echo "History cleared (wipes everything)."
+        ;;
+    e)
+        history -w
+        ${EDITOR:-vi} ~/.bash_history
+        ;;
+    f)
+        history | grep --color=auto "$value"
+        ;;
+    n)
+        history | tail -n "$value"
+        ;;
+    s)
+        history
+        ;;
+    help)
+        echo "Helpful History Tips:"
+        echo "  !!                 # Run last command, often used e.g. 'sudo !!' to rerun with sudo"
+        echo "  su -c \"!!\" root  # Switch user to root and run last command"
+        echo "  !<number>          # Run specific command from history, e.g. !51"
+        echo "  !-<number>         # Run command relative to the last command, e.g. !-3 3rd last"
+        echo "  !?<string>?        # Run last command containing 'string', e.g. !?grep?"
+        echo "  !*                 # Insert parameters from previous command"
+        echo "    e.g. touch file1 file2 file3"
+        echo "         chmod +x !*   =>   chmod +x file1 file2 file3"
+        echo "    touch a.txt b.txt c.txt; echo !^; echo !:1; echo !:2; echo !:3; echo !$; echo !*"
+        echo "  ^old^new           # Repeat last command, replacing 'old' with 'new'"
+        echo "  history -d <num>   # Delete a specific history entry"
+        echo "  HISTTIMEFORMAT=    # Temporarily clear history timestamp format"
+        echo "  fc -e <editor>     # Edit the last command in the editor"
+        ;;
+    *)
+        if [[ "$option" =~ ^[0-9]+$ ]]; then
+            history | tail -n "$option";
+        else
+            echo "Invalid option. Use 'h' without arguments to see usage.";
+        fi
+        ;;
+esac

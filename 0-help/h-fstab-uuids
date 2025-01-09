@@ -1,3 +1,7 @@
+#!/bin/bash
+if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
+
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Using UUIDs in /etc/fstab: Best Practices and How-Tos
 
 When setting up or maintaining a Linux system, one key consideration is how to reference storage devices in `/etc/fstab`. While some systems default to using `/dev/sdX` notation, it's generally better to use UUIDs for reliability and future-proofing.
@@ -134,4 +138,4 @@ sudo reboot
 ## Summary
 Using UUIDs in `/etc/fstab` provides consistency, reliability, and future-proofing for your Linux systems. While `/dev/sdX` notation may work in some scenarios, switching to UUIDs is highly recommended, especially for critical system drives and regularly mounted data devices.
 
-
+EOF

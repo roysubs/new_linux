@@ -7,7 +7,7 @@ import signal
 import sys
 from datetime import datetime
 
-LOG_FILE = "/tmp/new_selector_debug.log"
+LOG_FILE = "/tmp/python_menu.log"
 
 def log_message(message):
     """Log debug messages to a file."""

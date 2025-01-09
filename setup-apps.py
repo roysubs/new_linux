@@ -14,11 +14,11 @@ def log_message(message):
     with open(LOG_FILE, "a") as log_file:
         log_file.write(f"{datetime.now()}: {message}\n")
 
-def list_scripts(folder, prefix="new"):
+def list_scripts(folder):
     """List all scripts in the folder starting with the specified prefix."""
     scripts = [
         f for f in os.listdir(folder)
-        if f.startswith(prefix) and f.endswith(".sh") and os.path.isfile(os.path.join(folder, f))
+        if f.endswith(".sh") and os.path.isfile(os.path.join(folder, f))
     ]
     log_message(f"Scripts found: {scripts}")
     return sorted(scripts)
@@ -180,7 +180,7 @@ def main():
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    script_dir = os.path.expanduser("~/new_linux/0-new-system")
+    script_dir = os.path.expanduser("~/new_linux/0-install")
     scripts = list_scripts(script_dir)
 
     if not scripts:

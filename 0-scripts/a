@@ -1,0 +1,80 @@
+#!/bin/bash
+# Apt Tool Script
+# Provides utilities for apt package management with concise history and detailed info.
+
+if [ $# -eq 0 ]; then
+    echo "Apt Tool. Usage: a [option] <package(s)>"
+    echo "Options:"
+    echo "  d <package(s)>  Depends: find packages that depend upon the specified package(s)"
+    echo "  i <package(s)>  Install the specified package(s) with sudo"
+    echo "  h               History: show install/remove/upgrade history"
+    echo "  r <package(s)>  Remove the specified package(s) with sudo"
+    echo "  s <package(s)>  Search for the specified package(s)"
+    echo "  u               Update, upgrade, and autoremove packages with sudo"
+    echo "  v <package(s)>  View info: version, dependencies, package contents, etc."
+    exit 0
+fi
+
+option=$1
+shift  # Shift to access package arguments
+
+case "$option" in
+    d)
+        for package in "$@"; do
+            echo "Dependencies for $package:"
+            apt-cache rdepends "$package"
+            echo
+        done
+        ;;
+    i)
+        sudo apt install "$@"
+        ;;
+    h)
+        zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log.1.gz |
+            sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\n/ /;p}' |
+            sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' |
+            grep --color=auto -v 'Start-Date:'
+        ;;
+    r)
+        sudo apt remove "$@"
+        ;;
+    s)
+        for package in "$@"; do
+            echo "Search results for $package:"
+            apt search "$package"
+            echo
+        done
+        ;;
+    u)
+        sudo apt update && sudo apt upgrade && sudo apt autoremove
+        ;;
+    v)
+        for package in "$@"; do
+            echo "Information for '$package' (apt info in Debian, apt show in Mint):"
+            if grep --color=auto -q "Mint" /etc/os-release; then
+                apt show "$package"
+            else
+                apt info "$package"
+            fi
+            echo
+            read -n 1 -s -r -p "Press any key to show package dependencies for $package"
+            echo
+            apt-cache depends "$package"
+            echo
+            read -n 1 -s -r -p "Press any key to show package contents for $package"
+            echo
+            if dpkg -s "$package" > /dev/null 2>&1; then
+                dpkg -L "$package"
+            elif command -v apt-file > /dev/null 2>&1; then
+                apt-file list "$package"
+            else
+                echo "Install apt-file to view contents of a package that is not currently installed."
+            fi
+            echo
+        done
+        ;;
+    *)
+        echo "Invalid option. Use 'a' without arguments to see usage."
+        ;;
+esac
+
