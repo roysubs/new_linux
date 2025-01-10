@@ -38,6 +38,8 @@ python3 unimatrix.py
 # ./unimatrix
 
 echo "
+==========
+
 unimatrix has been setup in ~/scripts/unimatrix
 Symbolic link 'unimatrix' added on \$PATH at /usr/local/bin
 Could alias with: alias unimatrix='python3 ~/unimatrix/unimatrix.py'

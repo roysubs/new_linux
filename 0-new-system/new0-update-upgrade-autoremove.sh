@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Function to handle package management tasks on Debian-based systems
+# Run through main apt package maintenance tasks for Debian-based systems
+
 if type apt &>/dev/null; then
     manager="apt"
     DISTRO="Debian/Ubuntu"
@@ -9,7 +10,7 @@ else
     return 1
 fi
 
-# Utility functions for separation and displaying/running commands
+# Utility functions, separator and displaying/running commands
 separator() { echo -e "\n>>>>>>>>\n"; }
 displayandrun() { echo -e "\$ $*"; "$@"; }
 

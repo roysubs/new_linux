@@ -1,0 +1,14 @@
+#!/bin/bash
+if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
+
+cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
+Set the shebang in a powershell script that has no .ps1 extension:
+`#!/usr/bin/pwsh`
+or
+`#!/usr/bin/env pwsh`
+If vim is not detecting the filetype in scripts without .ps1 extension:
+`:set filetype=ps1`
+
+
+EOF
+

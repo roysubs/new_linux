@@ -4,11 +4,6 @@
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
 HOME_DIR="$HOME"
 
-# # Install tools if not already installed
-# PACKAGES=("lynx" "pv")
-# install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
-# for package in "${PACKAGES[@]}"; do install-if-missing $package; done
-
 # Install tools if not already installed
 PACKAGES=("lynx" "pv")
 install-if-missing() {
@@ -19,66 +14,57 @@ install-if-missing() {
 }
 for package in "${PACKAGES[@]}"; do install-if-missing "$package"; done
 
-
-# URL to visit
+# Lynx configuration
 URL="https://genius.com/Monty-python-the-knights-who-say-ni-annotated"
 OUTPUT_FILE="/tmp/ni.txt"
 LYNX_CFG="/etc/lynx/lynx.cfg"
-
-# Backup current settings
 COOKIE_SETTINGS_BACKUP="$(mktemp).lynx.cfg"
 cp "$LYNX_CFG" "$COOKIE_SETTINGS_BACKUP"
-# grep extract of each setting is not required if we backup the whole file and then put it back immediately after use
-# grep -E "^#?SET_COOKIES|^#?ACCEPT_ALL_COOKIES|^#?COOKIE_FILE|^#?COOKIE_SAVE_FILE" $LYNX_CFG > "$COOKIE_SETTINGS_BACKUP"
 
-# Update or add the necessary settings
+# Update or add lynx settings
 sudo sed -i "s|^#?SET_COOKIES:.*|SET_COOKIES:TRUE|" "$LYNX_CFG"
 sudo sed -i "s|^#?ACCEPT_ALL_COOKIES:.*|ACCEPT_ALL_COOKIES:TRUE|" "$LYNX_CFG"
 sudo sed -i "s|^#?COOKIE_FILE:.*|COOKIE_FILE:$HOME/.lynx_cookies|" "$LYNX_CFG"
 sudo sed -i "s|^#?COOKIE_SAVE_FILE:.*|COOKIE_SAVE_FILE:$HOME/.lynx_cookies|" "$LYNX_CFG"
 
-# Add settings if they don't exist
+# Add missing settings
 grep -q "^SET_COOKIES" "$LYNX_CFG" || echo "SET_COOKIES:TRUE" | sudo tee -a "$LYNX_CFG"
 grep -q "^ACCEPT_ALL_COOKIES" "$LYNX_CFG" || echo "ACCEPT_ALL_COOKIES:TRUE" | sudo tee -a "$LYNX_CFG"
 grep -q "^COOKIE_FILE" "$LYNX_CFG" || echo "COOKIE_FILE:$HOME/.lynx_cookies" | sudo tee -a "$LYNX_CFG"
 grep -q "^COOKIE_SAVE_FILE" "$LYNX_CFG" || echo "COOKIE_SAVE_FILE:$HOME/.lynx_cookies" | sudo tee -a "$LYNX_CFG"
 
-# Ensure the cookie file exists
-touch ~/.lynx_cookies
+# Ensure cookie file exists
+touch "$HOME/.lynx_cookies"
 
-# Dump the text content to a file
+# Fetch content using lynx
 lynx --dump "$URL" > "$OUTPUT_FILE"
 
-# Extract lines between start and end markers
+# Extract content
 awk '
-/HEAD KNIGHT: Ni!/ { start = NR }         # Find the start marker
-/KNIGHTS: Aaaaugh!/ { end = NR }          # Find the last occurrence of the end marker
-{ lines[NR] = $0 }                        # Save all lines in an array
+/HEAD KNIGHT: Ni!/ { start = NR }
+/KNIGHTS: Aaaaugh!/ { end = NR }
+{ lines[NR] = $0 }
 END {
-    if (start && end && start <= end) {   # Check if valid markers exist
-        for (i = start; i <= end; i++) {  # Print the lines from start to end
+    if (start && end && start <= end) {
+        for (i = start; i <= end; i++) {
             print lines[i]
         }
     } else {
         print "Error: Start or end markers not found or invalid." > "/dev/stderr"
         exit 1
     }
-}
-' "$OUTPUT_FILE" > "${OUTPUT_FILE}.tmp"
-
-# Replace the original file with the extracted content
+}' "$OUTPUT_FILE" > "${OUTPUT_FILE}.tmp"
 mv "${OUTPUT_FILE}.tmp" "$OUTPUT_FILE"
 
 # Revert lynx settings
-while IFS= read -r line; do
-    setting=$(echo "$line" | cut -d':' -f1)
-    value=$(echo "$line" | cut -d':' -f2-)
-    sudo sed -i "s|^$setting:.*|$setting:$value|" "$LYNX_CFG"
-done < "$COOKIE_SETTINGS_BACKUP"
+if [ -f "$COOKIE_SETTINGS_BACKUP" ]; then
+    # Restoring original lynx.cfg...
+    sudo mv "$COOKIE_SETTINGS_BACKUP" "$LYNX_CFG"
+else
+    echo "Error: Backup file $COOKIE_SETTINGS_BACKUP not found."
+    exit 1
+fi
 
-# Clean up
-rm "$COOKIE_SETTINGS_BACKUP"
-
-# Display with pv
-cat $OUTPUT_FILE | pv -qL 50;
+# Display content with pv
+cat "$OUTPUT_FILE" | pv -qL 50
 
