@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Check if running as sudo
+if [ "$(id -u)" -ne 0 ]; then echo "This script must be run with sudo or as root."; exit 1; fi
+
 # Get the list of snapshots
 snapshots=$(ls /timeshift/snapshots/)
 
