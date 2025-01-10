@@ -6,7 +6,7 @@
 # if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
 if [ "$(id -u)" -ne 0 ]; then echo "Elevation required; rerunning as sudo..."; sudo "$0" "$@"; exit 0; fi
 
-# Only update if it's been more than 2 days since the last update (to avoid constant updates)
+# Only update if it has been more than 2 days since the last update (to avoid constant updates)
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update && sudo apt upgrade; fi
 
 # Install tools if not already installed
@@ -15,12 +15,16 @@ install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt i
 for package in "${PACKAGES[@]}"; do install-if-missing $package; done
 
 echo "
-Mosh Operation
+Mosh (Mobile Shell) Operation
 ==========
+https://ideawrights.com/mosh-windows-wsl/
+Mosh (mobile shell) is a shell client optimized for poor or intermittent internet
+connections, so is useful when working on a poor mobile connection or a high-latency
+satellite connections.
+
 Mosh uses SSH only for the initial setup—to authenticate and start a
 process on the remote host. Once that's done, Mosh switches to its own
 protocol, which runs over UDP. After the switch:
-
 - Mosh no longer relies on the SSH connection.
 - The ongoing communication between the client and the remote host happens
   via Mosh's custom UDP-based protocol, completely independent of SSH.
