@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Install and configure Python and working with venv and pipx
+
 # Define text formatting for output
 GREEN='\033[0;32m'
 YELLOW='\033[0;93m'

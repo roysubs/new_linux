@@ -4,10 +4,21 @@
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
 HOME_DIR="$HOME"
 
+# # Install tools if not already installed
+# PACKAGES=("lynx" "pv")
+# install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
+# for package in "${PACKAGES[@]}"; do install-if-missing $package; done
+
 # Install tools if not already installed
 PACKAGES=("lynx" "pv")
-install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
-for package in "${PACKAGES[@]}"; do install-if-missing $package; done
+install-if-missing() {
+    local package="$1"
+    if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then
+        echo "Installing $package..."; sudo apt-get install -y "$package"
+    fi
+}
+for package in "${PACKAGES[@]}"; do install-if-missing "$package"; done
+
 
 # URL to visit
 URL="https://genius.com/Monty-python-the-knights-who-say-ni-annotated"
@@ -21,16 +32,16 @@ cp "$LYNX_CFG" "$COOKIE_SETTINGS_BACKUP"
 # grep -E "^#?SET_COOKIES|^#?ACCEPT_ALL_COOKIES|^#?COOKIE_FILE|^#?COOKIE_SAVE_FILE" $LYNX_CFG > "$COOKIE_SETTINGS_BACKUP"
 
 # Update or add the necessary settings
-sudo sed -i 's/^#?SET_COOKIES:.*/SET_COOKIES:TRUE/' "$LYNX_CFG"
-sudo sed -i 's/^#?ACCEPT_ALL_COOKIES:.*/ACCEPT_ALL_COOKIES:TRUE/' "$LYNX_CFG"
-sudo sed -i 's|^#?COOKIE_FILE:.*|COOKIE_FILE:~/.lynx_cookies|' "$LYNX_CFG"
-sudo sed -i 's|^#?COOKIE_SAVE_FILE:.*|COOKIE_SAVE_FILE:~/.lynx_cookies|' "$LYNX_CFG"
+sudo sed -i "s|^#?SET_COOKIES:.*|SET_COOKIES:TRUE|" "$LYNX_CFG"
+sudo sed -i "s|^#?ACCEPT_ALL_COOKIES:.*|ACCEPT_ALL_COOKIES:TRUE|" "$LYNX_CFG"
+sudo sed -i "s|^#?COOKIE_FILE:.*|COOKIE_FILE:$HOME/.lynx_cookies|" "$LYNX_CFG"
+sudo sed -i "s|^#?COOKIE_SAVE_FILE:.*|COOKIE_SAVE_FILE:$HOME/.lynx_cookies|" "$LYNX_CFG"
 
 # Add settings if they don't exist
 grep -q "^SET_COOKIES" "$LYNX_CFG" || echo "SET_COOKIES:TRUE" | sudo tee -a "$LYNX_CFG"
 grep -q "^ACCEPT_ALL_COOKIES" "$LYNX_CFG" || echo "ACCEPT_ALL_COOKIES:TRUE" | sudo tee -a "$LYNX_CFG"
-grep -q "^COOKIE_FILE" "$LYNX_CFG" || echo "COOKIE_FILE:~/.lynx_cookies" | sudo tee -a "$LYNX_CFG"
-grep -q "^COOKIE_SAVE_FILE" "$LYNX_CFG" || echo "COOKIE_SAVE_FILE:~/.lynx_cookies" | sudo tee -a "$LYNX_CFG"
+grep -q "^COOKIE_FILE" "$LYNX_CFG" || echo "COOKIE_FILE:$HOME/.lynx_cookies" | sudo tee -a "$LYNX_CFG"
+grep -q "^COOKIE_SAVE_FILE" "$LYNX_CFG" || echo "COOKIE_SAVE_FILE:$HOME/.lynx_cookies" | sudo tee -a "$LYNX_CFG"
 
 # Ensure the cookie file exists
 touch ~/.lynx_cookies

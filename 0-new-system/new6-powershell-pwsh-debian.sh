@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# Install and configure PowerShell 7.x for Debian
+
 echo "Install PowerShell 7.4 on Debian"
 # https://learn.microsoft.com/en-us/powershell/scripting/install/install-debian?view=powershell-7.4
 

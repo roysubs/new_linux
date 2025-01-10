@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Install lazygit git management tool
+
 if command -v lazygit >/dev/null 2>&1; then
     echo "Lazygit is already installed. Exiting."
     exit 0

@@ -1,15 +1,36 @@
 #!/bin/bash
 
 # Add current user to sudo group (without requiring sudo), and update /etc/sudoers
+# nosudo - this line prevents setup-new-system.py from running this with sudo.
 
-echo "This script acts as 'sudo without using sudo' by running root"
-echo "commands using 'su -c' (the root password must be known of course)."
-echo "Use the root password when prompted below."
+echo "This script adds the current user access to sudo on a new system."
+echo "As the user has no access yet, it has to 'sudo without using sudo'"
+echo "to setup this access, running commands with'su -c' (the root"
+echo "password must be known of course to use this script)."
+echo
 
 # Get the current username
 USERNAME=$(whoami)
 
-# Explain Debian's default behavior
+# Prompt for the root password early
+echo "Please enter the root password now to proceed with the configuration:"
+read -sp "Root Password: " ROOT_PASSWORD
+echo
+
+# Check if the user is in the 'sudo' group
+if groups "$USERNAME" | grep -q '\bsudo\b'; then
+    echo "User $USERNAME is already in the 'sudo' group."
+    # Check if sudo is enabled in /etc/sudoers
+    echo "Checking if sudo is active in /etc/sudoers..."
+    if echo "$ROOT_PASSWORD" | su -c 'grep -q "sudo" /etc/sudoers' 2>/dev/null; then
+        echo "sudo is active in /etc/sudoers. Exiting."
+        exit 0
+    else
+        echo "sudo is not active in /etc/sudoers."
+    fi
+fi
+
+# The rest of the script proceeds only if the root password is correct
 echo -e "\nOn Debian systems:
 - The root account is used for administrative tasks by default.
 - The 'sudo' group is not always enabled by default.
@@ -20,9 +41,7 @@ if getent group sudo &>/dev/null; then
     echo -e "\nThe 'sudo' group exists on your system."
 else
     echo -e "\nThe 'sudo' group does not exist. Creating it now..."
-    echo "Please use the root password in the below."
-    su -c 'groupadd sudo'
-    if [[ $? -eq 0 ]]; then
+    if echo "$ROOT_PASSWORD" | su -c 'groupadd sudo'; then
         echo "The 'sudo' group has been successfully created."
     else
         echo "Failed to create the 'sudo' group. Exiting." >&2
@@ -31,15 +50,10 @@ else
 fi
 
 # Check if the '%sudo' line is already in the /etc/sudoers file
-# The user running is not root and not in the sudo group so we have to
-# use 'su -c' also to do the grep test on /etc/sudoers
 echo -e "\nChecking /etc/sudoers for 'sudo' group configuration..."
-echo "Please use the root password in the below."
-if ! su -c "grep -q '^%sudo\s*ALL=(ALL:ALL) ALL' /etc/sudoers"; then
+if ! echo "$ROOT_PASSWORD" | su -c "grep -q '^%sudo\s*ALL=(ALL:ALL) ALL' /etc/sudoers"; then
     echo -e "\n'%sudo' line not found in /etc/sudoers, adding it now..."
-    echo "Please use the root password in the below."
-    su -c "echo '%sudo   ALL=(ALL:ALL) ALL' >> /etc/sudoers"
-    if [[ $? -eq 0 ]]; then
+    if echo "$ROOT_PASSWORD" | su -c "echo '%sudo   ALL=(ALL:ALL) ALL' >> /etc/sudoers"; then
         echo "The '%sudo' line has been added successfully."
     else
         echo "Failed to add the '%sudo' line to /etc/sudoers. Exiting." >&2
@@ -51,8 +65,12 @@ fi
 
 # Remove duplicate %sudo line if present
 echo -e "\nRemoving any duplicate '%sudo' lines from /etc/sudoers..."
-echo "Please use the root password in the below."
-su -c "grep -n \"^%sudo\s*ALL=(ALL:ALL) ALL\" /etc/sudoers | awk -F: 'NR > 1 {print \$1}' | xargs -I{} sed -i '{}d' /etc/sudoers"
+if echo "$ROOT_PASSWORD" | su -c "grep -n \"^%sudo\s*ALL=(ALL:ALL) ALL\" /etc/sudoers | awk -F: 'NR > 1 {print \$1}' | xargs -I{} sed -i '{}d' /etc/sudoers"; then
+    echo "Duplicate '%sudo' lines removed."
+else
+    echo "Failed to remove duplicate '%sudo' lines. Exiting." >&2
+    exit 1
+fi
 
 # Check if the user is in the 'sudo' group
 echo -e "\nChecking if user '$USERNAME' is a member of the 'sudo' group..."
@@ -60,9 +78,7 @@ if groups "$USERNAME" | grep -qw "sudo"; then
     echo "User '$USERNAME' is already a member of the 'sudo' group."
 else
     echo "User '$USERNAME' is not a member of the 'sudo' group. Adding now..."
-    echo "Please use the root password in the below."
-    su -c "/usr/sbin/usermod -aG sudo '$USERNAME'"
-    if [[ $? -eq 0 ]]; then
+    if echo "$ROOT_PASSWORD" | su -c "/usr/sbin/usermod -aG sudo '$USERNAME'"; then
         echo "User '$USERNAME' has been added to the 'sudo' group."
         echo "Please log out and log back in for the changes to take effect."
     else
@@ -88,3 +104,4 @@ Common group membership commands:
 
 If you encounter issues, ensure that the /etc/sudoers file has no syntax errors using 'sudo visudo'.
 "
+

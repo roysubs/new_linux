@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fully configure postfix 
+# Install and configure postfix and a gmail SMTP relay
 
 # Define colors for better readability
 GREEN='\033[0;32m'
