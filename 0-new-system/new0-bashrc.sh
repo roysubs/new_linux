@@ -26,13 +26,15 @@ export MANPAGER=less   # Set pager for 'man'
 export CHEAT_PATHS=\"~/.cheat\"
 export CHEAT_COLORS=true
 # git config --global core.pager less   # Set pager for 'git'
-# Set glob expansion for vi, e.g. vi *text* then tab will expand *text* to matching file
+# glob expansion for vi, e.g. 'vi *myf*' then tab should expand *myf* to a matching file
 complete -o filenames -o nospace -o bashdefault -o default vi
-# shopt for immediate glob expansion
-# shopt -s extglob
-# Use Escape Characters to Force Expansion
-# When typing vi *select-*, explicitly force globbing by adding a space before pressing tab. e.g. 'vi *text* ' then tab
-vi *select-*
+# shopt -s extglob # for immediate glob expansion, or, 'vi *myf* ' (note space) then tab to expand
+h() {   # Enhanced history tool if 'hh' script is on PATH
+    history -a  # Save the current session's unsaved history to \$HISTFILE
+    if command -v hh >/dev/null 2>&1; then hh \"\$@\"
+    else history \"\$@\"  # If 'hh' does not exist, fallback to 'history'
+    fi
+}
 alias vimrc='vi ~/.vimrc'
 alias bashrc='vi ~/.bashrc'
 alias nvimrc='vi ~/.config/nvim/init.vim'
@@ -43,35 +45,61 @@ alias cd..='cd ..'
 alias ..='cd ..'
 alias cx='chmod +x'                # chmod add execute
 cxx() { chmod +x \$1; ./\$1; }     # chmod \$1 and then run it
-alias cx!='chmod +x \"\$(!!:2)\"'  # chmod add execute to the file that you just edited (e.g., with vi or nano)
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
 # def: Get definitions, expand alias and function definitions that match \$1 
-def() {
+defshow() {
     if [ -z \"\$1\" ]; then
         declare -F
-        printf \"\\nAll defined functions ('declare -F').\\'def <func-name>' to show function definition\\n'def <alias-name>' to show alias definitions ('command -V <alias-name>')\\n\\n\"
-    elif type batcat >/dev/null 2>&1; then
-        command -V \$1 | batcat -pp -l bash
-    else
-        command -V \$1
+        printf \"\\nAll defined functions ('declare -F').\\n\"
+        printf \"'def <name>' to show function definition, alias, built-in, or script.\\n\\n\"
+        return
     fi
+    local OVERLAPS=()   # Track overlaps in an array, i.e. where the item is in more than one category
+    local BAT=\"cat\"   # Check if batcat is available
+    if command -v batcat >/dev/null 2>&1; then BAT=\"batcat -pp -l bash\"; fi
+    # Check if it's a function
+    if declare -F \"\$1\" >/dev/null 2>&1; then
+        echo \"Function '\$1':\"
+        declare -f \"\$1\" | \$BAT
+        OVERLAPS+=(\"Function\")
+    fi
+    # Check if it's an alias
+    if alias \"\$1\" >/dev/null 2>&1; then
+        echo \"Alias '\$1':\"
+        alias \"\$1\" | \$BAT
+        OVERLAPS+=(\"Alias\")
+    fi
+    # Check if it's a built-in command
+    if type -t \"\$1\" | grep -q \"builtin\"; then
+        echo \"Built-in Command '\$1':\"
+        help \"\$1\" | \$BAT
+        OVERLAPS+=(\"Built-in\")
+    fi
+    # Check if it's an external script
+    if command -v \"\$1\" >/dev/null 2>&1; then
+        local SCRIPT_PATH=\$(command -v \"\$1\")
+        if [[ -f \"\$SCRIPT_PATH\" ]]; then
+            echo \"Script '\$1' is at '\$SCRIPT_PATH':\"
+            \$BAT \"\$SCRIPT_PATH\"
+            OVERLAPS+=(\"Script\")
+        fi
+    fi
+    # Display overlaps
+    if [ \${#OVERLAPS[@]} -gt 1 ]; then echo -e \"\\033[0;31mNote: '\$1' is a \${OVERLAPS[*]}.\\033[0m\"; fi
+    # If no matches were found
+    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi
 }
-alias ai='a i'
-alias av='a v'
-alias ah='a h'
-# rm !(abc.txt)  # Remove everything except abc.txt
-# rm !(*.pdf)    # Remove everything except pdf files
-# !#             # Retype from current line)
-# cp /some/long/path/file !#:1 (now press tab and it will expand)
-# Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
-# !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
-# Event Designators:
-# !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
-# !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
+# The 'a' script should be in the scripts folder
+if type -t a >/dev/null 2>&1; then
+    alias ai='a i'
+    alias av='a v'
+    alias ah='a h'
+fi
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 shopt -s checkwinsize   # At every prompt check if the window size has changed
-shopt -s histappend;   # Append commands to the bash history (~/.bash_history) instead of overwriting it   # https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
+shopt -s histappend     # Append commands to the bash history (~/.bash_history) instead of overwriting it
+# https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
 export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time when run 'history'
 # Word Designatores: ls /etc/, cd !!:1 (:0 is the initial word), !!:1*, !!:1-$, !!:*     'cat /etc/hosst', then type '^hosst^hosts^' will immediately run the fixed command.
 # Modifiers: 'cat /etc/hosts', cd !!:$:h (will cd into /etc/ as :h chops the 'head' off, :t, 'tail' will remove 'cat /etc/', :r to remove trailing extension, :r:r to remove .tar.gz, :p is just to 'print', 'find ~ -name \"file1\"', try !119:0:p / !119:2*:p
@@ -81,7 +109,6 @@ alias ipconfig='sudo ifconfig'  # Windows typo
 alias find1='find /etc /usr /opt /var ~ \\( -type d -o -name \"*.conf\" -o -name \"*.cfg\" -o -name \"*.sh\" -o -name \"*.bin\" -o -name \"*.exe\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.doc\" \\) 2>/dev/null'
 
 # Jump functions. Adding to scripts would require dotsource, so add/change as required in .bashrc to include in main shell
-# h() { cd ~ || return; ls; }                     # jump to home, commented as using 'h' for history and can use 'cd' for home
 n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
 0h() { cd ~/new_linux/0-help || return; ls; }     # jump to new_linux/0-help
 0i() { cd ~/new_linux/0-install || return; ls; }  # jump to new_linux/0-install
@@ -91,11 +118,12 @@ n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
 v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
 w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
 white()  { cd ~/192.168.1.29-d || return; ls; }   # jump to 'WHITE' PC SMB share
+# h() { cd ~ || return; ls; }   # jump to home, commented out as using 'h' for history (just use 'cd' to jump to home anyway)
 
 # tmux definitions
 alias tt='tmux'
-alias tkk='tmux kill-pane'
-alias tkill='tmux kill-pane'
+alias tlist='tmux list'
+alias tkk='tmux kill-pane'; alias tkill='tmux kill-pane'
 alias thelp='echo -e \"TMUX COMMANDS\n=====\n\n\$(tmux list-commands)\n\nTMUX KEY BINDINGS\n=====\n\n\$(tmux list-keys)\n\n\n\" | less'
 alias tcommands='tmux list-commands | less' # Show tmux commands, with less
 alias tkeys='tmux list-keys | less' # Show key bindings, with less
@@ -159,8 +187,34 @@ add_line_if_not_exists() {
                 echo "Comment already exists. Skipping."
             fi
             ;;
+        function)
+            func_name=$(echo "$line" | cut -d' ' -f1)
+            if ! grep -q "^$func_name" "$BASHRC_FILE"; then
+                echo "Adding function: $func_name"
+                echo "$line" >> "$BASHRC_FILE"
+                while IFS= read -r next_line && [[ ! "$next_line" =~ ^\} ]]; do
+                    echo "$next_line" >> "$BASHRC_FILE"
+                done
+                echo "$next_line" >> "$BASHRC_FILE" # Add closing brace
+            else
+                echo "Function $func_name already exists. Skipping."
+            fi
+            ;;
+        complete|shopt)
+            if ! grep -qF "$line" "$BASHRC_FILE"; then
+                echo "Adding $type: $line"
+                echo "$line" >> "$BASHRC_FILE"
+            else
+                echo "$type $line already exists. Skipping."
+            fi
+            ;;
         *)
-            echo "Unknown type: $type"
+            echo "Adding unclassified line: $line"
+            if ! grep -qF "$line" "$BASHRC_FILE"; then
+                echo "$line" >> "$BASHRC_FILE"
+            else
+                echo "Line already exists. Skipping."
+            fi
             ;;
     esac
 }
@@ -173,25 +227,20 @@ while IFS= read -r line; do
         add_line_if_not_exists "$line" "alias"
     elif [[ "$line" =~ ^export ]]; then
         add_line_if_not_exists "$line" "export"
+    elif [[ "$line" =~ ^complete ]]; then
+        add_line_if_not_exists "$line" "complete"
+    elif [[ "$line" =~ ^shopt ]]; then
+        add_line_if_not_exists "$line" "shopt"
     elif [[ "$line" =~ \ \{ ]]; then
-        # Handle multiline functions
-        func_start=$(echo "$line" | cut -d' ' -f1)
-        if ! grep -q "^$func_start" "$BASHRC_FILE"; then
-            echo "Adding multiline function: $line"
-            echo "$line" >> "$BASHRC_FILE"
-            # Add the rest of the function until we find the closing brace
-            while IFS= read -r next_line && [[ ! "$next_line" =~ ^\} ]]; do
-                echo "$next_line" >> "$BASHRC_FILE"
-            done
-            echo "$next_line" >> "$BASHRC_FILE" # Append the closing brace
-        else
-            echo "Function $func_start already exists. Skipping."
-        fi
+        add_line_if_not_exists "$line" "function"
     elif [[ -z "$line" ]]; then
-        # Add blank lines directly
-        echo >> "$BASHRC_FILE"
+        echo >> "$BASHRC_FILE"  # Preserve blank lines
+    else
+        add_line_if_not_exists "$line" "other"
     fi
-done <<< "$bashrc_block"  # Use here-document above as <<< here-string throws vim formatting off
+done <<< "$bashrc_block"
+
+# Could use here-document above as <<< here-string threw vim formatting off at times
 # done <<EOF
 # $bash_block
 # EOF
@@ -228,6 +277,14 @@ fi
 # Cleans up the output by: Removing Start-Date:. Removing /usr/bin/apt.
 # Final grep: removes redundant lines containing 'Start-Date:'
 
+
+# Everything below here does nothing, they are just ANSI colour definitions.
+# Leaving these here in case of use in other scripts.
+#
+# Some examples of use after adding these definitions to scripts:
+# echo -e "${BOLD_RED}Error:${NC} Something went wrong!"
+# echo -e "${GREEN}Success:${NC} Operation completed."
+# PS1="${BOLD_GREEN}\u${NC}@${BOLD_BLUE}\h${NC}:${BOLD_YELLOW}\w${NC}\$ "
 
 # BLACK
 BLACK='\033[0;30m'
@@ -321,6 +378,3 @@ RESET_INVERT='\033[27m'
 RESET_HIDDEN='\033[28m'
 RESET_STRIKETHROUGH='\033[29m'
 
-# echo -e "${BOLD_RED}Error:${NC} Something went wrong!"
-# echo -e "${GREEN}Success:${NC} Operation completed."
-# PS1="${BOLD_GREEN}\u${NC}@${BOLD_BLUE}\h${NC}:${BOLD_YELLOW}\w${NC}\$ "

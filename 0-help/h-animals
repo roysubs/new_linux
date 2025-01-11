@@ -4,6 +4,10 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 Animal ASCII Art Gallery
 ========================
 
+https://www.asciiarthub.com/
+https://www.asciiart.eu/
+https://www.asciiart.eu/ascii-draw-studio/app
+
 **Brighten your terminal with colorful ASCII animals!**
 
 ```plaintext
@@ -54,14 +58,23 @@ Animal ASCII Art Gallery
     (__)      
 
 9. 🦄 Unicorn:
-            \   ^__^  
-             \  (oo)\_______  
-                (__)\       )\/\  
-                    ||----w |  
-                    ||     ||  
 
-10. 🐀 Mouse:
+
+
+
+10. 🐁🐭🐀 Mouse:
    ()_()     
   ( o o )    
   > ^ <     
+
+11. 🦇 Bat 
+    =/\                 /\=
+    / \'._   (\_/)   _.'/ \       (_                   _)
+   / .''._'--(o.o)--'_.''. \       /\                 /\
+  /.' _/ |`'=/ " \='`| \_ `.\     / \'._   (\_/)   _.'/ \
+ /` .' `\;-,'\___/',-;/` '. '\   /_.''._'--('.')--'_.''._\
+/.-' jgs   `\(-V-)/`       `-.\  | \_ / `;=/ " \=;` \ _/ |
+             "   "               \/  `\__|`\___/`|__/`  \/
+                                  `       \(/|\)/       `
+                                           " ` "
 EOF
