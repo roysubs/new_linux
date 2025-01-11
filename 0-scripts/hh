@@ -1,6 +1,11 @@
 #!/bin/bash
-# History Tool Script
-# Provides utility options for managing and viewing command history.
+# History Tool: View command history.
+# In moving this from a .bashrc function to a standalone script, this created a problem
+# as the subshell the script runs in no longer has access to the parent command history
+# (unless it is sourced), so we must invoke from .bashrc with a function (the function
+# in .bashrc is 'h' and this script is now 'hh').
+
+HISTORY_FILE=~/.bash_history
 
 if [ $# -eq 0 ]; then
     echo "History Tool. Usage: h [option] [arguments]"
@@ -26,6 +31,22 @@ fi
 option=$1
 value=$2
 
+# Function to display history with timestamps and line numbers from the file
+display_history() {
+    awk '
+    BEGIN { FS = OFS = "\t" }
+    {
+        if ($0 ~ /^#/) {
+            if ($1 ~ /^#[0-9]+$/) {
+                timestamp = strftime("%Y-%m-%d %H:%M:%S", substr($1, 2))
+            }
+        } else {
+            print NR, timestamp, $0
+        }
+    }
+    ' "$HISTORY_FILE"
+}
+
 case "$option" in
     clear!)
         history -c
@@ -33,19 +54,22 @@ case "$option" in
         ;;
     e)
         history -w
-        ${EDITOR:-vi} ~/.bash_history
+        ${EDITOR:-vi} "$HISTORY_FILE"
         ;;
     f)
-        history | grep --color=auto "$value"
+        # value=$(echo -n "$value")  # Remove any trailing newlines
+        # echo "Value with spaces or special characters:"
+        # hexdump -C <<< "$value"  # Debugging step to check the value
+        display_history | grep --color=auto "$value"  # Search directly in the formatted history output
         ;;
     n)
-        history | tail -n "$value"
+        display_history | tail -n "$value"  # Show the last n commands from the formatted history output
         ;;
     s)
-        history
+        display_history  # Show the full history with formatted output
         ;;
     help)
-        echo "Helpful History Tips:"
+        echo "History Usage and configuration variable:"
         echo "  !!                 # Run last command, often used e.g. 'sudo !!' to rerun with sudo"
         echo "  su -c \"!!\" root  # Switch user to root and run last command"
         echo "  !<number>          # Run specific command from history, e.g. !51"
@@ -62,9 +86,10 @@ case "$option" in
         ;;
     *)
         if [[ "$option" =~ ^[0-9]+$ ]]; then
-            history | tail -n "$option";
+            display_history | tail -n "$option"
         else
-            echo "Invalid option. Use 'h' without arguments to see usage.";
+            echo "Invalid option. Use 'h' without arguments to see usage."
         fi
         ;;
 esac
+

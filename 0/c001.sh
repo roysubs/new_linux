@@ -139,7 +139,7 @@ if [ -z "$new_partition" ]; then
 fi
 
 # Format the partition
-run_command mkfs.ext4 "$new_partition"
+run_command mkfs.ext4 -E lazy_itable_init=1,lazy_journal_init=1 "$new_partition"
 # Check if formatting succeeded
 if [ $? -eq 0 ]; then
     echo "Partition $new_partition successfully formatted as ext4."

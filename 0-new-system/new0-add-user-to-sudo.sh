@@ -4,16 +4,16 @@
 # nosudo - this line prevents setup-new-system.py from running this with sudo.
 
 echo "This script adds the current user access to sudo on a new system."
-echo "As the user has no access yet, it has to 'sudo without using sudo'"
-echo "to setup this access, running commands with'su -c' (the root"
-echo "password must be known of course to use this script)."
+echo "As the user would have no access yet, it has to 'sudo without sudo'"
+echo "to setup the access, running commands with 'su -c' (the root password"
+echo "must be known to use this script)."
 echo
 
 # Get the current username
 USERNAME=$(whoami)
 
 # Prompt for the root password early
-echo "Please enter the root password now to proceed with the configuration:"
+echo "Enter the root password to proceed with configuration:"
 read -sp "Root Password: " ROOT_PASSWORD
 echo
 

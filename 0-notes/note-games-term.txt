@@ -1,0 +1,52 @@
+Here are 50 terminal-based games that are interesting and unique, spanning genres like strategy, puzzle, programming, and more (not just roguelikes):
+
+TIS-100 - A programming puzzle game inspired by assembly language.
+Colossal Cave Adventure - The original text-based adventure game.
+nSnake - A terminal version of the classic Snake game.
+2048-cli - A terminal-based version of the 2048 puzzle game.
+Moon-buggy - A simple side-scrolling game where you jump over craters.
+NetHack - A classic roguelike with rich gameplay mechanics.
+ASCII Patrol - ASCII-styled clone of Moon Patrol.
+Brogue - A polished roguelike with beautiful ASCII graphics.
+Cataclysm: Dark Days Ahead - A survival roguelike with a deep crafting system.
+Angband - A roguelike inspired by Tolkien’s world.
+Rogue - The original roguelike that inspired the genre.
+Dungeon Crawl Stone Soup - A popular, modern roguelike.
+Crobots - Program robots to battle each other.
+zork - A classic interactive fiction adventure.
+Hackers of Resistance - A text-based hacking simulator.
+MyMan - A terminal Pac-Man clone.
+Terminal Phase - A vertical shoot-em-up in the terminal.
+Allegiance - A tactical ASCII-based space strategy game.
+Command Line Heroes Bash Pong - Pong, but in Bash.
+Pipes.sh - Watch random pipes grow in your terminal.
+Terminal Space Invaders - A terminal version of Space Invaders.
+Dwarf Fortress (Text Mode) - A complex fortress-building simulation.
+Adventure - Another version of Colossal Cave.
+Factorio CLI - Minimal automation game in the terminal.
+Word War vi - A fun ASCII space shooter.
+ASCII Sector - ASCII-based space trading and combat.
+Vitetris - A Tetris clone for the terminal.
+Chess CLI - Play chess in the terminal.
+Larn - A dungeon-crawling roguelike.
+DOOMRL (Doom Roguelike) - A roguelike inspired by DOOM.
+Greed - A terminal puzzle game.
+Robot Finds Kitten - A quirky and simple terminal game.
+Endless Sky (Text Mode) - A space trading and combat simulator.
+KJumpingCube - A simple strategy game for the terminal.
+Liquid War - A fluid-based RTS.
+RoboZZle - A programming-based puzzle game.
+Asciiquarium - An animated ASCII aquarium.
+Bastet - A Tetris clone that gives you the worst pieces.
+Repton - A boulder-pushing puzzle game.
+TextCraft - A terminal-based strategy game.
+Beast - A text-based game inspired by Sokoban.
+Pixman - An ASCII-based puzzle platformer.
+Star Traders CLI - Trade and explore the galaxy in the terminal.
+Cryptopals - A cryptography challenge game in CLI.
+Snake+ - Enhanced snake with features like walls and bonuses.
+SpaceTris - Tetris meets Space Invaders in ASCII.
+Tactical Space Command - ASCII-based tactical space game.
+Zangband - A roguelike with fantasy themes.
+Nuclear Throne Terminal Edition - A text-based reimagining.
+Hack - The precursor to NetHack.
