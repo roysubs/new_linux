@@ -104,6 +104,10 @@ error: cannot overwrite multiple values with a single value
    ```bash
    git config --global --unset-all credential.helper
    ```
+   Or remove a specific redundant entry if that does not fully work:
+   ```bash
+   git config --global --unset credential.helper /usr/local/bin/git-credential-manager
+   ```
 
 3. Set the correct helper:
 
