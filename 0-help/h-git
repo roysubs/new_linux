@@ -16,6 +16,8 @@ Git Quick Notes
       ```bash
       git init
       ```
+      git config --global user.name "username"
+      git config --global user.email "user@email.com"
 
     - Clone a remote repository:
       ```bash
