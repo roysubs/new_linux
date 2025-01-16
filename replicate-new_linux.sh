@@ -2,7 +2,7 @@
 
 # Create a replica of /new_linux at /new_linu_bak
 # Useful for when doing possible breaking changes to have a quick
-# local restore available
+# local restore available, and for rsync syntax.
 
 # Source and destination directories
 SOURCE_DIR=~/new_linux/

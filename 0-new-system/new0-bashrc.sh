@@ -25,15 +25,26 @@ export LESS='-RFX'   # -R (ANSI colour), -F (exit if fit on one screen), X (disa
 export MANPAGER=less   # Set pager for 'man'
 export CHEAT_PATHS=\"~/.cheat\"
 export CHEAT_COLORS=true
-# git config --global core.pager less   # Set pager for 'git'
+git config --global core.pager less   # Set pager for 'git'
 # glob expansion for vi, e.g. 'vi *myf*' then tab should expand *myf* to a matching file
 complete -o filenames -o nospace -o bashdefault -o default vi
-# shopt -s extglob # for immediate glob expansion, or, 'vi *myf* ' (note space) then tab to expand
-h() {   # Enhanced history tool if 'hh' script is on PATH
-    history -a  # Save the current session's unsaved history to \$HISTFILE
+# Extended globbing
+shopt -s extglob
+# Standard Globbing (enabled by default): *, ?, [], e.g. *file[123] will match myfile1, myfile2, myfile3.
+# Extended Globbing:
+# ?(pattern), zero or one occurrence, e.g. ?(abc) matches abc or nothing.
+# *(pattern), zero or more of the pattern, e.g. *(abc) matches abc, abcabc, or nothing.
+# +(pattern), one or more occurrences of the pattern, e.g. +(abc) matches abc or abcabc but NOT nothing.
+# @(pattern1|pattern2|...), matches exactly one of the specified patterns, e.g., @(jpg|png) matches jpg or png.
+# !(pattern), matches anything except the pattern, e.g., !(abc) matches any string except abc.
+# Enhanced history tool if 'hh' script is on PATH
+h() {
+    export HH_INVOCATION=1   # Required to invoke hh
+    history -a               # Save the current session's unsaved history to \$HISTFILE
     if command -v hh >/dev/null 2>&1; then hh \"\$@\"
-    else history \"\$@\"  # If 'hh' does not exist, fallback to 'history'
+    else history \"\$@\"     # If 'hh' does not exist, fallback to 'history'
     fi
+    unset HH_INVOCATION
 }
 alias vimrc='vi ~/.vimrc'
 alias bashrc='vi ~/.bashrc'
@@ -43,8 +54,8 @@ alias vimrcroot='sudo vi /etc/vim/vimrc'
 alias vimrcsudo='sudo vi /etc/vim/vimrc'
 alias cd..='cd ..'
 alias ..='cd ..'
-alias cx='chmod +x'                # chmod add execute
-cxx() { chmod +x \$1; ./\$1; }     # chmod \$1 and then run it
+alias cx='chmod +x'              # chmod add execute
+cxx() { chmod +x \$1; ./\$1; }   # chmod \$1 and then run it
 alias ls.='ls -d .*'
 alias ll.='ls -ald .*'
 # def: Get definitions, expand alias and function definitions that match \$1 
@@ -88,14 +99,12 @@ defshow() {
     # Display overlaps
     if [ \${#OVERLAPS[@]} -gt 1 ]; then echo -e \"\\033[0;31mNote: '\$1' is a \${OVERLAPS[*]}.\\033[0m\"; fi
     # If no matches were found
-    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi
+    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
 }
 # The 'a' script should be in the scripts folder
-if type -t a >/dev/null 2>&1; then
-    alias ai='a i'
-    alias av='a v'
-    alias ah='a h'
-fi
+if type -t a >/dev/null 2>&1; then alias ai='a i'; fi
+if type -t a >/dev/null 2>&1; then alias av='a v'; fi
+if type -t a >/dev/null 2>&1; then alias ah='a h'; fi
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 shopt -s checkwinsize   # At every prompt check if the window size has changed
 shopt -s histappend     # Append commands to the bash history (~/.bash_history) instead of overwriting it
@@ -200,7 +209,7 @@ add_line_if_not_exists() {
                 echo "Function $func_name already exists. Skipping."
             fi
             ;;
-        complete|shopt)
+        complete|shopt|if|fi)
             if ! grep -qF "$line" "$BASHRC_FILE"; then
                 echo "Adding $type: $line"
                 echo "$line" >> "$BASHRC_FILE"
@@ -231,6 +240,10 @@ while IFS= read -r line; do
         add_line_if_not_exists "$line" "complete"
     elif [[ "$line" =~ ^shopt ]]; then
         add_line_if_not_exists "$line" "shopt"
+    elif [[ "$line" =~ ^if ]]; then
+        add_line_if_not_exists "$line" "if"
+    elif [[ "$line" =~ ^fi ]]; then
+        add_line_if_not_exists "$line" "fi"
     elif [[ "$line" =~ \ \{ ]]; then
         add_line_if_not_exists "$line" "function"
     elif [[ -z "$line" ]]; then

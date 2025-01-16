@@ -1,36 +1,31 @@
 #!/bin/bash
 #
-# https://github.com/swarm-game/swarm/
-# https://swarm-game.github.io/
+# https://github.com/swarm-game/swarm/releases
 # https://swarm-game.github.io/installing/#installing-via-binaries
 # https://byorgey.wordpress.com/2022/06/20/swarm-status-report/
 
 # Exit script on any error
-# set -e
+set -e
 
 # Define constants
-REPO_URL="https://github.com/swarm-game/swarm/releases"
+REPO_URL="https://api.github.com/repos/swarm-game/swarm/releases/latest"
 INSTALL_DIR="$HOME/.local/share/swarm"
 BIN_DIR="$HOME/.local/bin"
 
 # Ensure required directories exist
 mkdir -p "$INSTALL_DIR" "$BIN_DIR"
 
-# Fetch latest release page
-LATEST_RELEASE=$(curl -sL "$REPO_URL/latest")
+# Fetch the latest release info
+LATEST_RELEASE=$(curl -sL "$REPO_URL")
 
-# Extract asset download URLs
-BINARY_URL=$(echo "$LATEST_RELEASE" | grep -oP '(?<=href=")/swarm-game/swarm/releases/download/[^"]*/swarm-Linux')
-DATA_URL=$(echo "$LATEST_RELEASE" | grep -oP '(?<=href=")/swarm-game/swarm/releases/download/[^"]*/swarm-data.zip')
+# Extract asset download URLs using jq
+BINARY_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("swarm-Linux")) | .browser_download_url')
+DATA_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("swarm-data.zip")) | .browser_download_url')
 
 if [[ -z "$BINARY_URL" || -z "$DATA_URL" ]]; then
   echo "Error: Could not find download URLs. Exiting."
   exit 1
 fi
-
-# Prefix URLs with the base GitHub URL
-BINARY_URL="https://github.com$BINARY_URL"
-DATA_URL="https://github.com$DATA_URL"
 
 # Download the binary
 BINARY_PATH="swarm-Linux"
@@ -46,10 +41,22 @@ curl -L -o "$DATA_ARCHIVE" "$DATA_URL"
 unzip -o "$DATA_ARCHIVE" -d "$INSTALL_DIR"
 rm "$DATA_ARCHIVE"
 
+# Ensure the binary location is in the PATH
+if ! grep -q "$BIN_DIR" "$HOME/.bashrc"; then
+  echo "Adding $BIN_DIR to PATH..."
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+  source "$HOME/.bashrc"
+fi
+
+# Create symlink for swarm if it's not already in PATH
+if ! command -v swarm &>/dev/null; then
+  echo "Creating symlink for swarm..."
+  ln -s "$BIN_DIR/swarm" "$BIN_DIR/swarm"
+fi
+
 # Inform the user
 echo "Swarm has been installed successfully!"
 echo "Binary location: $BIN_DIR/swarm"
 echo "Data directory: $INSTALL_DIR"
-echo "Make sure $BIN_DIR is in your PATH. You can add it with the following command if necessary:"
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc" && source "$HOME/.bashrc"
+echo "Swarm should now be available in your PATH."
 
