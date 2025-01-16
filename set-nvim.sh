@@ -32,8 +32,8 @@ if grep -q "^alias vi=" ~/.bashrc; then
     echo "Replacing existing alias for vi in ~/.bashrc"
     sed -i "s#^alias vi=.*#alias vi='nvim'#" ~/.bashrc
 else
-    echo "Set alias for vi to nvim in ~/.bashrc"
     echo "alias vi='nvim'" >> ~/.bashrc
+    echo "Added alias to ~/.bashrc: alias vi='nvim'"
 fi
 
 alias vi='nvim'

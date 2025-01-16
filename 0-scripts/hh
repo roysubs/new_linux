@@ -5,6 +5,12 @@
 # (unless it is sourced), so we must invoke from .bashrc with a function (the function
 # in .bashrc is 'h' and this script is now 'hh').
 
+# Check if the HH_INVOCATION flag is set (i.e., invoked by the 'h' function)
+if [ -z "$HH_INVOCATION" ]; then
+    echo "Error: This script must be invoked via the 'h' function in .bashrc."
+    exit 1
+fi
+
 HISTORY_FILE=~/.bash_history
 
 if [ $# -eq 0 ]; then
@@ -16,15 +22,8 @@ if [ $# -eq 0 ]; then
     echo "  n <number>     Show the last <number> commands"
     echo "  s              Show the full history with line numbers"
     echo "  help           Display additional helpful history tips"
+    echo "  examples       Display history usage examples"
     echo ""
-    echo "Examples:"
-    echo "  history 7          # Show last 7 history lines"
-    echo "  !51                # Run command 51 in history"
-    echo "  !!                 # Run last command"
-    echo "  sudo !!            # Run last command with sudo"
-    echo "  su -c \"!!\" root   # Run last command as root"
-    echo "  rm !(abc.txt)      # Remove everything except abc.txt"
-    echo "  cp /path/file !#:1 # Expand first argument of the current line"
     exit 0
 fi
 
@@ -57,8 +56,6 @@ case "$option" in
         ${EDITOR:-vi} "$HISTORY_FILE"
         ;;
     f)
-        # value=$(echo -n "$value")  # Remove any trailing newlines
-        # echo "Value with spaces or special characters:"
         # hexdump -C <<< "$value"  # Debugging step to check the value
         display_history | grep --color=auto "$value"  # Search directly in the formatted history output
         ;;
@@ -67,6 +64,16 @@ case "$option" in
         ;;
     s)
         display_history  # Show the full history with formatted output
+        ;;
+    examples)
+        echo "Examples of using history:"
+        echo "  history 7          # Show last 7 history lines"
+        echo "  !51                # Run command 51 in history"
+        echo "  !!                 # Run last command"
+        echo "  sudo !!            # Run last command with sudo"
+        echo "  su -c \"!!\" root # Run last command as root"
+        echo "  rm !(abc.txt)      # Remove everything except abc.txt"
+        echo "  cp /path/file !#:1 # Expand first argument of the current line"
         ;;
     help)
         echo "History Usage and configuration variable:"

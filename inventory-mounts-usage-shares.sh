@@ -35,7 +35,7 @@ list_samba_shares() {
     if command -v smbclient >/dev/null 2>&1; then
         smbclient -L localhost -N | grep -E "Disk|Printer" || echo "No Samba shares found."
     else
-        echo "smbclient not installed. Install it to view Samba shares."
+        echo -e "\nsmbclient not installed. Install it to view Samba shares."
     fi
     echo
 }
@@ -58,7 +58,7 @@ list_cifs_connections() {
     if command -v smbstatus >/dev/null 2>&1; then
         sudo smbstatus -S || echo "No active CIFS connections found."
     else
-        echo "smbstatus not installed. Install Samba utilities to view CIFS connections."
+        echo -e "\nsmbstatus not installed. Install Samba utilities to view CIFS connections."
     fi
     echo
 }
