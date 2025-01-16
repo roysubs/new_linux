@@ -43,8 +43,8 @@ sudo zerotier-cli listpeers
 
 # Step 6: (Optional) Check if ZeroTier is successfully connected
 print_green "Step 6: Checking ZeroTier status..."
-print_green "Running: zerotier-cli info"
-zerotier-cli info
+print_green "Running: sudo zerotier-cli info"
+sudo zerotier-cli info
 
 print_green "ZeroTier installation and network join completed. Please authorize the device in the ZeroTier web console if required."
 
