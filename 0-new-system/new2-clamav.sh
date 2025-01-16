@@ -6,20 +6,30 @@ print_step() {
 }
 
 # Step 1: Install ClamAV
-print_step "Step 1: Installing ClamAV..."
+print_step "Step 1: Installing ClamAV and chkrootkit..."
 if ! command -v clamscan &>/dev/null; then
     echo "Installing ClamAV and necessary services..."
     sudo apt update && sudo apt install -y clamav clamav-daemon
+    sudo apt install chkrootkit
+sudo chkrootkit
 else
     echo "ClamAV is already installed."
 fi
+if ! command -v chrootkit &>/dev/null; then
+    sudo apt update && sudo apt install -y chkrootkit
+else
+    echo "chkrootkit is already installed."
+fi
 
 # Step 2: Stop freshclam service to avoid lock issues
-print_step "Step 2: Stopping freshclam service temporarily..."
-sudo systemctl stop clamav-freshclam
+print_step "Step 2: Run chkrootkit..."
+sudo chkrootkit
 
-# Step 3: Update the virus database
-print_step "Step 3: Updating ClamAV virus database..."
+# Step 3: Stop freshclam service to avoid locks then update the virus database
+print_step "Step 3: Stop freshclam service to avoid locks then update the virus database"
+print_step "Stopping freshclam service temporarily..."
+sudo systemctl stop clamav-freshclam
+print_step "Updating ClamAV virus database..."
 if ! sudo freshclam; then
     echo "Failed to update the database. Attempting to fix..."
     sudo rm -rf /var/lib/clamav/*
