@@ -46,65 +46,6 @@ h() {
     fi
     unset HH_INVOCATION
 }
-alias vimrc='vi ~/.vimrc'
-alias bashrc='vi ~/.bashrc'
-alias nvimrc='vi ~/.config/nvim/init.vim'
-alias initvim='vi ~/.config/nvim/init.vim'
-alias vimrcroot='sudo vi /etc/vim/vimrc'
-alias vimrcsudo='sudo vi /etc/vim/vimrc'
-alias cd..='cd ..'
-alias ..='cd ..'
-alias cx='chmod +x'              # chmod add execute
-cxx() { chmod +x \$1; ./\$1; }   # chmod \$1 and then run it
-alias ls.='ls -d .*'
-alias ll.='ls -ald .*'
-# def: Get definitions, expand alias and function definitions that match \$1 
-defshow() {
-    if [ -z \"\$1\" ]; then
-        declare -F
-        printf \"\\nAll defined functions ('declare -F').\\n\"
-        printf \"'def <name>' to show function definition, alias, built-in, or script.\\n\\n\"
-        return
-    fi
-    local OVERLAPS=()   # Track overlaps in an array, i.e. where the item is in more than one category
-    local BAT=\"cat\"   # Check if batcat is available
-    if command -v batcat >/dev/null 2>&1; then BAT=\"batcat -pp -l bash\"; fi
-    # Check if it's a function
-    if declare -F \"\$1\" >/dev/null 2>&1; then
-        echo \"Function '\$1':\"
-        declare -f \"\$1\" | \$BAT
-        OVERLAPS+=(\"Function\")
-    fi
-    # Check if it's an alias
-    if alias \"\$1\" >/dev/null 2>&1; then
-        echo \"Alias '\$1':\"
-        alias \"\$1\" | \$BAT
-        OVERLAPS+=(\"Alias\")
-    fi
-    # Check if it's a built-in command
-    if type -t \"\$1\" | grep -q \"builtin\"; then
-        echo \"Built-in Command '\$1':\"
-        help \"\$1\" | \$BAT
-        OVERLAPS+=(\"Built-in\")
-    fi
-    # Check if it's an external script
-    if command -v \"\$1\" >/dev/null 2>&1; then
-        local SCRIPT_PATH=\$(command -v \"\$1\")
-        if [[ -f \"\$SCRIPT_PATH\" ]]; then
-            echo \"Script '\$1' is at '\$SCRIPT_PATH':\"
-            \$BAT \"\$SCRIPT_PATH\"
-            OVERLAPS+=(\"Script\")
-        fi
-    fi
-    # Display overlaps
-    if [ \${#OVERLAPS[@]} -gt 1 ]; then echo -e \"\\033[0;31mNote: '\$1' is a \${OVERLAPS[*]}.\\033[0m\"; fi
-    # If no matches were found
-    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
-}
-# The 'a' script should be in the scripts folder
-if type -t a >/dev/null 2>&1; then alias ai='a i'; fi
-if type -t a >/dev/null 2>&1; then alias av='a v'; fi
-if type -t a >/dev/null 2>&1; then alias ah='a h'; fi
 alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
 shopt -s checkwinsize   # At every prompt check if the window size has changed
 shopt -s histappend     # Append commands to the bash history (~/.bash_history) instead of overwriting it
@@ -112,6 +53,58 @@ shopt -s histappend     # Append commands to the bash history (~/.bash_history) 
 export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time when run 'history'
 # Word Designatores: ls /etc/, cd !!:1 (:0 is the initial word), !!:1*, !!:1-$, !!:*     'cat /etc/hosst', then type '^hosst^hosts^' will immediately run the fixed command.
 # Modifiers: 'cat /etc/hosts', cd !!:$:h (will cd into /etc/ as :h chops the 'head' off, :t, 'tail' will remove 'cat /etc/', :r to remove trailing extension, :r:r to remove .tar.gz, :p is just to 'print', 'find ~ -name \"file1\"', try !119:0:p / !119:2*:p
+
+# The below depend on the 'a' script (should be in the scripts folder)
+if type -t a >/dev/null 2>&1; then alias ai='a i'; fi
+if type -t a >/dev/null 2>&1; then alias av='a v'; fi
+if type -t a >/dev/null 2>&1; then alias ah='a h'; fi
+
+alias vimrc='vi ~/.vimrc'
+alias bashrc='vi ~/.bashrc'
+alias nvimrc='vi ~/.config/nvim/init.vim'
+alias initvim='vi ~/.config/nvim/init.vim'
+alias vimrcroot='sudo vi /etc/vim/vimrc'
+alias vimrcsudo='sudo vi /etc/vim/vimrc'
+
+alias cd..='cd ..'
+alias ..='cd ..'
+alias cx='chmod +x'              # chmod add execute
+cxx() { chmod +x \$1; ./\$1; }   # chmod \$1 and then run it
+alias ls.='ls -d .*'
+alias ll.='ls -ald .*'
+
+# defshow must be in .bashrc to see the shell functions and aliases\$1
+defshow() {
+    if [ -z \"\$1\" ]; then
+        declare -F; printf \"\\nAll defined functions ('declare -F').\\n\"
+        printf \"'def <name>' to show definitions of functions, aliases, built-ins, and scripts.\\n\\n\"
+        return
+    fi
+    local OVERLAPS=()   # Track overlaps in an array, i.e. where the item is in more than one category
+    local BAT=\"cat\"   # Check if batcat is available
+    if command -v batcat >/dev/null 2>&1; then   # Only use 'batcat' if available
+        BAT=\"batcat -pp -l bash\"
+    fi
+    if declare -F \"\$1\" >/dev/null 2>&1; then   # check for a 'Function'
+        echo \"Function '\$1':\"; declare -f \"\$1\" | \$BAT; OVERLAPS+=(\"Function\")
+    fi
+    if alias \"\$1\" >/dev/null 2>&1; then   # check for an 'Alias'
+        echo \"Alias '\$1':\"; alias \"\$1\" | \$BAT; OVERLAPS+=(\"Alias\")
+    fi
+    if type -t \"\$1\" | grep -q \"builtin\"; then   # check for a 'built-in command'
+        echo \"Built-in Command '\$1':\"; help \"\$1\" | \$BAT; OVERLAPS+=(\"Built-in\")
+    fi
+    if command -v \"\$1\" >/dev/null 2>&1; then   # check for an 'external script'
+        local SCRIPT_PATH=\$(command -v \"\$1\")
+        if [[ -f \"\$SCRIPT_PATH\" ]]; then
+            echo \"Script '\$1' is at '\$SCRIPT_PATH':\"; \$BAT \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\")
+        fi
+    fi
+    # Display overlaps
+    if [ \${#OVERLAPS[@]} -gt 1 ]; then echo -e \"\\033[0;31mNote: '\$1' is a \${OVERLAPS[*]}.\\033[0m\"; fi
+    # If no matches were found
+    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
+}
 
 alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'  # Windows typo
@@ -126,10 +119,10 @@ n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
 0s() { cd ~/new_linux/0-scripts || return; ls; }  # jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
 w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
-white()  { cd ~/192.168.1.29-d || return; ls; }   # jump to 'WHITE' PC SMB share
+white() { cd ~/192.168.1.29-d || return; ls; }   # jump to 'WHITE' PC SMB share
 # h() { cd ~ || return; ls; }   # jump to home, commented out as using 'h' for history (just use 'cd' to jump to home anyway)
 
-# tmux definitions
+# tmux shortcuts
 alias tt='tmux'
 alias tlist='tmux list'
 alias tkk='tmux kill-pane'; alias tkill='tmux kill-pane'
@@ -291,13 +284,19 @@ fi
 # Final grep: removes redundant lines containing 'Start-Date:'
 
 
+##########
+#
 # Everything below here does nothing, they are just ANSI colour definitions.
-# Leaving these here in case of use in other scripts.
+# These can be useful to use in other scripts.
+#
+##########
 #
 # Some examples of use after adding these definitions to scripts:
 # echo -e "${BOLD_RED}Error:${NC} Something went wrong!"
 # echo -e "${GREEN}Success:${NC} Operation completed."
 # PS1="${BOLD_GREEN}\u${NC}@${BOLD_BLUE}\h${NC}:${BOLD_YELLOW}\w${NC}\$ "
+#
+##########
 
 # BLACK
 BLACK='\033[0;30m'
