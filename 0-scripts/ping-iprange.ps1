@@ -1,4 +1,3 @@
-#!/usr/bin/pwsh
 #!/usr/bin/env pwsh
 
 <#
@@ -58,15 +57,51 @@
     http://gallery.technet.microsoft.com/Fast-asynchronous-ping-IP-d0a5cf0e
 
 #>
+
+[CmdletBinding(DefaultParameterSetName = 'ShowHelp')]
 [CmdletBinding(ConfirmImpact='Low')]
 Param(
-    [parameter(Mandatory = $true, Position = 0)]
+    [parameter(ParameterSetName = 'PingRange', Mandatory = $true, Position = 0)]
     [System.Net.IPAddress]$StartAddress,
-    [parameter(Mandatory = $true, Position = 1)]
+
+    [parameter(ParameterSetName = 'PingRange', Mandatory = $true, Position = 1)]
     [System.Net.IPAddress]$EndAddress,
+
+    [parameter(ParameterSetName = 'PingRange')]
     [int]$Interval = 30,
-    [Switch]$RawOutput = $false
+
+    [parameter(ParameterSetName = 'PingRange')]
+    [Switch]$RawOutput = $false,
+
+    [parameter(ParameterSetName = 'ShowHelp', HelpMessage = 'Display help information')]
+    [Switch]$Help
 )
+
+# Notes:
+# Use "#!/usr/bin/env pwsh" instead of "#!/usr/bin/pwsh" as env will search path for pwsh, more portable
+# -? is not so common in Linux, so add [Switch]$Help and define it
+
+# Use [CmdletBinding()] when you want your script or function to behave like a native cmdlet.
+# Includes advanced parameter handling (e.g., multiple parameter sets or validation).
+# Includes support for -WhatIf / -Confirm, and common parameters like -Verbose and -ErrorAction.
+# ConfirmImpact is an option for [CmdletBinding()] that -Confirm impact (e.g., Low, Medium, High).
+# It determines when PowerShell will automatically prompt the user for confirmation if -Confirm
+# isn't explicitly provided.
+# Low: Rarely prompts for confirmation unless explicitly requested.
+# Medium: Prompts for confirmation when $ConfirmPreference is Medium or lower (default in most cases).
+# High: Always prompts for confirmation unless -Confirm:$false is specified.
+
+# Show help if the Help switch is used or no parameters are provided
+if ($PSCmdlet.ParameterSetName -eq 'ShowHelp' -or $Help) {
+    Get-Help $MyInvocation.MyCommand.Path -Full
+    return
+}
+
+# Check for mandatory parameters
+if (-not $StartAddress -or -not $EndAddress) {
+    Write-Error "Both -StartAddress and -EndAddress are required."
+    return
+}
 
 $timeout = 2000
 
@@ -190,3 +225,5 @@ return $Reply
 #     Ping-IPRange -StartAddress $StartAddress -EndAddress $EndAddress
 # }
 
+### #!/bin/bash
+### pwsh ./ping-iprange.ps1 "$@"

@@ -18,7 +18,16 @@ cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
 # Block of text to check and add to .bashrc
 # Make sure to escape " and \ in the below (change " to \" and change \n to \\n).
 bashrc_block="
-# user alias/function/export definitions
+# User definitions
+####################
+
+# Prompt before overwrite (-i interactive) for rm,cp,mv
+# Will not apply when running scripts unless that script is sourced at runtime
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Alias/Function/Export definitions
 export EDITOR=vi
 export PAGER=less
 export LESS='-RFX'   # -R (ANSI colour), -F (exit if fit on one screen), X (disable clearing screen on exit)
@@ -37,12 +46,15 @@ shopt -s extglob
 # +(pattern), one or more occurrences of the pattern, e.g. +(abc) matches abc or abcabc but NOT nothing.
 # @(pattern1|pattern2|...), matches exactly one of the specified patterns, e.g., @(jpg|png) matches jpg or png.
 # !(pattern), matches anything except the pattern, e.g., !(abc) matches any string except abc.
-# Enhanced history tool if 'hh' script is on PATH
+
+# Enhanced history tool (requires 'hh' script on PATH)
+# By having this in .bashrc, we can properly see all user history
 h() {
     export HH_INVOCATION=1   # Required to invoke hh
     history -a               # Save the current session's unsaved history to \$HISTFILE
-    if command -v hh >/dev/null 2>&1; then hh \"\$@\"
-    else history \"\$@\"     # If 'hh' does not exist, fallback to 'history'
+    if command -v hh >/dev/null 2>&1
+    then hh \"\$@\"
+    else echo \"hh tool not found on PATH, so will use 'history':\"; history \"\$@\"
     fi
     unset HH_INVOCATION
 }
@@ -81,23 +93,23 @@ defshow() {
         return
     fi
     local OVERLAPS=()   # Track overlaps in an array, i.e. where the item is in more than one category
-    local BAT=\"cat\"   # Check if batcat is available
+    local PAGER=\"cat\"   # Use 'cat' if 'batcat' is not available
     if command -v batcat >/dev/null 2>&1; then   # Only use 'batcat' if available
-        BAT=\"batcat -pp -l bash\"
+        PAGER=\"batcat -pp -l bash\"
     fi
     if declare -F \"\$1\" >/dev/null 2>&1; then   # check for a 'Function'
-        echo \"Function '\$1':\"; declare -f \"\$1\" | \$BAT; OVERLAPS+=(\"Function\")
+        declare -f \"\$1\" | \$PAGER; OVERLAPS+=(\"Function\"); echo; echo \"Function '\$1':\"; 
     fi
     if alias \"\$1\" >/dev/null 2>&1; then   # check for an 'Alias'
-        echo \"Alias '\$1':\"; alias \"\$1\" | \$BAT; OVERLAPS+=(\"Alias\")
+        alias \"\$1\" | \$PAGER; OVERLAPS+=(\"Alias\"); echo; echo \"Alias '\$1':\"
     fi
     if type -t \"\$1\" | grep -q \"builtin\"; then   # check for a 'built-in command'
-        echo \"Built-in Command '\$1':\"; help \"\$1\" | \$BAT; OVERLAPS+=(\"Built-in\")
+        help \"\$1\" | \$PAGER; OVERLAPS+=(\"Built-in\"); echo; echo \"Built-in Command '\$1':\"
     fi
     if command -v \"\$1\" >/dev/null 2>&1; then   # check for an 'external script'
         local SCRIPT_PATH=\$(command -v \"\$1\")
         if [[ -f \"\$SCRIPT_PATH\" ]]; then
-            echo \"Script '\$1' is at '\$SCRIPT_PATH':\"; \$BAT \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\")
+            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH':\" 
         fi
     fi
     # Display overlaps

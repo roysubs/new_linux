@@ -1,0 +1,9 @@
+# rm !(abc.txt)  # Remove everything except abc.txt
+# rm !(*.pdf)    # Remove everything except pdf files
+# !#             # Retype from current line)
+# cp /some/long/path/file !#:1 (now press tab and it will expand)
+# Event Designators: !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
+# !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)
+# Event Designators:
+# !?grep? (last command with 'grep' somewhere in the body), !ssh (last command starting 'ssh')
+# !?torn  (grep for last command with 'torn' in the body),   wc !?torn:2   (run wc using the 2nd argument of the last command with 'torn' in body)

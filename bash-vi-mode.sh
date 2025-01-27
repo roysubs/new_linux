@@ -1,7 +1,11 @@
 #!/bin/bash
 
 # Only run this script if it is sourced
-(return 0 2>/dev/null) || { echo "Only run this script sourced (i.e., '. ./set-vi-mode.sh' to change to vi mode)"; exit 1; }
+(return 0 2>/dev/null) || {
+    echo "Only run this script sourced (i.e., '. ./set-vi-mode.sh' to change to vi mode)"
+    echo "This will set the bash environment to vi mode with:   set -o vi"
+    exit 1;
+}
 
 echo
 echo "set -o vi"
