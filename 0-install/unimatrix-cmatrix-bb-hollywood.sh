@@ -41,12 +41,20 @@ echo "
 ==========
 
 unimatrix has been setup in ~/scripts/unimatrix
-Symbolic link 'unimatrix' added on \$PATH at /usr/local/bin
-Could alias with: alias unimatrix='python3 ~/unimatrix/unimatrix.py'
+Symbolic link 'unimatrix' added on \$PATH at /usr/local/bin:
+    sudo ln -sf "$(pwd)/unimatrix.py" /usr/local/bin/unimatrix
+    sudo chmod +x /usr/local/bin/unimatrix
+Could alternatively alias with:
+    alias unimatrix='python3 ~/unimatrix/unimatrix.py'
+unimatrix is based on cmatrix. The following should produce virtually
+the same output as CMatrix:
+    unimatrix -n -s 96 -l o
 
-cmatrix - alternative Matrix screensaver
+cmatrix setup via apt package; alternative Matrix screensaver
 
-bb - ascii graphics toy
+bb setup via apt package; ascii graphics toy
+
+hollywood setup via apt package; ascii graphics screensaver toy
 "
 
 

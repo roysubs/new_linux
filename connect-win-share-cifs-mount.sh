@@ -2,7 +2,7 @@
 
 # Check if the required arguments are provided
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <WINDOWS_NAME_OR_IP> <SHARE_NAME> <USER_NAME>"
+    echo "Usage: $(basename 0) <WINDOWS_NAME_OR_IP> <SHARE_NAME> <USER_NAME>"
     echo "   If connecting via hostname, it must be visible from this system."
     exit 1
 fi
@@ -73,9 +73,21 @@ fi
 read -s -p "Enter password for $USER_NAME to connect to the Samba/CIFS share: " SMB_PASS
 echo
 
+# # Mount the share
+# echo "Mounting $UNC_PATH to $TARGET..."
+# sudo mount -t cifs "$UNC_PATH" "$TARGET" -o username="$USER_NAME",password="$SMB_PASS",rw,file_mode=0777,dir_mode=0777 && echo "Mount successful."
+
 # Mount the share
 echo "Mounting $UNC_PATH to $TARGET..."
-sudo mount -t cifs "$UNC_PATH" "$TARGET" -o username="$USER_NAME",password="$SMB_PASS",rw,file_mode=0777,dir_mode=0777 && echo "Mount successful."
+MOUNT_OUTPUT=$(sudo mount -t cifs "$UNC_PATH" "$TARGET" -o username="$USER_NAME",password="$SMB_PASS",rw,file_mode=0777,dir_mode=0777 2>&1)
+
+# Check if the mount command was successful
+if [ $? -eq 0 ]; then
+    echo "Mount successful."
+else
+    echo "Mount failed: $MOUNT_OUTPUT"
+    exit 1  # Exit the script if mount fails
+fi
 
 # Add to /etc/fstab for persistent mount
 read -p "Add this mount to /etc/fstab for persistence? [y/n]: " persist
