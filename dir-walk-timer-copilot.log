@@ -1,0 +1,73 @@
+Analyzing directories and files in: .
+Counting directories at 2025-01-25_08-17-04...
+
+Directory Method 1 (find)
+Running:
+sudo find '.' -type d | wc -l
+Directory Method 1 (find)
+Running: sudo find '.' -type d | wc -l
+Count: 65
+Time: .034604798 seconds
+
+Directory Method 2 (tree)
+Running:
+sudo tree -afi '.' | tail -n 1 | awk '{print $1}'
+Directory Method 2 (tree)
+Running: sudo tree -afi '.' | tail -n 1 | awk '{print $1}'
+Count: 65
+Time: .034205412 seconds
+
+Directory Method 5 (bash loop)
+Running:
+count=0; sudo find '.' -type d | while IFS= read -r; do count=$((count + 1)); done; echo $count
+Directory Method 5 (bash loop)
+Running: count=0; sudo find '.' -type d | while IFS= read -r; do count=$((count + 1)); done; echo $count
+Count: 0
+Time: .031888872 seconds
+
+Directory Method 6 (perl)
+Running:
+sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub {}, postprocess => sub { ++$n }}, "."); print $n'
+Directory Method 6 (perl)
+Running: sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub {}, postprocess => sub { ++$n }}, "."); print $n'
+Count: 65
+Time: .084416659 seconds
+
+Directory Method 7 (python)
+Running:
+sudo /usr/bin/python3 -c 'import os; print(sum([len(dirs) for _, dirs, _ in os.walk(".")]) + 1)'
+Directory Method 7 (python)
+Running: sudo /usr/bin/python3 -c 'import os; print(sum([len(dirs) for _, dirs, _ in os.walk(".")]) + 1)'
+Count: 65
+Time: .078890498 seconds
+
+
+
+
+Counting files at 2025-01-25_08-17-04...
+
+File Method 1 (find)
+Running: sudo find '.' -type f | wc -l
+Count: 421
+Time: .027533144 seconds
+
+File Method 2 (tree)
+Running: sudo tree -a '.' | tail -n1 | awk '{print $3}'
+Count: 421
+Time: .032646821 seconds
+
+File Method 4 (bash loop)
+Running: count=0; sudo find '.' -type f | while IFS= read -r; do count=$((count + 1)); done; echo $count
+Count: 0
+Time: .044879693 seconds
+
+File Method 5 (perl)
+Running: sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub { ++$n },postprocess => sub {--$n}}, "."); print $n'
+Count: 421
+Time: .085522553 seconds
+
+File Method 6 (python)
+Running: sudo /usr/bin/python3 -c 'import os; print(sum([len(files) for _, _, files in os.walk(".")]))'
+Count: 421
+Time: .077800290 seconds
+

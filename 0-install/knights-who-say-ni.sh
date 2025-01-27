@@ -66,5 +66,8 @@ else
 fi
 
 # Display content with pv
+echo
+echo
+echo
 cat "$OUTPUT_FILE" | pv -qL 50
 

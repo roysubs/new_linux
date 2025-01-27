@@ -11,8 +11,8 @@ if [ $# -eq 0 ]; then
     echo "  s <package(s)>   Search for the specified package(s)"
     echo "  u                Update, upgrade, and autoremove packages with sudo"
     echo "  v <package(s)>   View info: version, dependencies, package contents, etc."
-    echo "  d <package(s)>   Depends: packages that depend upon and all packages that can fulfill that"
-    echo "  rd <package(s)>  Reverse depends: reverse depends upon the specified package(s)"
+    echo "  d <package(s)>   Depends: Packages required to install the specified package(s)"
+    echo "  rd <package(s)>  Reverse depends: Packages that depends upon the specified package(s)"
     exit 0
 fi
 
