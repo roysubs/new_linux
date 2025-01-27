@@ -16,11 +16,12 @@ HISTORY_FILE=~/.bash_history
 if [ $# -eq 0 ]; then
     echo "History Tool. Usage: h [option] [arguments]"
     echo "Options:"
+    echo "  all            Show all history"
     echo "  clear!         Clear the history (danger; will wipe everything)"
     echo "  e              Edit the history using your default editor"
     echo "  f <string>     Search history for a specific string"
+    echo "  s <string>     Search history for a specific string"
     echo "  n <number>     Show the last <number> commands"
-    echo "  s              Show the full history with line numbers"
     echo "  help           Display additional helpful history tips"
     echo "  examples       Display history usage examples"
     echo ""
@@ -47,6 +48,9 @@ display_history() {
 }
 
 case "$option" in
+    all)
+        display_history  # Show the full history with formatted output
+        ;;
     clear!)
         history -c
         echo "History cleared (wipes everything)."
@@ -56,14 +60,16 @@ case "$option" in
         ${EDITOR:-vi} "$HISTORY_FILE"
         ;;
     f)
+        # A script has no visibility of the users history, so did various debugging.
         # hexdump -C <<< "$value"  # Debugging step to check the value
+        # Finally, altered this so that 'h' is in .bashrc, and 'hh' is a separate script.
+        display_history | grep --color=auto "$value"  # Search directly in the formatted history output
+        ;;
+    s)
         display_history | grep --color=auto "$value"  # Search directly in the formatted history output
         ;;
     n)
         display_history | tail -n "$value"  # Show the last n commands from the formatted history output
-        ;;
-    s)
-        display_history  # Show the full history with formatted output
         ;;
     examples)
         echo "Examples of using history:"

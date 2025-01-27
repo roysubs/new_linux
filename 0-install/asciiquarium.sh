@@ -2,9 +2,35 @@
 
 # Install the Term::Animation
 sudo apt install libcurses-perl
-wget https://cpan.metacpan.org/authors/id/K/KB/KBAUCOM/Term-Animation-2.5.tar.gz
-tar xzf Term-Animation-2.5.tar.gz
-cd Term-Animation-2.5/
+
+#!/bin/bash
+
+# Define variables
+URL="https://cpan.metacpan.org/authors/id/K/KB/KBAUCOM/Term-Animation-2.5.tar.gz"
+FILENAME=$(basename "$URL")
+TMP_DIR="/tmp"
+TARGET_DIR="/opt/Term-Animation-2.5"
+
+# Check if the file already exists in /tmp
+if [[ -f "$TMP_DIR/$FILENAME" ]]; then
+    echo "File already exists: $TMP_DIR/$FILENAME"
+else
+    wget -P "$TMP_DIR" "$URL"
+    if [[ $? -ne 0 ]]; then echo "Failed to download file: $URL"; exit 1; fi
+fi
+
+# Check if the target directory already exists
+if [[ -d "$TARGET_DIR" ]]; then
+    echo "Target directory already exists: $TARGET_DIR"
+else
+    sudo mkdir -p "$TARGET_DIR"
+    sudo tar -xzf "$TMP_DIR/$FILENAME" -C "$TARGET_DIR" --strip-components=1
+    if [[ $? -ne 0 ]]; then echo "Failed to extract file: $TMP_DIR/$FILENAME"; exit 1; fi
+fi
+
+echo "File downloaded and extracted to $TARGET_DIR"
+
+cd "$TARGET_DIR"
 perl Makefile.PL
 make 
 sudo make install

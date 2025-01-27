@@ -40,11 +40,12 @@ fi
 run_command lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,UUID,MOUNTPOINTS
 echo "# RM (Removable drive), RO (Read-only)"
 
-# Check if device argument is provided
 if [ -z "$1" ]; then
     echo
-    echo -e "Usage: $0 /dev/sdX [Size]"
-    echo "Size can be in any unit with or without 'B', e.g. 5G, 1PB, 100m, 500kb, etc"
+    echo -e "Usage:  $(basename "$0") /dev/sdX [Size]"
+    echo "sdX: The disk to operate on; this will usually be one of sda, sdb, sdc, ..."
+    echo "Size: The size of partition to create. Accepts any unit, in upper or lower case."
+    echo "e.g. 5G or 5gb, 1PB, 100m or 100MB, 500kb, etc"
     echo
     exit 1
 fi

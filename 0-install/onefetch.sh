@@ -4,4 +4,3 @@ if [ "$(id -u)" -ne 0 ]; then echo -e "\033[31mElevation required; rerunning as 
 
 apt install cmake
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
