@@ -5,13 +5,14 @@
 if [ $# -eq 0 ]; then
     echo "Apt Tool. Usage: a [option] <package(s)>"
     echo "Options:"
-    echo "  d <package(s)>  Depends: find packages that depend upon the specified package(s)"
-    echo "  i <package(s)>  Install the specified package(s) with sudo"
-    echo "  h               History: show install/remove/upgrade history"
-    echo "  r <package(s)>  Remove the specified package(s) with sudo"
-    echo "  s <package(s)>  Search for the specified package(s)"
-    echo "  u               Update, upgrade, and autoremove packages with sudo"
-    echo "  v <package(s)>  View info: version, dependencies, package contents, etc."
+    echo "  i <package(s)>   Install the specified package(s) with sudo"
+    echo "  h                History: show install/remove/upgrade history"
+    echo "  r <package(s)>   Remove the specified package(s) with sudo"
+    echo "  s <package(s)>   Search for the specified package(s)"
+    echo "  u                Update, upgrade, and autoremove packages with sudo"
+    echo "  v <package(s)>   View info: version, dependencies, package contents, etc."
+    echo "  d <package(s)>   Depends: packages that depend upon and all packages that can fulfill that"
+    echo "  rd <package(s)>  Reverse depends: reverse depends upon the specified package(s)"
     exit 0
 fi
 
@@ -19,13 +20,6 @@ option=$1
 shift  # Shift to access package arguments
 
 case "$option" in
-    d)
-        for package in "$@"; do
-            echo "Dependencies for $package:"
-            apt-cache rdepends "$package"
-            echo
-        done
-        ;;
     i)
         sudo apt install "$@"
         ;;
@@ -70,6 +64,20 @@ case "$option" in
             else
                 echo "Install apt-file to view contents of a package that is not currently installed."
             fi
+            echo
+        done
+        ;;
+    d)
+        for package in "$@"; do
+            echo "Dependencies for $package:"
+            apt-cache depends "$package"
+            echo
+        done
+        ;;
+    rd)
+        for package in "$@"; do
+            echo "Reverse dependencies for $package:"
+            apt-cache rdepends "$package"
             echo
         done
         ;;

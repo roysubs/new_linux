@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Install and configure PowerShell 7.x for Debian
+# Install and configure PowerShell 7.x for Ubuntu and Linux Mint 
 
-echo "Install PowerShell 7.4 on Linux Mint (Ubuntu 22.04 based)"
+echo "Install PowerShell 7.4 on Ubuntu or Linux Mint"
 
 # Update the list of packages and ensure wget is installed
 sudo apt-get update && sudo apt-get install -y wget

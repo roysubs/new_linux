@@ -62,7 +62,7 @@ if has('termguicolors')   \" Cursor types
     let &t_SR = \"\\e[4 q\"
     let &t_EI = \"\\e[2 q\"
 endif
-\" Key mappings, nnoremap: n (normal mode) nonre (non-recursive), map (map key)
+\" Key mappings, nnoremap: n (normal mode) nore (non-recursive), map (map a key)
 nnoremap <C-a> <esc>gg0VG<CR>  \" Ctrl-a : select all (normal mode)
 inoremap <C-s> <esc>:w<CR>     \" Ctrl-s : save file while in insert mode
 inoremap <S-Down> <Esc>Vj      \" Shift-cursordown   : Visual Line mode and select down

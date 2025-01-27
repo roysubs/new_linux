@@ -12,7 +12,9 @@ if ! command -v glow >/dev/null 2>&1; then
     sudo apt update && sudo apt install -y glow
 fi
 
-# Remove every h-* file in /usr/local/bin that contains "glow -p"
+# The following will only operate on files that:
+# - Have the name "h-*"
+# - Contain the text "glow -p" somewhere in the file
 for file in /usr/local/bin/h-*; do
     if [ -f "$file" ] && grep -q "glow -p" "$file"; then
         echo "Remove: $file"
@@ -35,8 +37,10 @@ for file in ~/new_linux/0-help/h-*; do
     fi
 done
 
+echo
 echo "Markdown help files installed to /usr/local/bin/ (which is in \$PATH)"
 echo "Type h- then press Tab twice to see available markdown help files."
+echo
 
 # We use /usr/local/bin becasue it is a standard directory used for user-installed executable programs.
 # By convention, /usr/local/bin is used to store programs that the system administrator installs
