@@ -13,6 +13,7 @@ if [ $# -eq 0 ]; then
     echo "  v <package(s)>   View info: version, dependencies, package contents, etc."
     echo "  d <package(s)>   Depends: Packages required to install the specified package(s)"
     echo "  rd <package(s)>  Reverse depends: Packages that depends upon the specified package(s)"
+    echo
     exit 0
 fi
 

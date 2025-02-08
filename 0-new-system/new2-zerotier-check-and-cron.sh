@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "
+This script will check, enabled, and start ZeroTier, join a ZeroTier network,
+verify the network status. Then, a monitoring script will be setup in ~/.config
+and a cron job will be created to restart the service if it goes down.
+"
+
 # Prompt the user for the ZeroTier network ID
 echo -e "\033[1;32mStep 1: Input the ZeroTier Network ID\033[0m"
 read -p "Please enter your ZeroTier network ID (e.g., 9f77fc393eeda812): " network_id
