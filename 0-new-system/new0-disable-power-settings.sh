@@ -60,15 +60,14 @@ done
 
 # Additional Manual Steps
 
-# Edit sleep.target if further customization is required
+# Edit sleep.target if further customization is required:
 # To explicitly override the behavior of the sleep.target:
-# 1. Run the following command:
-#    sudo systemctl edit sleep.target
-# 2. In the editor, add the following lines to disable sleep:
-#    [Unit]
-#    Description=Sleep Target
-#    ConditionPathExists=/nonexistent
-# 3. Save and exit.
+#    Run the following command:  sudo systemctl edit sleep.target
+#    In the editor, add the following lines to disable sleep:
+#       [Unit]
+#       Description=Sleep Target
+#       ConditionPathExists=/nonexistent
+#    Save and exit.
 # This step ensures that sleep.target cannot be activated even if other settings fail.
 
 

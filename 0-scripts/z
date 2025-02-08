@@ -1,0 +1,111 @@
+#!/bin/bash
+# Zip Tool Script
+# Provides utilities for zipping, unzipping, and compressing files and folders.
+# Supports commands for zipping files, extracting archives, and more.
+
+show_help() {
+    echo "Zip Tool. Usage: z [option] <file(s)>"
+    echo "Options:"
+    echo "  a <zipfile> <file(s)>       Add files to an archive (7z preferred, gzip fallback)"
+    echo "  an <zipfile> <file(s)>      Add files, no recursion, ignore all subdirectories"
+    echo "  ar <zipfile> <file(s)>      Add files, recurse into subfolders if selected"
+    echo "  x <zipfile>                 Extract an archive to a folder named after the zip file"
+    echo "  i <zipfile>                 Show info about an archive (size, number of files)"
+    echo "  g <gzipfilename> <file(s)>  Compress files using gzip"
+    echo "  un <archivefile>            Extract a .tar, .tar.gz, or .tar.xz file"
+    echo "  help                        Show this help message"
+    echo ""
+}
+
+run_command() {
+    echo -e "\033[1;34m$@\033[0m"
+    "$@"
+}
+
+# Check if 7z is available
+if command -v 7z > /dev/null 2>&1; then
+    COMPRESS_CMD="7z"
+    EXT="7z"
+else
+    COMPRESS_CMD="gzip"
+    EXT="gz"
+fi
+
+if [ $# -eq 0 ]; then
+    show_help
+    exit 0
+fi
+
+option=$1
+shift  # Shift to access file arguments
+
+case "$option" in
+    a|ar|an)
+        if [ $# -lt 2 ]; then
+            echo "Error: Provide a zipfile followed by files to add."
+            exit 1
+        fi
+        zipfile=$1
+        shift
+
+        # Handle recursion based on the option
+        if [ "$option" == "ar" ]; then
+            # Add files with recursion
+            run_command $COMPRESS_CMD a "$zipfile.$EXT" "$@" 
+        elif [ "$option" == "an" ]; then
+            # Filter out directories, only add files
+            files_to_add=()
+            for file in "$@"; do
+                if [ -f "$file" ]; then
+                    files_to_add+=("$file")
+                fi
+            done
+            run_command $COMPRESS_CMD a "$zipfile.$EXT" "${files_to_add[@]}"
+        else
+            # Add files with default (7z or gzip)
+            run_command $COMPRESS_CMD a "$zipfile.$EXT" "$@"
+        fi
+        ;;
+    x)
+        if [ $# -ne 1 ]; then
+            echo "Error: Provide a zipfile to extract."
+            exit 1
+        fi
+        zipfile=$1
+        # Extract the zip file to a folder without the .zip extension
+        run_command mkdir -p "${zipfile%.zip}"
+        run_command $COMPRESS_CMD x "$zipfile" -o"${zipfile%.zip}"
+        ;;
+    i)
+        if [ $# -ne 1 ]; then
+            echo "Error: Provide a zipfile to show info."
+            exit 1
+        fi
+        zipfile=$1
+        run_command $COMPRESS_CMD l "$zipfile"
+        ;;
+    g)
+        if [ $# -lt 2 ]; then
+            echo "Error: Provide a gzip filename followed by files to compress."
+            exit 1
+        fi
+        gzipfilename=$1
+        shift
+        run_command gzip "$gzipfilename" "$@"
+        ;;
+    un)
+        if [ $# -ne 1 ]; then
+            echo "Error: Provide a tar archive to extract."
+            exit 1
+        fi
+        archivefile=$1
+        run_command tar -xvf "$archivefile"
+        ;;
+    help)
+        show_help
+        ;;
+    *)
+        echo "Invalid option. Use 'z' without arguments to see usage."
+        ;;
+esac
+

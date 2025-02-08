@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 'size' on its own will work out the size of the present working directory (including subdirectories)
+# 'size /path/to/check' will do the same for a given path
+# 'size -c' will do the above, but will also count the number of files and directories in the tree
+
 count=false
 path="."
 
@@ -26,17 +30,27 @@ fi
 start_time=$(date +%s.%N)  # Set start time to the current time
 
 if [[ -f "$path" ]]; then
-    echo "'$path' is in $(dirname "$path")"
-    path=.
+    echo "'$path' is a file, not a directory."
+    exit 1
 fi
+
 if [[ -d "$path" ]]; then
     size_info=$(du -sh "$path" 2>/dev/null | awk '{print $1}')
-    df_output=$(df -h "$path" 2>/dev/null)  # Use human-readable format
-    device=$(echo "$df_output" | awk 'NR==2 {print $1}')
-    size=$(echo "$df_output" | awk 'NR==2 {print $2}')
-    used=$(echo "$df_output" | awk 'NR==2 {print $3}')
-    available=$(echo "$df_output" | awk 'NR==2 {print $4}')
-    use_percent=$(echo "$df_output" | awk 'NR==2 {print $5}')
+    
+    # Output raw df data for debugging
+    df_output=$(df -h "$path" 2>/dev/null)
+    echo "Raw df output: $df_output"  # Debugging line
+
+    # Fetch details from the last line of df_output
+    device=$(echo "$df_output" | tail -n 1 | awk '{print $1}')
+    size=$(echo "$df_output" | tail -n 1 | awk '{print $2}')
+    used=$(echo "$df_output" | tail -n 1 | awk '{print $3}')
+    available=$(echo "$df_output" | tail -n 1 | awk '{print $4}')
+    use_percent=$(echo "$df_output" | tail -n 1 | awk '{print $5}')
+
+    # Check if these variables are being set correctly
+    echo "Device: $device, Size: $size, Used: $used, Available: $available, Use%: $use_percent"  # Debugging line
+
     end_time=$(date +%s.%N)  # Set end time to the current time
     elapsed_time=$(echo "$end_time - $start_time" | bc)  # Calculate elapsed time
 

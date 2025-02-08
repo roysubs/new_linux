@@ -89,7 +89,8 @@ if [ -z "$partition_numbers" ]; then
 else
     for partition_number in $partition_numbers; do
         echo "Removing partition number: $partition_number from $device"
-        run_command parted --script "$device" rm "$partition_number"
+        disk="${device%[0-9]*}"   # parted rm   must be run on the underlying disk, not the partition
+        run_command parted --script "$disk" rm "$partition_number"
     done
 fi
 

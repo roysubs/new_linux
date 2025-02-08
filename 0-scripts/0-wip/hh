@@ -1,0 +1,76 @@
+#!/bin/bash
+# History Tool: View command history.
+
+# Check if invoked by the 'h' function
+echo "Checking if HH_INVOCATION is set: $HH_INVOCATION"
+if [ -z "$HH_INVOCATION" ]; then
+    echo "Error: This script must be invoked via the 'h' function in .bashrc."
+    exit 1
+fi
+
+# Temporary history file passed from the 'h' function
+TEMP_HISTORY_FILE="$3"
+echo "Using temporary history file: $TEMP_HISTORY_FILE"
+
+# Function to display history with timestamps from the temporary history file
+display_history() {
+    # Display history with timestamps and command
+    awk '{
+        timestamp=$2 " " $3;
+        cmd = substr($0, index($0,$4));
+        print $1, timestamp, cmd;
+    }' "$TEMP_HISTORY_FILE"
+}
+
+# Handling options
+option=$1
+value=$2
+
+case "$option" in
+    all)
+        display_history  # Show the full history with formatted output
+        ;;
+    f|s)
+        display_history | grep --color=auto "$value"  # Search history with the value
+        ;;
+    n)
+        display_history | tail -n "$value"  # Show the last 'n' commands
+        ;;
+    clear!)
+        history -c  # Clear history in the current session
+        echo "History cleared."
+        ;;
+    e)
+        history -w  # Write current session history to the history file
+        ${EDITOR:-vi} "$HISTORY_FILE"  # Edit the history file with the default editor
+        ;;
+    examples)
+        echo "Examples of using history:"
+        echo "  history 7          # Show last 7 history lines"
+        echo "  !51                # Run command 51 in history"
+        echo "  !!                 # Run last command"
+        echo "  sudo !!            # Run last command with sudo"
+        echo "  su -c \"!!\" root # Run last command as root"
+        echo "  rm !(abc.txt)      # Remove everything except abc.txt"
+        echo "  cp /path/file !#:1 # Expand first argument of the current line"
+        ;;
+    help|'?')
+        echo "History Usage and configuration variable:"
+        echo "  !!                 # Run last command, often used e.g. 'sudo !!' to rerun with sudo"
+        echo "  su -c \"!!\" root  # Switch user to root and run last command"
+        echo "  !<number>          # Run specific command from history, e.g. !51"
+        echo "  !-<number>         # Run command relative to the last command, e.g. !-3 3rd last"
+        echo "  !?<string>?        # Run last command containing 'string', e.g. !?grep?"
+        echo "  !*                 # Insert parameters from previous command"
+        echo "    e.g. touch file1 file2 file3"
+        echo "         chmod +x !*   =>   chmod +x file1 file2 file3"
+        ;;
+    *)
+        if [[ "$option" =~ ^[0-9]+$ ]]; then
+            display_history | tail -n "$option"  # Show the last 'n' commands from the formatted history
+        else
+            echo "Invalid option. Usage: h [option] <string>"
+        fi
+        ;;
+esac
+
