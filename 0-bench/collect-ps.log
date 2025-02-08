@@ -1,0 +1,120 @@
+[20250207-195013]     PID    PPID CMD                         %MEM %CPU
+[20250207-195013]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195013]     938       1 /usr/sbin/tailscaled --stat  1.3  1.6
+[20250207-195013]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195013]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195013]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195013]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195013]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195013]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195013]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195018]     PID    PPID CMD                         %MEM %CPU
+[20250207-195018]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195018]     938       1 /usr/sbin/tailscaled --stat  1.3  1.6
+[20250207-195018]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195018]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195018]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195018]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195018]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195018]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195018]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195023]     PID    PPID CMD                         %MEM %CPU
+[20250207-195023]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195023]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195023]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195023]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195023]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195023]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195023]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195023]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195023]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195028]     PID    PPID CMD                         %MEM %CPU
+[20250207-195028]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195028]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195028]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195028]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195028]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195028]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195028]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195028]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195028]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195033]     PID    PPID CMD                         %MEM %CPU
+[20250207-195033]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195033]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195033]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195033]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195033]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195033]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195033]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195033]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195033]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195038]     PID    PPID CMD                         %MEM %CPU
+[20250207-195038]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195038]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195038]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195038]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195038]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195038]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195038]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195038]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195038]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195043]     PID    PPID CMD                         %MEM %CPU
+[20250207-195043]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195043]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195043]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195043]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195043]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195043]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195043]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195043]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195043]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195048]     PID    PPID CMD                         %MEM %CPU
+[20250207-195048]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195048]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195048]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195048]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195048]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195048]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195048]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195048]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195048]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195053]     PID    PPID CMD                         %MEM %CPU
+[20250207-195053]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195053]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195053]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195053]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195053]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195053]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195053]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195053]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195053]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195058]     PID    PPID CMD                         %MEM %CPU
+[20250207-195058]  170444       1 qbittorrent-nox             62.9 14.2
+[20250207-195058]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195058]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195058]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195058]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195058]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195058]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195058]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195058]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195103]     PID    PPID CMD                         %MEM %CPU
+[20250207-195103]  170444       1 qbittorrent-nox             62.9 14.1
+[20250207-195103]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195103]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195103]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195103]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195103]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195103]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195103]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195103]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
+[20250207-195109]     PID    PPID CMD                         %MEM %CPU
+[20250207-195109]  170444       1 qbittorrent-nox             62.9 14.1
+[20250207-195109]     938       1 /usr/sbin/tailscaled --stat  1.4  1.6
+[20250207-195109]    1812    1789 /usr/sbin/lightdm-gtk-greet  0.5  0.0
+[20250207-195109]    1229       1 /usr/bin/navidrome service   0.4  0.0
+[20250207-195109]    1344    1281 /usr/lib/xorg/Xorg :0 -seat  0.4  0.0
+[20250207-195109]     282       1 /lib/systemd/systemd-journa  0.3  0.0
+[20250207-195109]    1782       1 /usr/sbin/exim4 -bd -q30m    0.3  0.0
+[20250207-195109]  168896    1721 /usr/sbin/smbd --foreground  0.2  0.1
+[20250207-195109]   84285       1 /usr/bin/atop -w /var/log/a  0.2  0.0
