@@ -15,7 +15,7 @@ rsync -avh --delete "$SRC_DIR" "$DST_DIR"
 
 # Check if rsync succeeded
 if [ $? -eq 0 ]; then
-    echo "Replication completed successfully. '$DST_DIR' is now a replica of '$SRC_DIR'."
+    echo -e "Replication completed successfully.\n'$DST_DIR' is now a replica of '$SRC_DIR'."
 else
     echo "Error: Replication failed."
     exit 1
