@@ -46,8 +46,10 @@ To bring up Tailscale:
    sudo tailscale up   # If not authenticated, this will prompt to connect to a network
    tailscale ip        # Show the tailscale ip assigned to this host, e.g., 100.x.x.x
 
-You can now ssh directly to the remote system by it's tailscale ip if both are authenticated on
-the same network.
+To view your network, check machines here:
+https://login.tailscale.com/admin/machines
+
+You can now ssh directly to any remote system  on the tailscale network using its tailscale ip
 
 Optional: Enable subnet routing or use MagicDNS for easier access to other devices on your networks.
 Refer to the official Tailscale documentation for advanced configurations: https://tailscale.com/kb.
