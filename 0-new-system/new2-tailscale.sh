@@ -35,26 +35,22 @@ cat <<EOF
 
 Tailscale is installed and running on this system.
 
-To set up two-way communication between this system and a remote system:
-
-1. Install Tailscale on the remote system also using this script, or just the invoked tailscale script:
+To set up two-way communication between this system and a remote system, ensure that tailscale is
+installed and running on both. To manual install:
    curl -fsSL https://tailscale.com/install.sh | sh
-   systemctl status tailscaled
-   systemctl enable --now tailscaled
-   Note the official documentation at:   https://tailscale.com/download
+   sudo systemctl status tailscaled
+   sudo systemctl enable --now tailscaled   # Tailscale service will start on every boot
+Note the official documentation at:   https://tailscale.com/download
 
-2. Authenticate both systems using "tailscale up" on each.
+To bring up Tailscale:
+   sudo tailscale up   # If not authenticated, this will prompt to connect to a network
+   tailscale ip        # Show the tailscale ip assigned to this host, e.g., 100.x.x.x
 
-3. Once both systems are authenticated, check the Tailscale IP addresses for each system:
-   - On this system: Run "tailscale ip" (e.g., 100.x.x.x).
-   - On the remote system: Run "tailscale ip" to get its Tailscale IP.
+You can now ssh directly to the remote system by it's tailscale ip if both are authenticated on
+the same network.
 
-4. Verify connectivity between the two systems:
-   - From this system, you can ping the remote system's Tailscale IP (e.g., "ping 100.x.x.x").
-   - From the remote system, you can ping this system's Tailscale IP.
-
-5. Optional: Enable subnet routing or use MagicDNS for easier access to other devices on your networks.
-   Refer to the official Tailscale documentation for advanced configurations: https://tailscale.com/kb.
+Optional: Enable subnet routing or use MagicDNS for easier access to other devices on your networks.
+Refer to the official Tailscale documentation for advanced configurations: https://tailscale.com/kb.
 
 tailscale status                         # Show current connection status and connected peers
 tailscale netcheck                       # Check network status, NAT type, and connectivity issues
@@ -66,7 +62,6 @@ tailscale up --advertise-routes=192.168.1.0/24  # Advertise this device as a sub
 tailscale up --exit-node=<device-name>   # Route all traffic through a specific Tailscale device (exit node)
 tailscale down                           # Disable Tailscale on this machine
 journalctl -u tailscaled --no-pager | tail -50  # Show last 50 lines of Tailscale logs
-
 
 EOF
 
