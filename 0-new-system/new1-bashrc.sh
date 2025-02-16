@@ -1,15 +1,19 @@
 #!/bin/bash
 
 # Each line in 'bashrc_block' will be tested against .bashrc
-# If that item exists with a different value, it will not alter it.
-# It does not check the whole line, e.g. for 'export EDITOR=vi'
-# if this was set to 'export EDITOR=emacs' or 'nano' this will not
-# be changed as it will check for 'eport EDITOR=' and if that is
-# found it will skip to the next entry.
+# If that item exists with a different value, it will not alter it
+# so by design does not mess up existing configurations (it just
+# adds any elements not covered to the end of .bashrc).
+#
+# e.g. if 'export EDITOR=' is set (to vi or emacs or nano) the
+# export EDITOR= line in here will not be added and the existing
+# line will not be altered.
+#
 # Multi-line functions are treated as a single block; again, if a
-# function with the name exists, it will leave that, but if not,
-# the whole multi-line function from bashrc_block will be added
-# to .bashrc
+# function with that name already exists, this script will not modify
+# that, and will not add the new entry. Otherwise, the whole
+# multi-line function from bashrc_block will be added to .bashrc
+# so the whole function is cleanly added.
 
 # Backup ~/.bashrc before making changes
 BASHRC_FILE="$HOME/.bashrc"
@@ -183,7 +187,9 @@ tmm() {
 }
 "
 
-# Capture the first non-empty line of $bash_block
+# Capture the first non-empty line of $bashrc_block, this is the header line
+# If it currently exists, the script first offers to *remove* everything after
+# the header line, so that all of the $bashrc_block can be updated together.
 first_non_empty_line=$(echo "$bashrc_block" | sed -n '/[^[:space:]]/s/^[[:space:]]*//p' | head -n 1)
 
 # Ensure the variable is not empty
@@ -194,21 +200,25 @@ fi
 
 # Check if this line exists in .bashrc
 if ! grep -Fxq "$first_non_empty_line" "$BASHRC_FILE"; then
-    echo "No matching line found in .bashrc. Skipping removal."
-    exit 0
-fi
-
-# Prompt user for confirmation to wipe from the found line downwards
-echo "Do you want to wipe the existing bashrc_block from .bashrc starting from: $first_non_empty_line ? (y/n)"
-read -r wipe_confirm
-
-if [[ "$wipe_confirm" =~ ^[Yy]$ ]]; then
-    # Delete from the found line to the end of the file
-    sed -i "/$(printf '%s\n' "$first_non_empty_line" | sed 's/[.[\*^$]/\\&/g')/,\$d" "$BASHRC_FILE"
-    echo "Removed from '$first_non_empty_line' to the end of .bashrc."
+    echo "No match for the header line in the \$bashrc_block was found in .bashrc."
+    echo "so will skip full removal and move to a line by line add of \$bashrc_block."
 else
-    echo "No changes made to .bashrc."
+    # Prompt user for confirmation to wipe from the found line downwards
+    echo "Do you want to wipe the existing bashrc_block from .bashrc starting from: $first_non_empty_line ? (y/n)"
+    read -r wipe_confirm
+
+    if [[ "$wipe_confirm" =~ ^[Yy]$ ]]; then
+        # Delete from the found line to the end of the file
+        sed -i "/$(printf '%s\n' "$first_non_empty_line" | sed 's/[.[\*^$]/\\&/g')/,\$d" "$BASHRC_FILE"
+        echo "Removed from '$first_non_empty_line' to the end of .bashrc."
+    else
+        echo "No changes made to .bashrc."
+    fi
 fi
+
+# Always add the first non-empty line to .bashrc, regardless of removals
+# echo "$first_non_empty_line" >> "$BASHRC_FILE"
+# echo "Added '$first_non_empty_line' to .bashrc."
 
 read -p "Press Enter to continue..."
 
@@ -320,128 +330,3 @@ else
   # Script is executed
   echo "This script is not sourced, so to apply changes, run: source ~/.bashrc"
 fi
-
-
-
-# a h option: zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log* | sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\\n/ /;p}' | sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' | grep -v 'Start-Date:' ;;
-# zgrep history.log* is used instead of grep history.log to also look inside rotated logs
-# First sed:   sed -n '/^Start-Date/{h;n;s/^Commandline:
-# Combines Start-Date with the following Commandline
-#    h: Store the Start-Date line in the hold space.
-#    n: Move to the next line (Commandline).
-#    s/^Commandline: //: Remove the Commandline: prefix.
-#    H: Append the processed line to the hold space.
-#    x: Exchange hold and pattern space to combine lines.
-#    s/\n/ /: Replace the newline between Start-Date and Commandline with a space.
-#    p: Print the result.
-# Second sed:
-# Cleans up the output by: Removing Start-Date:. Removing /usr/bin/apt.
-# Final grep: removes redundant lines containing 'Start-Date:'
-
-
-##########
-#
-# Everything below here does nothing, they are just ANSI colour definitions.
-# These can be useful to use in other scripts.
-#
-##########
-#
-# Some examples of use after adding these definitions to scripts:
-# echo -e "${BOLD_RED}Error:${NC} Something went wrong!"
-# echo -e "${GREEN}Success:${NC} Operation completed."
-# PS1="${BOLD_GREEN}\u${NC}@${BOLD_BLUE}\h${NC}:${BOLD_YELLOW}\w${NC}\$ "
-#
-##########
-
-# BLACK
-BLACK='\033[0;30m'
-BLACK_BOLD='\033[1;30m'
-BLACK_UNDERLINE='\033[4;30m'
-BLACK_HIGH_INTENSITY='\033[0;90m'
-BLACK_BOLD_HIGH_INTENSITY='\033[1;90m'
-BLACK_BG='\033[40m'
-BLACK_BG_HIGH_INTENSITY='\033[0;100m'
-
-# RED
-RED='\033[0;31m'
-RED_BOLD='\033[1;31m'
-RED_UNDERLINE='\033[4;31m'
-RED_HIGH_INTENSITY='\033[0;91m'
-RED_BOLD_HIGH_INTENSITY='\033[1;91m'
-RED_BG='\033[41m'
-RED_BG_HIGH_INTENSITY='\033[0;101m'
-
-# GREEN
-GREEN='\033[0;32m'
-GREEN_BOLD='\033[1;32m'
-GREEN_UNDERLINE='\033[4;32m'
-GREEN_HIGH_INTENSITY='\033[0;92m'
-GREEN_BOLD_HIGH_INTENSITY='\033[1;92m'
-GREEN_BG='\033[42m'
-GREEN_BG_HIGH_INTENSITY='\033[0;102m'
-
-# YELLOW
-YELLOW='\033[0;33m'
-YELLOW_BOLD='\033[1;33m'
-YELLOW_UNDERLINE='\033[4;33m'
-YELLOW_HIGH_INTENSITY='\033[0;93m'
-YELLOW_BOLD_HIGH_INTENSITY='\033[1;93m'
-YELLOW_BG='\033[43m'
-YELLOW_BG_HIGH_INTENSITY='\033[0;103m'
-
-# BLUE
-BLUE='\033[0;34m'
-BLUE_BOLD='\033[1;34m'
-BLUE_UNDERLINE='\033[4;34m'
-BLUE_HIGH_INTENSITY='\033[0;94m'
-BLUE_BOLD_HIGH_INTENSITY='\033[1;94m'
-BLUE_BG='\033[44m'
-BLUE_BG_HIGH_INTENSITY='\033[0;104m'
-
-# PURPLE
-PURPLE='\033[0;35m'
-PURPLE_BOLD='\033[1;35m'
-PURPLE_UNDERLINE='\033[4;35m'
-PURPLE_HIGH_INTENSITY='\033[0;95m'
-PURPLE_BOLD_HIGH_INTENSITY='\033[1;95m'
-PURPLE_BG='\033[45m'
-PURPLE_BG_HIGH_INTENSITY='\033[0;105m'
-
-# CYAN
-CYAN='\033[0;36m'
-CYAN_BOLD='\033[1;36m'
-CYAN_UNDERLINE='\033[4;36m'
-CYAN_HIGH_INTENSITY='\033[0;96m'
-CYAN_BOLD_HIGH_INTENSITY='\033[1;96m'
-CYAN_BG='\033[46m'
-CYAN_BG_HIGH_INTENSITY='\033[0;106m'
-
-# WHITE
-WHITE='\033[0;37m'
-WHITE_BOLD='\033[1;37m'
-WHITE_UNDERLINE='\033[4;37m'
-WHITE_HIGH_INTENSITY='\033[0;97m'
-WHITE_BOLD_HIGH_INTENSITY='\033[1;97m'
-WHITE_BG='\033[47m'
-WHITE_BG_HIGH_INTENSITY='\033[0;107m'
-
-# Reset
-NC='\033[0m' # No Color
-
-# Formatting Options
-BOLD='\033[1m'
-DIM='\033[2m'
-ITALIC='\033[3m'
-UNDERLINE='\033[4m'
-BLINK='\033[5m'
-INVERT='\033[7m'
-HIDDEN='\033[8m'
-STRIKETHROUGH='\033[9m'
-RESET_BOLD='\033[21m'
-RESET_DIM='\033[22m'
-RESET_UNDERLINE='\033[24m'
-RESET_BLINK='\033[25m'
-RESET_INVERT='\033[27m'
-RESET_HIDDEN='\033[28m'
-RESET_STRIKETHROUGH='\033[29m'
-
