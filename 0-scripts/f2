@@ -1,0 +1,66 @@
+#!/bin/bash
+
+usage() {
+    echo "Usage: $0 [option] <pattern>"
+    echo "Options:"
+    echo "  fc <pattern>     Find files in common directories matching pattern"
+    echo "  dc <pattern>     Find directories in common locations matching pattern"
+    echo "  days <path> <days> [pattern]  Find files modified in the last X days"
+    echo "  big <path> <size> [pattern]   Find files >= size, in format 100M, 1G, etc"
+    echo "  small <path> <size> [pattern] Find files <= size, in format 100M, 1G, etc"
+    echo "  exe <path> [pattern]          Find executable files"
+    echo "  sym <path> [pattern]          Find symbolic links"
+    echo "  empty <path> [pattern]        Find empty files and directories"
+    echo "  mine <path> [pattern]         Find files owned by the current user"
+    echo "  ext <path> <ext>              Find files by extension"
+    echo "  docs <path> [pattern]         Find document files"
+    exit 1
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+fi
+
+option="$1"
+shift
+
+case "$option" in
+    fc)
+        find /etc /var /usr/local -type f -name "$1"
+        ;;
+    dc)
+        find /etc /var /usr/local -type d -name "$1"
+        ;;
+    days)
+        find "$1" -type f -mtime -"$2" \( -name "$3" \) 2>/dev/null
+        ;;
+    big)
+        find "$1" -type f -size +"$2" \( -name "$3" \) 2>/dev/null
+        ;;
+    small)
+        find "$1" -type f -size -"$2" \( -name "$3" \) 2>/dev/null
+        ;;
+    exe)
+        find "$1" -type f -executable \( -name "$2" \) 2>/dev/null
+        ;;
+    sym)
+        find "$1" -type l \( -name "$2" \) 2>/dev/null
+        ;;
+    empty)
+        find "$1" \( -type f -empty -o -type d -empty \) \( -name "$2" \) 2>/dev/null
+        ;;
+    mine)
+        find "$1" -type f -user "$USER" \( -name "$2" \) 2>/dev/null
+        ;;
+    ext)
+        find "$1" -type f -name "*.$2" 2>/dev/null
+        ;;
+    docs)
+        find "$1" -type f \( -name "*.txt" -o -name "*.pdf" -o -name "*.doc" -o -name "*.docx" -o -name "*.odt" \) \( -name "$2" \) 2>/dev/null
+        ;;
+    *)
+        echo "Error: Unknown option '$option'"
+        usage
+        ;;
+esac
+

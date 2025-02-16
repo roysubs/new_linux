@@ -1,8 +1,14 @@
 #!/bin/bash
 set -e
 
+# echo "$(basename $0)"
+echo "Update a Git repository directory so that all files match the timestamps on the remote."
+echo "A default 'git clone' will set all files to the same current timestamp instead of the"
+echo "last modified timestamp on the remote repository."
+
 # Ensure we are in the root of a Git project
 if [[ ! -d .git ]]; then
+  echo
   echo "Error: This script must be run in the root of a Git repository."
   exit 1
 fi

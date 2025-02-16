@@ -1,0 +1,137 @@
+#!/bin/bash
+# Find Utility Script
+# Provides a set of common find operations with an easier-to-use interface.
+
+BLUE="\e[34m"
+RESET="\e[0m"
+
+# Default to not showing the command
+show_command=false
+
+default_path="."
+
+if [ $# -eq 0 ]; then
+    echo """Find Utility. Usage: f [option <modifier>] [path] <pattern(s)>
+  If an option takes a modifier, that must be directly after the option.
+  Then a (single) path argument (optional, will default to ".").
+  Then search patterns (multiple, but also optional).
+  e.g. f td 3 "*.py" "*.sh"
+Options:
+  fc           Files Common (find files in common directories, searched in /etc, /usr, /opt, /var, ~)
+  dc           Dirs Common (find directories in common locations, searched in /etc, /usr, /opt, /var, ~)
+  td <days>    Find files modified in the last X days
+  th <hours>   Find files modified in the last X hours
+  tm <minutes> Find files modified in the last X minutes
+  ge <size>    Greater than or equal to size, e.g., 100M, 1G
+  le <size>    Less than or equal to size, e.g., 100M, 1G
+  exe          Find executable files
+  sym          Find symbolic links
+  empty        Find empty files and directories under path
+  me           Find files owned by the current user under path
+  ext <ext>    Find files by extension, e.g., f ext py
+  docs         Find document types under path (e.g., pdf, doc, txt, log)
+  common       Find common file types (e.g., conf, sh, txt, log, md)
+  s            Show file sizes with stat
+  p            Show file permissions with stat
+  sp           Show size, then permissions, then name
+  ps           Show permissions, then size, then name
+"""
+    exit 0
+fi
+
+option=$1
+shift
+
+for arg in "$@"; do
+    if [ "$arg" == "-cmd" ]; then
+        show_command=true
+        shift
+        break
+    fi
+done
+
+path="$default_path"
+if [[ "$1" != -* && -n "$1" ]]; then
+    path="$1"
+    shift
+fi
+
+patterns=("$@")
+
+build_name_condition() {
+    local conditions=()
+    for pattern in "$@"; do
+        conditions+=("-name \"$pattern\"")
+    done
+    echo "$(IFS=' -o '; echo "( ${conditions[*]} )")"
+}
+
+run_find() {
+    local find_cmd="find $path $@"
+    if [ "$show_command" = true ]; then
+        echo -e "${BLUE}$find_cmd${RESET}"
+    else
+        eval "$find_cmd"
+    fi
+}
+
+case "$option" in
+    fc)
+        run_find "-type f \( -path /etc -o -path /usr -o -path /opt -o -path /var -o -path $HOME \) $(build_name_condition "${patterns[@]}")"
+        ;;
+    dc)
+        run_find "-type d \( -path /etc -o -path /usr -o -path /opt -o -path /var -o -path $HOME \) $(build_name_condition "${patterns[@]}")"
+        ;;
+    td)
+        run_find "-type f -mtime -$1 $(build_name_condition "${patterns[@]:1}")"
+        ;;
+    th)
+        run_find "-type f -mmin -$(( $1 * 60 )) $(build_name_condition "${patterns[@]:1}")"
+        ;;
+    tm)
+        run_find "-type f -mmin -$1 $(build_name_condition "${patterns[@]:1}")"
+        ;;
+    ge)
+        run_find "-type f -size +$1 $(build_name_condition "${patterns[@]:1}")"
+        ;;
+    le)
+        run_find "-type f -size -$1 $(build_name_condition "${patterns[@]:1}")"
+        ;;
+    ext)
+        run_find "-type f -name \"*.$1\""
+        ;;
+    exe)
+        run_find "-type f -executable $(build_name_condition "${patterns[@]}")"
+        ;;
+    sym)
+        run_find "-type l $(build_name_condition "${patterns[@]}")"
+        ;;
+    empty)
+        run_find "( -type f -empty -o -type d -empty ) $(build_name_condition "${patterns[@]}")"
+        ;;
+    me)
+        run_find "-type f -user $(whoami) $(build_name_condition "${patterns[@]}")"
+        ;;
+    docs)
+        run_find "-type f \( -name \"*.pdf\" -o -name \"*.doc\" -o -name \"*.txt\" -o -name \"*.log\" \)"
+        ;;
+    common)
+        run_find "-type f \( -name \"*.conf\" -o -name \"*.sh\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.md\" \)"
+        ;;
+    s)
+        run_find "$(build_name_condition "${patterns[@]}") -exec stat --format=\"%s %n\" {} \;"
+        ;;
+    p)
+        run_find "$(build_name_condition "${patterns[@]}") -exec stat --format=\"%A %n\" {} \;"
+        ;;
+    sp)
+        run_find "$(build_name_condition "${patterns[@]}") -exec stat --format=\"%s %A %n\" {} \;"
+        ;;
+    ps)
+        run_find "$(build_name_condition "${patterns[@]}") -exec stat --format=\"%A %s %n\" {} \;"
+        ;;
+    *)
+        run_find "$option" "${patterns[@]}"
+        ;;
+esac
+
