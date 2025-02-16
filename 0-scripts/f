@@ -26,7 +26,7 @@ Options:
   exe          Find executable files
   sym          Find symbolic links
   empty        Find empty files and directories under path
-  mine         Find files owned by the current user under path
+  me           Find files owned by the current user under path
   ext <ext>    Find files by extension, e.g., f ext py
   docs         Find document types under path (e.g., pdf, doc, txt, log)
   common       Find common file types (e.g., conf, sh, txt, log, md)
@@ -159,7 +159,7 @@ case "$option" in
         name_condition=$(build_name_condition "${args[@]}")
         run_find_named "${args[0]} -type f -empty -o -type d -empty $name_condition"
         ;;
-    mine)
+    me)
         name_condition=$(build_name_condition "${args[@]}")
         run_find_named "${args[0]} -type f -user $(whoami) $name_condition"
         ;;
