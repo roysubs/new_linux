@@ -2,66 +2,47 @@
 
 # Add ~/new_linux to PATH in both current session (if sourced) and in .bashrc
 
-# Check if the script is sourced (can enable this line to prevent running if not sourced)
+# Optional: Prevent the script running if not sourced (uncomment this line if required)
 # (return 0 2>/dev/null) || { echo "This script must be sourced (e.g. prefix with '.' or 'source')"; exit 1; }
 
-#!/bin/bash
-
-# Function to remove duplicate entries from PATH
+# Function to clean duplicate entries from PATH
 clean_path() {
-  # Split PATH into unique entries, then recombine
   PATH=$(echo "$PATH" | tr ':' '\n' | awk '!seen[$0]++' | tr '\n' ':' | sed 's/:$//')
+}
+
+# Function to add a directory to PATH
+add_to_path() {
+  local DIR="$1"
+
+  # Resolve absolute path (handles ~/ correctly)
+  DIR=$(realpath -e "$HOME/${DIR/#\~\//}") || { echo "Directory $DIR does not exist, skipping."; return 1; }
+
+  # Add to current session if sourced
+  if (return 0 2>/dev/null); then
+    if [[ ":$PATH:" != *":$DIR:"* ]]; then
+      echo "Adding $DIR to PATH for the current session..."
+      export PATH="$DIR:$PATH"
+    else
+      echo "$DIR is already in the PATH for the current session."
+    fi
+  fi
+
+  # Ensure it's added to .bashrc
+  local PROFILE_FILE="$HOME/.bashrc"
+  if ! grep -qxF "export PATH=\"$DIR:\$PATH\"" "$PROFILE_FILE"; then
+    echo "Adding $DIR to PATH in $PROFILE_FILE..."
+    echo "export PATH=\"$DIR:\$PATH\"" >> "$PROFILE_FILE"
+  else
+    echo "$DIR is already in $PROFILE_FILE."
+  fi
 }
 
 # Clean PATH before adding new directories
 clean_path
 
-# Function to add a directory to PATH
-add_to_path() {
-  local DIR="$1"
-  
-  # Resolve ~ to absolute path if required
-  DIR=$(eval realpath -e "$DIR")   # Use eval to expand ~
-
-  # Check if the directory exists
-  if [ ! -d "$DIR" ]; then
-    echo "Directory $DIR does not exist, so it will not be added to \$PATH"
-    return 1
-  fi
-
-  # Add to PATH for the current session if sourced
-  (return 0 2>/dev/null) && {
-    if [[ ":$PATH:" != *":$DIR:"* ]]; then
-      echo "Adding $DIR to PATH for the current session..."
-      export PATH="$DIR:$PATH"
-      echo "PATH updated with '$DIR' for the current session."
-    else
-      echo "$DIR is already in the PATH for the current session."
-    fi
-  }
-
-  # Ensure the directory is added to PATH in the user's profile file
-  local PROFILE_FILE="$HOME/.bashrc"  # Adjust this if using a different shell
-  if ! grep -q "export PATH=.*$DIR*" "$PROFILE_FILE"; then
-    echo "Adding $DIR to PATH in $PROFILE_FILE..."
-    echo "export PATH=\"$DIR:\$PATH\"" >> "$PROFILE_FILE"
-  else
-    echo "$DIR is already in the PATH in $PROFILE_FILE."
-  fi
-
-  echo
-  echo "PATH updated with '$DIR'."
-  echo
-  echo "Current PATH:"
-  echo $PATH
-  echo
-  echo "export PATH line in $PROFILE_FILE:"
-  grep "export PATH=" "$PROFILE_FILE"
-}
-
-# Apply the function to multiple directories
-add_to_path "~/new_linux"
-add_to_path "~/new_linux/0-scripts"
+# Apply function to both directories
+add_to_path "new_linux"
+add_to_path "new_linux/0-scripts"
 
 echo "
 Console Login (TTY Login) order of Profile files:
@@ -105,4 +86,18 @@ echo \$0          # Check the current shell
 bash -x --login  # Debug login shell startup scripts
 bash -x          # Debug non-login shell startup scripts
 "
+
+# Check if script was sourced
+if ! (return 0 2>/dev/null); then
+  echo -e "\n\033[1;31mWARNING:\033[0m This script was not sourced!"
+  echo -e "  - The directories have been added to \033[1m.bashrc\033[0m and will apply next time you start a new shell."
+  echo -e "  - However, \033[1mthis current session is NOT updated!\033[0m"
+  echo -e "To do this, rerun this script sourced, or apply .bashrc with:"
+  echo -e "    \033[1;32msource ~/.bashrc\033[0m"
+else
+  echo -e "\n\033[1;32mSuccess!\033[0m PATH updated for the current session and future shells."
+fi
+
+# Display updated PATH
+echo -e "\nCurrent PATH:\n$PATH"
 
