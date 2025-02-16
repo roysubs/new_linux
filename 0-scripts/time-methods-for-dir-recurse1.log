@@ -1,0 +1,74 @@
+Analyzing directories and files in: .
+
+
+
+Counting directories at 2025-02-03_06-44-57...
+
+Directory Method 1 (find)
+Running: sudo find '.' -type d | wc -l
+Count: 100
+Time: .032394204 seconds
+
+Directory Method 2 (tree)
+Running: sudo tree -afi '.' | tail -n 1 | awk '{print $1}'
+Count: 100
+Time: .043879224 seconds
+
+Directory Method 5 (bash loop)
+Running: count=0; while IFS= read -r line; do count=$((count + 1)); done < <(sudo find '.' -type d); echo $count
+Count: 100
+Time: .033244780 seconds
+
+Directory Method 6 (perl)
+Running: sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub {}, postprocess => sub { ++$n }}, "."); print $n'
+Count: 100
+Time: .116809527 seconds
+
+Directory Method 7 (python)
+Running: sudo /usr/bin/python3 -c '
+import os
+count = 0
+for root, dirs, _ in os.walk(".", followlinks=False):
+    count += len(dirs)
+print(count)'
+
+Count: 99
+Time: .098766097 seconds
+
+Directory Method 8 (powershell)
+Running: sudo /usr/bin/pwsh -Command "Get-ChildItem -Recurse -Force -Attributes Directory -Path \".\" | Measure-Object | Select-Object -ExpandProperty Count"
+Count: 99
+Time: 1.763635661 seconds
+
+Counting files at 2025-02-03_06-44-57...
+
+File Method 1 (find)
+Running: sudo find '.' -type f | wc -l
+Count: 444
+Time: .030254398 seconds
+
+File Method 2 (tree)
+Running: sudo tree -a '.' | tail -n1 | awk '{print $3}'
+Count: 444
+Time: .041121405 seconds
+
+File Method 4 (bash loop)
+Running: count=0; while IFS= read -r line; do count=$((count + 1)); done < <(sudo find '.' -type f); echo $count
+Count: 444
+Time: .048570797 seconds
+
+File Method 5 (perl)
+Running: sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub { ++$n },postprocess => sub {--$n}}, "."); print $n'
+Count: 444
+Time: .079483215 seconds
+
+File Method 6 (python)
+Running: sudo /usr/bin/python3 -c 'import os; print(sum([len(files) for _, _, files in os.walk(".")]))'
+Count: 444
+Time: .073908584 seconds
+
+File Method 7 (powershell)
+Running: sudo /usr/bin/pwsh -Command "Get-ChildItem -Recurse -Force -File -Path \".\" | Measure-Object | Select-Object -ExpandProperty Count"
+Count: 444
+Time: 1.505357537 seconds
+
