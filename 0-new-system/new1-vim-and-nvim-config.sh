@@ -48,10 +48,12 @@ colorscheme desert \" Syntax highlighting scheme
 \" koehler, lunaperche, morning, murphy, pablo, peachpuff, quiet, ron, shine,
 \" slate, torte, zellner
 \" Disable tabs (to get a tab, Ctrl-V<Tab>), tab stops are 4 chars, indents are 4 chars
-set nonumber                         \" No line numbers (but can use Ctrl-L or F2 to toggle as below)
+
+set nonumber                         \" No line numbers (toggle on/off with Ctrl-L or F2 as below)
 nnoremap <C-L> :set invnumber<CR>    \" Toggle line numbers on/off
 nnoremap <F2> :set invnumber<CR>     \" Toggle line numbers on/off
 nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>
+
 set expandtab tabstop=4 shiftwidth=4 \" Tab will generate 4 spaces
 set background=dark  \" Dark background
 set noerrorbells     \" Disable error bells
