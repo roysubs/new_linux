@@ -1,8 +1,7 @@
-
 ##########
 #
-# Everything below here does nothing, they are just ANSI colour definitions.
-# These can be useful to use in other scripts.
+# Can use these variables to set colour output in other scripts
+# Everything below here does nothing, just a collection of ANSI code definitions
 #
 ##########
 #

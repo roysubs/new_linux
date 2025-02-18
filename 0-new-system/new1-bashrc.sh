@@ -56,7 +56,8 @@ shopt -s extglob
 h() {
     set +H; history -a;
     case \"\$1\" in
-        \"\" | help) echo -e \"Usage:\\n  h all\\n  h f (or s)\\n  h n\\n  h clear\\n  h edit\\n  h uniq\\n  h top\\n  h cmds\\n  h hist\\n  h root\\n\" ;;
+        \"\" | help) echo -e \"History Tool. Usage: h <option> [string]\\n  all\\n  f (or s)\\n  n\\n  clear\\n  edit\\n  uniq\\n  top\\n  cmds\\n  hist\\n  root\\n\" ;;
+ 
         all) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' ;;
         f | s) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' | grep -i --color=auto \"\$2\" ;;
         fd | sd) history | grep -i --color=auto \"\$2\" ;; 
@@ -96,9 +97,12 @@ alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
 alias smbconf='sudo vi /etc/samba/smb.conf' # Edit Samba configuration
 alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
 alias exports='sudo vi /etc/exports'        # Edit NFS exports
+# alias lsblkx='lsblk -lo NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -e 7'
+# alias lsblkx='lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINTS -lp | grep -v -E \'^/dev/sd[a-z]\s*$\''
+alias lsblkx='lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINTS -lp | grep -v -E "^/dev/sd[a-z]\\s*$"'
 
-# Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig, find1 (wip as a simple find tool ignoring unlikely locations)
-alias cd..='cd ..'
+# Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
+alias cd..='cd ..'               # Windows typo
 alias cx='chmod +x'              # chmod add execute
 cxx() { chmod +x \$1; ./\$1; }   # chmod \$1 and then run it
 alias ls.='ls -d .*'

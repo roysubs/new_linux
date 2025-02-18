@@ -240,15 +240,13 @@ fi
 # nmbd: Manages NetBIOS name resolution and browsing. Required if your network relies on NetBIOS.
 # For most modern setups, restarting both smbd and nmbd is necessary to ensure complete functionality. If your network uses DNS instead of NetBIOS, nmbd may not be required.
 
-
-
 echo "Summary:"
 echo
-echo -e "\033[34mlsblk | grep -e NAME -e sdb --color=never\033[0m"
-lsblk | grep -e NAME -e sdb --color=never
+echo -e "\033[34mlsblk | grep -e NAME -e ${device} --color=never\033[0m"
+lsblk | grep -e NAME -e "${device}" --color=never
 echo
-echo -e "\033[34mdf -h | grep -e Filesystem -e /dev/sdb --color=never\033[0m"
-df -h | grep -e Filesystem -e /dev/sdb --color=never
+echo -e "\033[34mdf -h | grep -e Filesystem -e /dev/${device##*/} --color=never\033[0m"
+df -h | grep -e Filesystem -e "/dev/${device##*/}" --color=never
 echo
 echo "All steps completed successfully for $device."
 
