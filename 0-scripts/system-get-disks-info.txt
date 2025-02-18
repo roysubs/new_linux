@@ -35,7 +35,7 @@ fi
 # Function to generate report for each disk
 generate_report() {
     local disk=$1
-    local report_file="$HOME_DIR/${scriptname}-${disk}.txt"
+    local report_file="$HOME_DIR/system-${disk}-disk-report.txt"
     echo "Generating report for $disk..."
 
     # Initialize the report file
