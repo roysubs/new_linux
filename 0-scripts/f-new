@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Show usage if -h is passed
+if [[ "$1" == "-h" ]]; then
+    echo "Usage: $(basename "$0") [number] [directory] [-s] [-h]"
+    echo "  number:     (optional) Number of results to display (default: 20)."
+    echo "  directory:  (optional) Target directory (default: current directory)."
+    echo "  -s          (optional) Use sudo for find command."
+    echo "  -h          Show this help."
+    echo "Note: number/directory can be in any order and will be worked out dynamically."
+    exit 0
+fi
+
+# Default values
+num=20
+dir="."
+use_sudo=""
+
+# Check for the -s flag
+if [[ "$1" == "-s" ]]; then
+    use_sudo="sudo"
+    shift  # Remove -s from arguments
+fi
+
+# Function to check if a value is a positive integer
+is_number() {
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+# Determine parameters dynamically
+if [[ -n "$1" && -n "$2" ]]; then
+    if is_number "$1" && [[ -d "$2" ]]; then
+        num="$1"
+        dir="$2"
+    elif is_number "$2" && [[ -d "$1" ]]; then
+        num="$2"
+        dir="$1"
+    else
+        echo "Error: Invalid arguments. One must be a number, the other a directory."
+        exit 1
+    fi
+elif [[ -n "$1" ]]; then
+    if is_number "$1" && [[ ! -d "$1" ]]; then
+        num="$1"
+    elif [[ -d "$1" ]]; then
+        dir="$1"
+    else
+        echo "Error: Invalid argument '$1'. Must be a number or an existing directory."
+        exit 1
+    fi
+fi
+
+# Define the find command
+find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%T@ %p\n' | sort -n | head -n \"$num\""
+
+# Display the command before execution
+echo "Executing: $find_cmd | awk '{ timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2) }'"
+echo
+
+# Start timer
+start_time=$(date +%s)
+
+# Execute the command
+eval "$find_cmd" | awk '{
+    timestamp = $1;
+    $1 = "";
+    print strftime("%Y-%m-%d %H:%M:%S", timestamp), substr($0,2)
+}'
+
+# End timer and calculate duration
+end_time=$(date +%s)
+elapsed=$((end_time - start_time))
+
+# Display execution time
+echo -e "\nExecution time: ${elapsed} seconds"
+

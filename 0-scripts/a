@@ -60,10 +60,13 @@ case "$option" in
             echo
             if dpkg -s "$package" > /dev/null 2>&1; then
                 dpkg -L "$package"
-            elif command -v apt-file > /dev/null 2>&1; then
-                apt-file list "$package"
             else
-                echo "Install apt-file to view contents of a package that is not currently installed."
+                if ! command -v apt-file > /dev/null 2>&1; then
+                    echo "Installing 'apt-file' to view contents of packages that are not currently installed."
+                    sudo apt install -y apt-file
+                    apt-file update
+                fi
+                apt-file list "$package"
             fi
             echo
         done

@@ -1,0 +1,37 @@
+nnoremap <F3> :call ToggleComment()<CR>
+vnoremap <F3> :call ToggleCommentVisual()<CR>
+
+function! ToggleComment()
+    let l:first = line(".")
+    execute "normal! ^"
+    if getline(".") =~ '^\s*#'
+        execute "normal! ^x"
+    else
+        execute "normal! I# "
+    endif
+endfunction
+
+function! ToggleCommentVisual()
+    let l:comment = "# "  " Change this for other languages (e.g., "// " for C, "-- " for SQL)
+    let l:uncomment_pattern = '^\s*' . escape(l:comment, '#')  " Match an existing comment
+
+    if getline("'<") =~ l:uncomment_pattern
+        execute "'<,'>s/" . l:uncomment_pattern . "//"
+    else
+        execute "'<,'>s/^/" . l:comment . "/"
+    endif
+endfunction
+
+
+# Modify the configuration file
+sed -i \
+    -e "s|^Session\\TorrentExportDirectory=.*|Session\\TorrentExportDirectory=$TorrentExportDirectory|" \
+    -e "s|^Session\\TempPath=.*|Session\\TempPath=$TempPath|" \
+    -e "s|^Downloads\\SavePath=.*|Downloads\\SavePath=$SavePath|" \
+    -e "s|^Session\\FinishedTorrentExportDirectory=.*|Session\\FinishedTorrentExportDirectory=$FinishedTorrentExportDirectory|" \    -e "s|^Session\\Port=.*|Session\\Port=$Port|" \
+    -e "s|^Session\\UploadRateLimit=.*|Session\\UploadRateLimit=$UploadRateLimit|" \
+    -e "s|^Session\\DownloadRateLimit=.*|Session\\DownloadRateLimit=$DownloadRateLimit|" \
+    -e "s|^Session\\MaxConnections=.*|Session\\MaxConnections=$MaxConnections|" \
+    -e "s|^Session\\MaxActiveTorrents=.*|Session\\MaxActiveTorrents=$MaxActiveTorrents|" \
+    -e "s|^Session\\RatioLimit=.*|Session\\RatioLimit=$RatioLimit|" "$CONFIG"
+
