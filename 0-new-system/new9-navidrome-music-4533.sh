@@ -2,6 +2,11 @@
 
 CURRENT_USER=${SUDO_USER:-$(whoami)}
 
+if ! command -v ffmpeg &>/dev/null; then
+    echo "ffmpeg is not installed. Installing..."
+    sudo apt update && sudo apt install -y ffmpeg
+fi
+
 LATEST_VERSION=$(curl -s https://api.github.com/repos/navidrome/navidrome/releases/latest | grep 'tag_name' | cut -d '"' -f 4 | sed 's/v//')
 DOWNLOAD_URL="https://github.com/navidrome/navidrome/releases/download/v${LATEST_VERSION}/navidrome_${LATEST_VERSION}_linux_amd64.deb"
 
@@ -38,22 +43,22 @@ sudo systemctl status navidrome --no-pager
 IP=$(hostname -I | awk '{print $1}')
 PORT=4533
 
-echo "\nNavidrome is running!"
+echo "Navidrome is running!"
 echo "Access it at: http://$IP:$PORT"
 
-echo "\nImportant Locations:"
+echo "Important Locations:"
 echo "  - Config File: $CONFIG_FILE"
 echo "  - Music Folder: $MUSIC_DIR"
 echo "  - Data Folder: $DATA_DIR"
 echo "  - Logs: /var/log/navidrome.log"
-
-echo "\nQuick Start Guide:"
+echo
+echo "Quick Start Guide:"
 echo "1. Upload music to $MUSIC_DIR"
 echo "   Example: scp -r my-music-folder user@$IP:$MUSIC_DIR"
 echo "2. Add Podcasts: Go to Settings > Podcasts > Add Podcast URL"
 echo "3. Add Radio Stations: Go to Settings > Radio and input the stream URL"
-
-echo "\nTroubleshooting:"
+echo
+echo "Troubleshooting:"
 echo "- Check logs: sudo journalctl -u navidrome --no-pager | tail -50"
 echo "- Restart service: sudo systemctl restart navidrome"
 echo "- Ensure firewall allows port $PORT: sudo ufw allow $PORT/tcp"

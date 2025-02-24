@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# Show usage if no arguments or -h is passed
+if [[ $# -eq 0 || "$1" == "-h" ]]; then
+    echo "Usage: $(basename "$0") <command> [num] [directory]"
+    echo "Commands:"
+    echo "  big      - Find the largest files"
+    echo "  old      - Find the oldest files"
+    echo "  recent   - Find the most recently modified files"
+    echo "  unused   - Find files not accessed in a long time"
+    echo "  huge     - Find files larger than a given size"
+    echo "  corrupt  - Find potentially corrupted files"
+    echo "  perm     - Find files with specific permissions"
+    echo "  owner    - Find files owned by a specific user"
+    echo "  ext      - Find files with a specific extension"
+    echo "Options:"
+    echo "  num       - (optional) Number of results to display (default: 20)"
+    echo "  directory - (optional) Target directory (default: current directory)"
+    echo "  -s        - (optional) Use sudo for find command"
+    exit 0
+fi
+
+# Default values
+cmd="$1"
+num=20
+dir="."
+use_sudo=""
+
+# Check for the -s flag
+if [[ "$2" == "-s" || "$3" == "-s" ]]; then
+    use_sudo="sudo"
+    shift
+fi
+
+# Function to check if a value is a positive integer
+is_number() {
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+# Determine parameters dynamically
+if [[ -n "$2" && -n "$3" ]]; then
+    if is_number "$2" && [[ -d "$3" ]]; then
+        num="$2"
+        dir="$3"
+    elif is_number "$3" && [[ -d "$2" ]]; then
+        num="$3"
+        dir="$2"
+    else
+        echo "Error: Invalid arguments. One must be a number, the other a directory."
+        exit 1
+    fi
+elif [[ -n "$2" ]]; then
+    if is_number "$2" && [[ ! -d "$2" ]]; then
+        num="$2"
+    elif [[ -d "$2" ]]; then
+        dir="$2"
+    else
+        echo "Error: Invalid argument '$2'. Must be a number or an existing directory."
+        exit 1
+    fi
+fi
+
+# Define find commands
+case "$cmd" in
+    big)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%s %p\n' | sort -nr | head -n \"$num\" | awk '{\$1=\$1; print \$1, \$2}' | numfmt --to=iec"
+        ;;
+    old)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%T@ %p\n' | sort -n | head -n \"$num\" | awk '{timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2)}'"
+        ;;
+    recent)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%T@ %p\n' | sort -nr | head -n \"$num\" | awk '{timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2)}'"
+        ;;
+    huge)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -size +${num}M -printf '%s %p\n' | numfmt --to=iec"
+        ;;
+    unused)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -atime +${num} -printf '%A@ %p\n' | sort -n | awk '{timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2)}'"
+        ;;
+    corrupt)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -exec file {} \; | grep -i 'corrupt'"
+        ;;
+    perm)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -perm $num"
+        ;;
+    owner)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -user $num"
+        ;;
+    ext)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -name '*.$num'"
+        ;;
+    *)
+        echo "Error: Unknown command '$cmd'. Use -h for help."
+        exit 1
+        ;;
+esac
+
+# Display the command before execution
+echo "Executing: $find_cmd"
+echo
+
+# Start timer
+start_time=$(date +%s)
+
+# Execute the command
+eval "$find_cmd"
+
+# End timer and calculate duration
+end_time=$(date +%s)
+elapsed=$((end_time - start_time))
+
+# Display execution time
+echo -e "\nExecution time: ${elapsed} seconds"
+

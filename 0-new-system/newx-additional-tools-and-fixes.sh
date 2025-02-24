@@ -75,7 +75,7 @@ update_system() {
 
 install_common_utilities() {
 # Section: Install common utilities
-  run_command "apt-get install -y curl wget git vim tmux htop tree unzip"
+  run_command "apt-get install -y curl wget git vim tmux htop ncdu tree unzip"
 }
 
 install_development_tools() {

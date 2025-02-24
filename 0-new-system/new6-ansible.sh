@@ -14,7 +14,7 @@ echo
 
 # Step 1: Update and Upgrade System Packages
 echo -e "${YELLOW}Step 1: Updating and upgrading system packages.${NC}"
-echo "This ensures your system has the latest updates and security patches."
+echo "Ensure this system has the latest updates and security patches."
 echo "Press Enter to continue or CTRL+C to exit."
 read
 # Only update if at least 2 days have passed since the last update
@@ -119,7 +119,6 @@ localhost ansible_connection=local
 remote_host_1 ansible_host=192.168.1.10 ansible_user=username
 remote_host_2 ansible_host=192.168.1.11 ansible_user=username
 ${NC}"
-echo
 echo "Note the above as pressing Enter will go to fullscreen vi to add hosts"
 echo "Press Enter to edit the inventory file."
 read
@@ -137,7 +136,18 @@ echo -e "Running: ${GREEN}ansible all -m ping${NC}"
 ansible all -m ping
 echo
 echo -e "${GREEN}Connectivity test complete!${NC}"
+echo "Note: if an interpreter warning is shown for Python3.xx, use the following:"
 echo
+echo -e ${GREEN}"ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3.12 ansible all -m ping${NC}"
+echo -e "or you can set the ${GREEN}ANSIBLE_PYTHON_INTERPRETER${NC} before running ansible all -m ping"
+echo -e "or you can set ${GREEN}inventory.ini${NC} or set ${GREEN}inventory.yml${NC} in the project folder, e.g.:"
+echo -e "${GREEN}
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3.12
+${NC}"
 
 # Step 7: Optional: Install Additional Collections
 echo -e "${YELLOW}Step 7: (Optional) Installing additional collections.${NC}"

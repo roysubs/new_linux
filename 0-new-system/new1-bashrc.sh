@@ -177,7 +177,7 @@ alias tvv=\"tmux split-window -v -c '#{pane_current_path}'\"
 trename() { tmux rename-session \$1; };    alias tren='trename'
 tswitch() { tmux switch-client -t \$1; };  alias tswi='tswitch'
 tattach() { tmux attach-session -t \$1; }; alias tatt='tmux attach' # just attach to last active
-alias tdetach='tmux detach';               alias tdet='tdetach'  # C-b, d
+alias tdetach='tmux detach';              alias tdet='tdetach'  # C-b, d
 # toggle tmux mouse on/off
 tmm() {
     current_status=\$(tmux show -g mouse | awk '{print \$2}')

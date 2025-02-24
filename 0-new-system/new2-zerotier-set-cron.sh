@@ -1,9 +1,9 @@
 #!/bin/bash
 
 echo "
-This script will check, enabled, and start ZeroTier, join a ZeroTier network,
-verify the network status. Then, a monitoring script will be setup in ~/.config
-and a cron job will be created to restart the service if it goes down.
+This script will check/enable/start ZeroTier, then join a ZeroTier network,
+and verify the network status. Then, a monitoring script will be setup in
+~/.config and a cron job will be created to restart the service if it goes down.
 "
 
 # Prompt the user for the ZeroTier network ID

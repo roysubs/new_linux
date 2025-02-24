@@ -1,8 +1,17 @@
-sudo apt install openssh-server
-sudo apt install git vim neovim htop btop tmux jq yq
-sudo apt install net-tools   # ifconfig and the below:
+sudo apt install -y openssh-server
+sudo apt install -y git vim neovim htop btop tmux jq yq ncdu
+sudo apt install -y net-tools   # ifconfig and the below:
 # arp, ifconfig, netstat, rarp, nameif, route, iptunnel, ipmaddr. Specific hardware: plipconfig, slattach, mii-tool
-sudo apt install bat         # Provides batcat
+sudo apt install -y bat         # Provides batcat
+sudo apt install -y iftop iotop
+sudo apt install -y sysstat
+# - sar: collects and reports system activity information
+# - iostat: reports CPU utilization and disk I/O statistics
+# - tapestat: reports statistics for tapes connected to the system
+# - mpstat: reports global and per-processor statistics
+# - pidstat: reports statistics for Linux tasks (processes)
+# - sadf: displays data collected by sar in various formats
+# - cifsiostat: reports I/O statistics for CIFS filesystems
 
 # Parsing tools
 # Miller (mlr), works like awk, sed, and cut but for JSON, CSV, and more.
