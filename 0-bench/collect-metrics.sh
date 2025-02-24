@@ -5,6 +5,10 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
+if ! command -v iftop > /dev/null 2>&1; then sudo apt install -y iftop; fi
+if ! command -v iotop > /dev/null 2>&1; then sudo apt install -y iotop; fi
+if ! command -v ifstat > /dev/null 2>&1; then sudo apt install -y ifstat; fi
+
 duration=$(( $1 * 60 ))  # Convert minutes to seconds
 interval=5  # Collection interval in seconds
 log_prefix="collect"
