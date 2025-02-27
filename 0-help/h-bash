@@ -20,9 +20,9 @@ Bash Quick Notes
     7. **Order of reading for interactive non-login shells**:
        - System-wide /etc/bash.bashrc, then user's ~/.bashrc.
 
-- Manually reapply .bashrc settings: `source ~/.bashrc`
-- Change Default Shell: `chsh -s /bin/bash`
+- Manually reapply (or 'source') .bashrc settings: `source ~/.bashrc`   or   `. ~/.bashrc`
 - To list available shells: `cat /etc/shells`
+- Change Default Shell: `chsh -s /bin/bash`
 
 - **Special Characters and Usage**:
     - `#`: Comment.
