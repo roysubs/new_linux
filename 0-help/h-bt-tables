@@ -10,7 +10,26 @@ fi
 cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # BattleTech Combat Charts & Tables
 
-## 1. **To-Hit Modifiers**  
+### Battletech Hit Location Table
+## **Hit Location Table**
+
+| Roll (2d6) | Standard Front | Standard Rear | Mech Side |
+|------------|---------------|--------------|-----------|
+| 2         | Head          | Head         | Head      |
+| 3         | Right Arm     | Right Arm    | Right Arm |
+| 4         | Right Leg     | Right Leg    | Right Leg |
+| 5         | Right Torso   | Right Torso  | Right Torso |
+| 6         | Center Torso  | Center Torso | Center Torso |
+| 7         | Left Torso    | Center Torso | Left Torso |
+| 8         | Left Leg      | Left Leg     | Left Leg  |
+| 9         | Left Arm      | Left Arm     | Left Arm  |
+| 10        | Right Arm     | Right Arm    | Right Arm |
+| 11        | Right Leg     | Right Leg    | Right Leg |
+| 12        | Head          | Head         | Head      |
+
+
+
+## **To-Hit Modifiers**  
 | Modifier                  | Effect                               |
 |---------------------------|--------------------------------------|
 | Target Movement            | +1 (Walk), +2 (Run), +3 (Jump)      |
@@ -20,7 +39,7 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 | Target in Cover            | +1 to +3 (depending on cover type)  |
 | Terrain or Obstructions    | +1 to +3 (depending on terrain)     |
 
-## 2. **Weapon Damage Table**  
+## **Weapon Damage Table**  
 | Weapon              | Damage | Range (Short / Medium / Long) | Heat |
 |---------------------|--------|-------------------------------|------|
 | Small Laser         | 3      | 3 / 6 / 9                     | 1    |
@@ -32,7 +51,7 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 | SRM 6               | 6      | 3 / 6 / 9                     | 3    |
 | LRM 15              | 15     | 3 / 6 / 9                     | 2    |
 
-## 3. **Damage Location Table**  
+## **Damage Location Table**  
 | Roll (2d6) | Location        | Effect                     |
 |------------|-----------------|----------------------------|
 | 2          | Head            | Pilot Injury, Critical Hit |
@@ -44,7 +63,7 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 | 13-14      | Right Leg       | Leg Disabled, Critical     |
 | 15-16      | Left Leg        | Leg Disabled, Critical     |
 
-## 4. **Critical Hit Table**  
+## **Critical Hit Table**  
 | Roll (2d6) | Effect                         |
 |------------|--------------------------------|
 | 2-4        | No critical hit                |

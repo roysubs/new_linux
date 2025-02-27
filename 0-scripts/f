@@ -59,7 +59,7 @@ done
 
 run_find_named() {
     # Build a specific find command with named conditions
-    find_cmd="find $@"
+    find_cmd="sudo find $@"
     if [ "$show_command" = true ]; then
         echo -e "${BLUE}$find_cmd${RESET}"
     else

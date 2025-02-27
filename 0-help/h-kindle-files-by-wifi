@@ -4,7 +4,8 @@ if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown
 cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 # Kindle File Management via WiFi
 
-This guide explains how to manage files on a Kindle when USB file transfer is broken. It details how to copy a `.mobi` file to your Kindle or delete a file from it using WiFi.
+This guide is for managing files on a Kindle when USB port is still damaged, still charging, but data transfer is broken.
+This will allow copying a `.mobi` file to the Kindle or to delete files from it over WiFi.
 
 ## Prerequisites
 - Your Kindle and computer are on the same WiFi network.
