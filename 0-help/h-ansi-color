@@ -1,5 +1,5 @@
 #!/bin/bash
-if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
+if ! command -v glow >/dev/null 2>&1; then echo "Install glow to properly display this markdown file."; fi
 
 cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 

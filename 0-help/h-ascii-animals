@@ -1,4 +1,5 @@
 #!/bin/bash
+if ! command -v glow >/dev/null 2>&1; then echo "Install glow to properly display this markdown file."; fi
 
 cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 Animal ASCII Art Gallery
@@ -11,69 +12,60 @@ https://www.asciiart.eu/ascii-draw-studio/app
 **Brighten your terminal with colorful ASCII animals!**
 
 ```plaintext
-1. 🦉 Owl:
+🐔 Chicken:
        __  
    _  (o)>  
   //\_//)   
    V_/_    
 
-2. 🐈 Cat:
+🐈 Cat:
    /\_/\  
   ( o.o )  
    > ^ <  
 
-3. 🐘 Elephant:
+🐁🐭🐀 Mouse:
+   ()_()     
+  ( o o )    
+   > ^ <     
+
+
+🐘 Elephant:
      /  \\~~~/  \\  
  ,----(     . .    )  
 /      \\__   _    )  
 \\         /         )  
  ``-----\\_______/--'  
 
-4. 🦦 Otter:
-     ()_()     
-    ( o o )    
-    > ^ <     
-
-5. 🐕 Dog:
+🐕 Dog:
    / \__
   (    @\____
   /         O
  /   (_____/
 /_____/   U  
 
-6. 🐢 Turtle:
+🐢 Turtle:
      _______  
    _/       \\_  
   / |       | \  
  |_/ \\_____/ \_|  
        \\ |      
 
-7. 🐟 Fish:
+🐟 Fish:
       ><(((('>  
 
-8. 🦜 Parrot:
+🦜 Parrot:
      .--.  
    _(    )    
   / __ \\     
     (__)      
 
-9. 🦄 Unicorn:
-
-
-
-
-10. 🐁🐭🐀 Mouse:
-   ()_()     
-  ( o o )    
-  > ^ <     
-
-11. 🦇 Bat 
+🦇 Bat 
     =/\                 /\=
     / \'._   (\_/)   _.'/ \       (_                   _)
    / .''._'--(o.o)--'_.''. \       /\                 /\
   /.' _/ |`'=/ " \='`| \_ `.\     / \'._   (\_/)   _.'/ \
  /` .' `\;-,'\___/',-;/` '. '\   /_.''._'--('.')--'_.''._\
-/.-' jgs   `\(-V-)/`       `-.\  | \_ / `;=/ " \=;` \ _/ |
+/.-'       `\(-V-)/`       `-.\  | \_ / `;=/ " \=;` \ _/ |
              "   "               \/  `\__|`\___/`|__/`  \/
                                   `       \(/|\)/       `
                                            " ` "
