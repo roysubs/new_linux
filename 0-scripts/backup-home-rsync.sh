@@ -61,8 +61,8 @@ excludesStr=$(printf " %s" "${excludes[@]}")
 excludesStr=$(echo "$excludesStr" | tr -s ' ')
 
 # Construct the rsync commands with the formatted exclusions
-rsyncFull="rsync -avi --checksum $excludesStr \"$HOME/\" \"$backupPath\""
-rsyncIncremental="rsync -avi --checksum --link-dest=\"$lastBackup\" $excludesStr \"$HOME/\" \"$backupPath\""
+rsyncFull="rsync -a $excludesStr \"$HOME/\" \"$backupPath\""   # --checksum
+rsyncIncremental="rsync -a --link-dest=\"$lastBackup\" $excludesStr \"$HOME/\" \"$backupPath\""
 
 # Run the rsync command
 # copiedItems=$(eval $rsyncCommand | tee /dev/tty)
@@ -142,7 +142,6 @@ completionMessage="$dateTime $backupType complete. $copiedFilesNum files were co
 echo "$completionMessage" | tee -a "$logFile"
 echo "-------------------------------------------------"
 
-
 ####################
 #
 # Set this script to run every hour in cron
@@ -181,3 +180,51 @@ fi
 # sudo systemctl stop cron   # Stop cron (until next reboot
 # sudo systemctl start cron  # Start cron
 # cat /etc/crontab           # List system-wide cron jobs
+
+####################
+# Prune old backups (only runs on Sunday at midnight)
+####################
+
+if [[ "$(date +%u)" -eq 7 && "$(date +%H)" -eq 0 ]]; then
+    echo "It's Sunday midnight. Pruning old backups..." | tee -a "$logFile"
+
+    # Find all backups older than 14 days
+    oldBackups=$(find "$backupDir" -mindepth 1 -maxdepth 1 -type d -mtime +14 | sort)
+
+    declare -A sundayBackups
+    
+    for backup in $oldBackups; do
+        backupName=$(basename "$backup")
+
+        # Extract the timestamp from the backup name
+        backupTime=$(echo "$backupName" | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}")
+        backupDate=${backupTime:0:10}  # Extract YYYY-MM-DD
+        backupHourMin=${backupTime:11:5}  # Extract HH-MM
+
+        # Check if this backup is a Sunday backup
+        backupDay=$(date -d "$backupDate" +%u)
+        
+        if [[ "$backupDay" -eq 7 ]]; then
+            # Store Sunday backups with the key as date and value as closest time to midnight
+            if [[ -z "${sundayBackups[$backupDate]}" || "$backupHourMin" < "${sundayBackups[$backupDate]}" ]]; then
+                sundayBackups[$backupDate]="$backupHourMin"
+            fi
+        fi
+    done
+
+    for backup in $oldBackups; do
+        backupName=$(basename "$backup")
+        backupTime=$(echo "$backupName" | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}")
+        backupDate=${backupTime:0:10}
+        backupHourMin=${backupTime:11:5}
+
+        # If this is the closest Sunday midnight backup, keep it
+        if [[ "${sundayBackups[$backupDate]}" == "$backupHourMin" ]]; then
+            echo "Keeping closest Sunday midnight backup: $backupName" | tee -a "$logFile"
+        else
+            echo "Deleting old backup: $backupName" | tee -a "$logFile"
+            rm -rf "$backup"
+        fi
+    done
+fi
+
