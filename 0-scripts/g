@@ -1,0 +1,118 @@
+#!/bin/bash
+# Git Tool Script
+# Provides utilities for common Git operations and troubleshooting.
+
+if [ $# -eq 0 ]; then
+    echo "Git Tool. Usage: g [option] <args>"
+    echo "Options:"
+    echo "  c <message>      Commit with the given message"
+    echo "  s                Status: Show the current repository status"
+    echo "  d                Diff: Show unstaged changes"
+    echo "  ds               Diff Staged: Show staged changes"
+    echo "  l                Log: Show commit history (short format)"
+    echo "  ll               Log Detailed: Show full commit history with diffs"
+    echo "  b                Branch: List branches, highlight current branch"
+    echo "  nb <name>        New Branch: Create and switch to a new branch"
+    echo "  ch <branch>      Checkout: Switch to a different branch"
+    echo "  p                Pull latest changes from the remote"
+    echo "  ph               Prune remote branches that no longer exist"
+    echo "  pu               Push to the current branch's upstream"
+    echo "  f                Fetch: Update remote refs without merging"
+    echo "  m <branch>       Merge: Merge the specified branch into the current one"
+    echo "  r <commit>       Reset: Soft reset to the given commit (keep changes)"
+    echo "  rh <commit>      Hard Reset: Reset to the given commit, discard changes"
+    echo "  st               Stash: Save uncommitted changes"
+    echo "  sta <message>    Stash with a message"
+    echo "  stp              Pop last stash"
+    echo "  cl!              Clean untracked files (DANGEROUS: Run with caution!)"
+    echo "  t                Troubleshooting Help: Show common Git fixes"
+    echo
+    exit 0
+fi
+
+option=$1
+shift  # Shift to access arguments
+
+case "$option" in
+    c)
+        git commit -m "$@"
+        ;;
+    s)
+        git status
+        ;;
+    d)
+        git diff
+        ;;
+    ds)
+        git diff --staged
+        ;;
+    l)
+        git log --oneline --graph --decorate --all
+        ;;
+    ll)
+        git log --stat --patch
+        ;;
+    b)
+        git branch --sort=-committerdate --color | sed -e '/^\*/!s/^/  /'
+        ;;
+    nb)
+        git checkout -b "$1"
+        ;;
+    ch)
+        git checkout "$1"
+        ;;
+    p)
+        git pull
+        ;;
+    ph)
+        git remote prune origin
+        ;;
+    pu)
+        git push
+        ;;
+    f)
+        git fetch
+        ;;
+    m)
+        git merge "$1"
+        ;;
+    r)
+        git reset --soft "$1"
+        ;;
+    rh)
+        git reset --hard "$1"
+        ;;
+    st)
+        git stash
+        ;;
+    sta)
+        git stash push -m "$1"
+        ;;
+    stp)
+        git stash pop
+        ;;
+    cl!)
+        echo "WARNING: This will delete untracked files! Use with caution."
+        read -p "Are you sure? (y/N) " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            git clean -fd
+        else
+            echo "Aborted."
+        fi
+        ;;
+    t)
+        echo "Git Troubleshooting Help:"
+        echo "  - If a merge conflict occurs: git status, then edit and resolve conflicts."
+        echo "  - To undo last commit but keep changes: g r HEAD~1"
+        echo "  - To forcefully reset to last commit: g rh HEAD"
+        echo "  - If 'detached HEAD' appears: g ch <branch>"
+        echo "  - If a push is rejected due to conflicts: g f && g p"
+        echo "  - To delete a local branch: git branch -d <branch>"
+        echo "  - To delete a remote branch: git push origin --delete <branch>"
+        echo
+        ;;
+    *)
+        echo "Invalid option. Use 'g' without arguments to see usage."
+        ;;
+esac
+

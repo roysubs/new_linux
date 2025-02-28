@@ -2,7 +2,7 @@
 
 # Show usage if -h is passed
 if [[ "$1" == "-h" ]]; then
-    echo "Usage: lsnew [number] [directory]"
+    echo "Usage: $(basename $0) [number] [directory]"
     echo "  number:    (optional) Number of results to display. Defaults to 20."
     echo "  directory: (optional) Target directory to analyze. Defaults to current directory."
     exit 0

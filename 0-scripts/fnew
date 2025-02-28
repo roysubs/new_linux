@@ -54,7 +54,7 @@ fi
 find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%T@ %p\n' | sort -n | head -n \"$num\""
 
 # Display the command before execution
-echo "Executing: $find_cmd | awk '{ timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2) }'"
+echo "$find_cmd | awk '{ timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2) }'"
 echo
 
 # Start timer

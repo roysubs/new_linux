@@ -71,7 +71,7 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 | 7-8        | Critical hit (2 damage points) |
 | 9-12       | Critical hit (Weapon or System disabled) |
 
-## 5. **Heat Table**  
+## **Heat Table**  
 | Heat Level | Effect                                        |
 |------------|-----------------------------------------------|
 | 0-3        | No penalty                                    |
@@ -79,7 +79,7 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 | 7-9        | -2 to Piloting Skill and Weapon Attack Rolls |
 | 10+        | Shut Down (Overheat)                          |
 
-## 6. **Movement Cost Table**  
+## **Movement Cost Table**  
 | Terrain            | Cost (Hexes)       |
 |--------------------|--------------------|
 | Open Ground        | 1                  |
@@ -90,7 +90,7 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 | Water (Deep)       | 3                  |
 | Hill               | 2-4 (depends on slope) |
 
-## 7. **Evade Modifier Table**  
+## **Evade Modifier Table**  
 | Attacker Movement | Target Movement | Modifier               |
 |-------------------|-----------------|------------------------|
 | Stationary        | Stationary      | +0                     |

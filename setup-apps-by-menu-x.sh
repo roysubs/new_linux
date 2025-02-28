@@ -102,35 +102,15 @@ def display_menu(stdscr, options, script_dir):
             # Handle user input
             key = stdscr.getch()
             if key == curses.KEY_UP:
-                current_idx = current_column * num_rows + current_row
-                current_idx = (current_idx - 1) % len(options)
-                current_row = current_idx % num_rows
-                current_column = current_idx // num_rows
+                current_row = (current_row - 1) % num_rows
             elif key == curses.KEY_DOWN:
-                current_idx = current_column * num_rows + current_row
-                current_idx = (current_idx + 1) % len(options)
-                current_row = current_idx % num_rows
-                current_column = current_idx // num_rows
-            elif key == curses.KEY_RIGHT:
-                current_idx = current_column * num_rows + current_row
-                current_idx = (current_idx + num_rows) % len(options)
-                current_row = current_idx % num_rows
-                current_column = current_idx // num_rows
-            elif key == curses.KEY_LEFT:
-                current_idx = current_column * num_rows + current_row
-                current_idx = (current_idx - num_rows) % len(options)
-                current_row = current_idx % num_rows
-                current_column = current_idx // num_rows
-            # if key == curses.KEY_UP:
-            #     current_row = (current_row - 1) % num_rows
-            # elif key == curses.KEY_DOWN:
-            #     current_row = (current_row + 1) % num_rows
-            # elif key == curses.KEY_RIGHT and current_column < num_columns - 1:
-            #     current_column += 1
-            #     current_row = min(current_row, (len(options) - 1) % num_rows)
-            # elif key == curses.KEY_LEFT and current_column > 0:
-            #     current_column -= 1
-            #     current_row = min(current_row, (len(options) - 1) % num_rows)
+                current_row = (current_row + 1) % num_rows
+            elif key == curses.KEY_RIGHT and current_column < num_columns - 1:
+                current_column += 1
+                current_row = min(current_row, (len(options) - 1) % num_rows)
+            elif key == curses.KEY_LEFT and current_column > 0:
+                current_column -= 1
+                current_row = min(current_row, (len(options) - 1) % num_rows)
             elif key == ord(" "):  # Toggle checkbox
                 idx = current_column * num_rows + current_row
                 if 0 <= idx < len(options):

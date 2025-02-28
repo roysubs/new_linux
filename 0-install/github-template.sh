@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Variables for customization
+# Purpose of this script:
+# Alter the variables for customisation and the display usage information
+# Use this to download and enable a github project for use on this system
+# Work in progress.
+
+# Variables for customisation
 PROJECT_NAME="bash-life"
 PROJECT_URL="https://github.com/szantaii/bash-life"
 INSTALL_DIR="/opt/$PROJECT_NAME"
