@@ -2,7 +2,11 @@
 set -e
 
 if [[ $# -lt 1 ]]; then
+  echo
+  echo "Perform a 'git clone' but ensure that the timestamps on the files cloned match those on the remote repo."
+  echo
   echo "Usage: $0 <repository-url> [destination]"
+  echo
   exit 1
 fi
 
