@@ -49,5 +49,15 @@ cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
 - Use `-maxdepth` and `-mindepth` to control recursion: `find /path -maxdepth 2 -name "*.conf"`
 - Combine with `xargs` for complex actions: `find /path -name "*.log" | xargs rm`
 - Speed up search on mounted drives with `-noleaf`.
+
+## Examples
+- Find all *.png / *.jpg, but exclude (prune) ~/backup-home
+- The -o switch is OR, so first the path is pruned, and then OR find next condition, and then OR inside the ( )
+`find ~ -path ~/backup-home -prune -o \( -name "*.png" -o -name "*.jpg" \) -print`
+- Show the filesizes the found files
+`find ~ -path ~/backup-home -prune -o \( -name "*.png" -o -name "*.jpg" \) -printf "%s %p\n"`
+- Show the filesizes in human readable format
+`find ~ -path ~/backup-home -prune -o \( -name "*.png" -o -name "*.jpg" \) -printf "%s %p\n" | awk '{printf "%.2f MB %s\n", $1/1048576, $2}'`
+
 EOF
 

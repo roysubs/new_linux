@@ -17,6 +17,8 @@ MAKE=$(dmidecode -s system-manufacturer)
 MODEL=$(dmidecode -s system-product-name | grep -v "To Be Filled By O.E.M")
 SERIAL=$(dmidecode -s system-serial-number)
 CPU_INFO=$(lscpu | grep "Model name" | sed 's/Model name:\s*//')
+# Regular lscpu reads from /proc/cpuinfo, shows basic CPU details.
+# sudo lscpu may access BIOS/DMI tables, revealing extra or manufacturer-specific data.
 BIOS_INFO=$(dmidecode -s bios-version)
 CPU_CORES=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
 NUMA=$(lscpu | awk -F: '/NUMA node0 CPU\(s\)/ {print $2}' | xargs)

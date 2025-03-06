@@ -1,0 +1,4 @@
+
+# To add a srt file to an mp4 without recompressing:
+ffmpeg -i input_video.mp4 -i subtitles.srt -c copy -c:s mov_text output_video.mp4
+
