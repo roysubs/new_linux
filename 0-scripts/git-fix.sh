@@ -16,13 +16,15 @@ print_header "\nStep 1: Checking if the SSH agent is running..."
 if pgrep -u "$USER" ssh-agent > /dev/null; then
     echo "SSH agent is already running. Using existing agent."
 else
-    run_command "eval \"\$(ssh-agent -s)\""
+    print_header "No SSH agent running. Starting a new one..."
+    eval "$(ssh-agent -s)"
 fi
 
 # Step 2: List currently added SSH keys
 print_header "\nStep 2: Checking if any SSH keys are loaded..."
 run_command "ssh-add -l"
 
+# If no keys are found, add the default key
 if [ $? -ne 0 ]; then
     echo "No SSH keys found in the agent. Attempting to add your default key..."
     run_command "ssh-add ~/.ssh/id_rsa 2>/dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null"
@@ -68,3 +70,4 @@ print_header "\nFinal Instructions:"
 echo "If your SSH key is missing, add it to GitHub under Settings -> SSH and GPG keys."
 echo "If problems persist, try restarting your SSH agent with: eval \"\$(ssh-agent -s)\" and re-running ssh-add."
 echo "\nDone!"
+
