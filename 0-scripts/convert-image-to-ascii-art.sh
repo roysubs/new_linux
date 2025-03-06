@@ -1,7 +1,10 @@
 #!/bin/bash
+# jp2a --color "$FILE"
+# img2txt --gamma=0.6 --width=80 "$FILE"
 
 # Check if a file argument is provided
 if [[ -z "$1" ]]; then
+    echo "Convert an image file to ASCII art (jp2a / img2txt from caca-utils)"
     echo "Usage: $0 <image_file>"
     exit 1
 fi

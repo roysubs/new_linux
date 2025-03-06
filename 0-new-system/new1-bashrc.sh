@@ -105,10 +105,10 @@ alias lsblkx='lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINTS
 alias cd..='cd ..'               # Windows typo
 alias cx='chmod +x'              # chmod add execute
 cxx() { chmod +x \$1; ./\$1; }   # chmod \$1 and then run it
-alias ls.='ls -d .*'
+alias ls.='ls -d .*'             # -d shows only the directory, not the contents (of .config etc)
 alias ll.='ls -ald .*'
-alias ifconfig='sudo ifconfig'  # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
-alias ipconfig='sudo ifconfig'  # Windows typo
+alias ifconfig='sudo ifconfig'   # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
+alias ipconfig='sudo ifconfig'   # Windows typo
 alias find1='find /etc /usr /opt /var ~ \\( -type d -o -name \"*.conf\" -o -name \"*.cfg\" -o -name \"*.sh\" -o -name \"*.bin\" -o -name \"*.exe\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.doc\" \\) 2>/dev/null'
 
 # This function must be in .bashrc to have visibility of all loaded shell functions and aliases
