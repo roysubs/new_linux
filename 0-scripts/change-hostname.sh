@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Update hostname in /etc/hostname, /etc/hosts, and hostnamectl"
 echo "Current hostname: $(hostname)"
 
 # Use $1 if provided, otherwise prompt the user for input

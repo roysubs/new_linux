@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Auto-rename media files to remove junk text and format as a proper name."
+
 # List of supported media file extensions
 media_extensions=("mkv" "avi" "mp3" "mp4" "cbr" "cbz" "mov" "flv" "wmv" "webm" "mpg" "mpeg" "jpg" "png" "gif")
 
