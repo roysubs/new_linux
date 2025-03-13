@@ -3,7 +3,7 @@
 # Script to invoke and run the script at ~/new_linux/0-new-system/myhelp.sh
 
 # Define the path to the target script
-TARGET_SCRIPT=../0-new-system/new2-update-markdown-help-files.sh
+TARGET_SCRIPT=../0-new-system/new2-update-h-scripts.sh
 
 # Check if the target script exists and is executable
 if [[ -x "$TARGET_SCRIPT" ]]; then

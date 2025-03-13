@@ -2,6 +2,7 @@
 
 # Show usage if no arguments or -h is passed
 if [[ $# -eq 0 || "$1" == "-h" ]]; then
+    echo
     echo "Usage: $(basename "$0") <command> [num] [directory]"
     echo "Commands:"
     echo "  big      - Find the largest files"
@@ -17,6 +18,7 @@ if [[ $# -eq 0 || "$1" == "-h" ]]; then
     echo "  num       - (optional) Number of results to display (default: 20)"
     echo "  directory - (optional) Target directory (default: current directory)"
     echo "  -s        - (optional) Use sudo for find command"
+    echo
     exit 0
 fi
 
