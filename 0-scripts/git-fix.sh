@@ -13,8 +13,10 @@ run_command() {
 
 # Step 1: Check if SSH agent is running
 print_header "\nStep 1: Checking if the SSH agent is running..."
-if pgrep -u "$USER" ssh-agent > /dev/null; then
-    echo "SSH agent is already running. Using existing agent."
+SSH_AGENT_PID=$(pgrep -u "$USER" ssh-agent)
+if [ -n "$SSH_AGENT_PID" ]; then
+    echo "SSH agent is already running (PID: $SSH_AGENT_PID). Using existing agent."
+    eval "$(ssh-agent -s)"
 else
     print_header "No SSH agent running. Starting a new one..."
     eval "$(ssh-agent -s)"
