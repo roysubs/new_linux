@@ -66,11 +66,6 @@ if has('termguicolors')   \" Cursor types
 endif
 \" Key mappings, nnoremap: n (normal mode) nore (non-recursive), map (map a key)
 nnoremap <C-a> <esc>gg0VG<CR>  \" Ctrl-a : select all (normal mode)
-inoremap <C-s> <esc>:w<CR>     \" Ctrl-s : save file while in insert mode
-inoremap <S-Down> <Esc>Vj      \" Shift-cursordown   : Visual Line mode and select down
-inoremap <S-Up> <Esc>Vk        \" Shift-cursorup     : Visual Line mode and select up
-inoremap <S-Right> <Esc><C-V>h \" Shift-cursor-right : Visual Block mode and select right
-inoremap <S-Left> <Esc><C-V>l  \" Shift-cursor-left  : Visual Block mode and select left
 nnoremap <S-Down> <Esc>Vj      \" Shift-cursor-down  : Visual Line mode and select down
 nnoremap <S-Up> <Esc>Vk        \" Shift-cursor-up    : Visual Line mode and select up
 \" Ctrl-cursor-down useful as Ctrl-v maps to paste in some SSH clients (ssh.exe from powershell)
@@ -78,6 +73,12 @@ nnoremap <C-Down> <Esc><C-V>j  \" Ctrl-cursor-down   : Visual Block mode and sel
 nnoremap <C-Up> <Esc><C-V>k    \" Ctrl-cursor-up     : Visual Block mode and select up
 nnoremap <C-Right> <Esc><C-V>l \" Ctrl-cursor-right  : Visual Block mode and select right
 nnoremap <C-Left> <Esc><C-V>h  \" Ctrl-cursor-left   : Visual Block mode and select left
+inoremap <C-s> <esc>:w<CR>     \" Ctrl-s : save file while in insert mode
+\" inoremap: i (insertmode), nore (non-recursive), map (map a key)
+inoremap <S-Down> <Esc>Vj      \" Shift-cursordown   : Visual Line mode and select down
+inoremap <S-Up> <Esc>Vk        \" Shift-cursorup     : Visual Line mode and select up
+inoremap <S-Right> <Esc><C-V>h \" Shift-cursor-right : Visual Block mode and select right
+inoremap <S-Left> <Esc><C-V>l  \" Shift-cursor-left  : Visual Block mode and select left
 \" Perform :w write on a protected file even when not as sudo
 cnoremap w!! execute 'silent! write !sudo tee % >/dev/null' <bar> edit
 "
