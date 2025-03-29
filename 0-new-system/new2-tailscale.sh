@@ -36,7 +36,7 @@ cat <<EOF
 Tailscale is installed and running on this system.
 
 To set up two-way communication between this system and a remote system, ensure that tailscale is
-installed and running on both. To manual install:
+installed and running on both. To manually install:
    curl -fsSL https://tailscale.com/install.sh | sh
    sudo systemctl status tailscaled
    sudo systemctl enable --now tailscaled   # Tailscale service will start on every boot

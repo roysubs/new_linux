@@ -154,7 +154,7 @@ n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
 0s() { cd ~/new_linux/0-scripts || return; ls; }  # jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
 w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
-white() { cd ~/192.168.1.29-d || return; ls; }   # jump to 'WHITE' PC SMB share
+# white() { cd ~/192.168.1.29-d || return; ls; }  # can have various custom jump functions (this for 'WHITE' PC SMB share)
 
 # tmux shortcuts
 alias tt='tmux'
