@@ -1,12 +1,14 @@
 # new_linux Project
 
-This repository is a collection of scripts, configurations, and utilities aimed at Linux system management, automation, and customization. The structure is organized into distinct directories based on their purpose.
+Quick setup and configuration for new Linux systems, with various management utilities. The project root contains menu scripts to select guided setup of essential components.
 
 ## Folder Structure
 
 ### `0-new-system/`
-Contains scripts and configurations for setting up a new Linux system. These help streamline the process of installing and configuring essential software and system settings.
-Use the `setup-new-system-by-menu.sh` in the root of new\_linux to run some or all of these as required.
+Scripts for setting up a new Linux system (or updating, configuring existing systems). These help streamline the process of installing and configuring essential software and system settings. Use the `setup-new-system-by-menu.sh` in the root of `new_linux` to run some or all of these as required.
+Note the `new1-bashrc.sh` in here which will carefully and non-destructively update `.bashrc` (i.e. if a setting already exists in the existing `.bashrc` then it will not be overwritten. These updates add various tools for navigating the project (dotsource `.bashrc` after running this, or use `. ~\new_linux\0new-system\new1-bashrc.sh` to dotsource at runtime):
+`n` jump to new_linux root, `0ns` jump to the `0new-system` directory.
+`0s` jump to the scripts directory (note that `new1-bashrc.sh` will add this directory to the path by default).
 
 ### `0-help/`
 Markdown-based help files that can be displayed in the console using `glow`. These provide quick reference guides for various Linux commands and tools.
