@@ -2,8 +2,9 @@
 
 # Ensure at least one argument is provided
 if [ $# -eq 0 ]; then
+    echo "Display space that will be deleted before deleting"
     echo "Usage: $0 '<pattern>'"
-    echo "Example: $0 '2025-02-*'"
+    echo "Example: $0 'namestring-*'"
     exit 1
 fi
 
