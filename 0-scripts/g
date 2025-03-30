@@ -5,6 +5,7 @@
 if [ $# -eq 0 ]; then
     echo "Git Tool. Usage: g [option] <args>"
     echo "Options:"
+    echo "  a                git add ."
     echo "  c <message>      Commit with the given message"
     echo "  s                Status: Show the current repository status"
     echo "  d                Diff: Show unstaged changes"
@@ -34,6 +35,9 @@ option=$1
 shift  # Shift to access arguments
 
 case "$option" in
+    a)
+        git add .
+        ;;
     c)
         git commit -m "$@"
         ;;
