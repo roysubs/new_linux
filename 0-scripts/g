@@ -15,15 +15,15 @@ if [ $# -eq 0 ]; then
     echo "  b                Branch: List branches, highlight current branch"
     echo "  nb <name>        New Branch: Create and switch to a new branch"
     echo "  ch <branch>      Checkout: Switch to a different branch"
-    echo "  p                Pull latest changes from the remote"
-    echo "  ph               Prune remote branches that no longer exist"
-    echo "  pu               Push to the current branch's upstream"
+    echo "  push             Push to the current branch's upstream"
+    echo "  pull             Pull latest changes from the remote"
+    echo "  rpo              git remote prune origin (prune branches that no longer exist)"
     echo "  f                Fetch: Update remote refs without merging"
     echo "  m <branch>       Merge: Merge the specified branch into the current one"
     echo "  r <commit>       Reset: Soft reset to the given commit (keep changes)"
     echo "  rh <commit>      Hard Reset: Reset to the given commit, discard changes"
     echo "  st               Stash: Save uncommitted changes"
-    echo "  sta <message>    Stash with a message"
+    echo "  stm <message>    Stash with a message"
     echo "  stp              Pop last stash"
     echo "  cl!              Clean untracked files (DANGEROUS: Run with caution!)"
     echo "  t                Troubleshooting Help: Show common Git fixes"
@@ -65,14 +65,14 @@ case "$option" in
     ch)
         git checkout "$1"
         ;;
-    p)
+    push)
+        git push
+        ;;
+    pull)
         git pull
         ;;
-    ph)
+    rpo)
         git remote prune origin
-        ;;
-    pu)
-        git push
         ;;
     f)
         git fetch
@@ -89,7 +89,7 @@ case "$option" in
     st)
         git stash
         ;;
-    sta)
+    stm)
         git stash push -m "$1"
         ;;
     stp)
