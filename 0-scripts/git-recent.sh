@@ -3,9 +3,9 @@
 # Set default number of commits to show (5)
 num_commits=${1:-5}
 
-# Define the directory of the remote Git repository (adjust as needed)
-GIT_REPO_PATH="/path/to/your/repository.git/hooks"
-POST_RECEIVE_HOOK="$GIT_REPO_PATH/post-receive"
+# Get the root directory of the Git repository
+GIT_REPO_PATH=$(git rev-parse --show-toplevel)
+POST_RECEIVE_HOOK="$GIT_REPO_PATH/.git/hooks/post-receive"
 
 # Check if the post-receive hook exists
 if [ -f "$POST_RECEIVE_HOOK" ]; then
@@ -19,7 +19,7 @@ if [ -f "$POST_RECEIVE_HOOK" ]; then
         if [[ "$response" =~ ^[Yy]$ ]]; then
             # Add a basic logging script to the post-receive hook
             echo "#!/bin/bash" > "$POST_RECEIVE_HOOK"
-            echo "echo \"\$(date) - Push received on branch \$(git rev-parse --abbrev-ref HEAD)\" >> /path/to/push_log.txt" >> "$POST_RECEIVE_HOOK"
+            echo "echo \"\$(date) - Push received on branch \$(git rev-parse --abbrev-ref HEAD)\" >> $GIT_REPO_PATH/push_log.txt" >> "$POST_RECEIVE_HOOK"
             chmod +x "$POST_RECEIVE_HOOK"
             echo "The post-receive hook has been populated and is now recording push events."
         else
@@ -33,7 +33,7 @@ else
     if [[ "$response" =~ ^[Yy]$ ]]; then
         # Create a new post-receive hook to log push events
         echo "#!/bin/bash" > "$POST_RECEIVE_HOOK"
-        echo "echo \"\$(date) - Push received on branch \$(git rev-parse --abbrev-ref HEAD)\" >> /path/to/push_log.txt" >> "$POST_RECEIVE_HOOK"
+        echo "echo \"\$(date) - Push received on branch \$(git rev-parse --abbrev-ref HEAD)\" >> $GIT_REPO_PATH/push_log.txt" >> "$POST_RECEIVE_HOOK"
         chmod +x "$POST_RECEIVE_HOOK"
         echo "The post-receive hook has been created and is now recording push events."
     else
