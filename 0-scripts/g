@@ -7,6 +7,7 @@ if [ $# -eq 0 ]; then
     echo "Options:"
     echo "  a                git add ., add all files to repo"
     echo "  c <message>      git commit -m <message>, quickly commit"
+    echo "  acp <message>    git add. / git commit -m <message> / git push"
     echo "  s                Status: Show the current repository status"
     echo "  d                Diff: Show unstaged changes"
     echo "  ds               Diff Staged: Show staged changes"
@@ -40,6 +41,11 @@ case "$option" in
         ;;
     c)
         git commit -m "$@"
+        ;;
+    acp)
+        git add .
+        git commit -m "$@"
+        git push
         ;;
     s)
         git status
