@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 CURRENT_USER=${SUDO_USER:-$(whoami)}
 
 if ! command -v ffmpeg &>/dev/null; then
