@@ -39,8 +39,7 @@ fi
 [ -f ~/.config/nvim/init.vim ] || mkdir -p ~/.config/nvim && touch ~/.config/nvim/init.vim
 
 # Vim settings and key mappings to apply
-vimrc_block="
-\" General Vim settings
+vimrc_block="\" General Vim settings
 syntax on          \" Syntax highlighting
 colorscheme desert \" Syntax highlighting scheme
 \" Available themes:
@@ -48,13 +47,14 @@ colorscheme desert \" Syntax highlighting scheme
 \" koehler, lunaperche, morning, murphy, pablo, peachpuff, quiet, ron, shine,
 \" slate, torte, zellner
 \" Disable tabs (to get a tab, Ctrl-V<Tab>), tab stops are 4 chars, indents are 4 chars
+set nonumber                          \" No line numbers (toggle on/off with Ctrl-L or F2 as below)
+nnoremap <C-L> :set invnumber<CR>     \" Toggle line numbers on/off
+nnoremap <F2> :set invnumber<CR>      \" Toggle line numbers on/off
+nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>  \" F4 shows hidden characters
+inoremap <C-s> <Esc>:w<CR>            \" Save file while in insert mode
+\" Perform :w write on a protected file even when not as sudo
+cnoremap w!! execute 'silent! write !sudo tee % >/dev/null' <bar> edit
 
-set nonumber                         \" No line numbers (toggle on/off with Ctrl-L or F2 as below)
-nnoremap <C-L> :set invnumber<CR>    \" Toggle line numbers on/off
-nnoremap <F2> :set invnumber<CR>     \" Toggle line numbers on/off
-nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>
-
-set expandtab tabstop=4 shiftwidth=4 \" Tab will generate 4 spaces
 set background=dark  \" Dark background
 set noerrorbells     \" Disable error bells
 set novisualbell     \" Disable error screen flash
@@ -64,23 +64,22 @@ if has('termguicolors')   \" Cursor types
     let &t_SR = \"\\e[4 q\"
     let &t_EI = \"\\e[2 q\"
 endif
-\" Key mappings, nnoremap: n (normal mode) nore (non-recursive), map (map a key)
-nnoremap <C-a> <esc>gg0VG<CR>  \" Ctrl-a : select all (normal mode)
-nnoremap <S-Down> <Esc>Vj      \" Shift-cursor-down  : Visual Line mode and select down
-nnoremap <S-Up> <Esc>Vk        \" Shift-cursor-up    : Visual Line mode and select up
-\" Ctrl-cursor-down useful as Ctrl-v maps to paste in some SSH clients (ssh.exe from powershell)
-nnoremap <C-Down> <Esc><C-V>j  \" Ctrl-cursor-down   : Visual Block mode and select down
-nnoremap <C-Up> <Esc><C-V>k    \" Ctrl-cursor-up     : Visual Block mode and select up
-nnoremap <C-Right> <Esc><C-V>l \" Ctrl-cursor-right  : Visual Block mode and select right
-nnoremap <C-Left> <Esc><C-V>h  \" Ctrl-cursor-left   : Visual Block mode and select left
-inoremap <C-s> <esc>:w<CR>     \" Ctrl-s : save file while in insert mode
-\" inoremap: i (insertmode), nore (non-recursive), map (map a key)
-inoremap <S-Down> <Esc>Vj      \" Shift-cursordown   : Visual Line mode and select down
-inoremap <S-Up> <Esc>Vk        \" Shift-cursorup     : Visual Line mode and select up
-inoremap <S-Right> <Esc><C-V>h \" Shift-cursor-right : Visual Block mode and select right
-inoremap <S-Left> <Esc><C-V>l  \" Shift-cursor-left  : Visual Block mode and select left
-\" Perform :w write on a protected file even when not as sudo
-cnoremap w!! execute 'silent! write !sudo tee % >/dev/null' <bar> edit
+
+\" Shift-Up/Down / Ctrl-Up/Down for Visual Line Selection
+nnoremap <S-Down> Vj       \" Shift-Down : Select one line down
+nnoremap <S-Up> Vk         \" Shift-Up   : Select one line up
+inoremap <S-Down> <Esc>Vj  \" Visual Line Select also from insert mode
+inoremap <S-Up> <Esc>Vk    \" Visual Line Select also from insert mode
+nnoremap <C-Down> <C-V>j   \" Ctrl-Down  : Block selection down
+nnoremap <C-Up> <C-V>k     \" Ctrl-Up    : Block selection up
+\" Alt-Left/Right for block selection sideways
+\" Do not use Ctrl-Left/Right as that is default navigate word action
+nnoremap <M-Right> <C-V>l  \" Alt-Right : Block select right
+nnoremap <M-Left> <C-V>h   \" Alt-Left  : Block select left
+nnoremap vv v      \" vv -> Enter character-wise visual mode (default 'v')
+nnoremap vV V      \" vV -> Enter line-wise visual mode (equivalent to 'V')
+nnoremap vb <C-V>  \" vb -> Enter block-wise visual mode (equivalent to 'Ctrl-V')
+
 "
 
 # Neovim-specific settings block
@@ -129,10 +128,10 @@ if [[ "$APPLY_GLOBAL" == true ]]; then
 else
   # Update the normal user's vimrc
   if [ -f "$NORMAL_USER_HOME/.vimrc" ]; then
-    update_vimrc "$NORMAL_USER_HOME/.vimrc" "$vim_block"
+    update_vimrc "$NORMAL_USER_HOME/.vimrc" "$vimrc_block"
   fi
   if [ -f "$NORMAL_USER_HOME/.config/nvim/init.vim" ]; then
-    update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim" "$vim_block"
+    update_vimrc "$NORMAL_USER_HOME/.config/nvim/init.vim" "$vimrc_block"
   fi
   # Update Neovim-specific settings with extra block
   if [ -f "$NORMAL_USER_HOME/.config/nvim/init.vim" ]; then

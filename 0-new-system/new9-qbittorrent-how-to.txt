@@ -1,3 +1,11 @@
+The qbittorrent-nox script in this folder installs and configures the headless qbittorrent-nox package.
+The other scripts are to interact with that from a Windows desktop. This involved setting up an
+association for magnet links on Windows so that they will be silently redirected to the Linux server
+running qbittorrent-nox, which can then be accessed graphically from it's webclient interface making
+for quite an elegant setup where the Linux server does all of the processing and downloading but can
+be managed remotely.
+
+
 Redirect Magnet Links on Windows to Linux server running qBittorrent.
 ==========
 
