@@ -9,10 +9,7 @@ fi
 
 LATEST_VERSION=$(curl -s https://api.github.com/repos/navidrome/navidrome/releases/latest | grep 'tag_name' | cut -d '"' -f 4 | sed 's/v//')
 DOWNLOAD_URL="https://github.com/navidrome/navidrome/releases/download/v${LATEST_VERSION}/navidrome_${LATEST_VERSION}_linux_amd64.deb"
-
-echo "LATEST_VERSION: $LATEST_VERSION"
 echo "DOWNLOAD_URL: $DOWNLOAD_URL"
-
 echo "Downloading Navidrome $LATEST_VERSION..."
 wget -O /tmp/navidrome.deb "$DOWNLOAD_URL"
 

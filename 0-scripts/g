@@ -1,12 +1,12 @@
 #!/bin/bash
 # Git Tool Script
-# Provides utilities for common Git operations and troubleshooting.
+# Provides utilities for common Git operations and troubleshooting. 
 
 if [ $# -eq 0 ]; then
     echo "Git Tool. Usage: g [option] <args>"
     echo "Options:"
-    echo "  a                git add ."
-    echo "  c <message>      Commit with the given message"
+    echo "  a                git add ., add all files to repo"
+    echo "  c <message>      git commit -m <message>, quickly commit"
     echo "  s                Status: Show the current repository status"
     echo "  d                Diff: Show unstaged changes"
     echo "  ds               Diff Staged: Show staged changes"
