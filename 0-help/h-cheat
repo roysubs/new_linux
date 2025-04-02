@@ -1,7 +1,8 @@
 #!/bin/bash
-if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
+if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
 
-cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
+cat <<'EOF' | mdcat | less -R
+
 # Cheat Quick Notes
 
 ## Basics
