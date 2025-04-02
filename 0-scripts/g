@@ -32,9 +32,8 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-run_command() {
+echo_command() {
     echo -e "\033[1;34m$@\033[0m"
-    "$@"
 }
 
 option=$1
@@ -48,16 +47,16 @@ case "$option" in
         git commit -m "$@"
         ;;
     acp)
-    	run_command "git status"
+    	echo_command "git status"
         git status
         echo "====="
-    	run_command "git add ."
+    	echo_command "git add ."
         git add .
         echo "====="
-        run_command "git commit -m <message>"
+        echo_command "git commit -m <message>"
         git commit -m "$@"
         echo "====="
-        run_command "git push"
+        echo_command "git push"
         git push
         ;;
     s)
