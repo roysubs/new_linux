@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Display help summary for Vim
-cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
+cat <<'EOF' | mdcat | less -R
 Vim Quick Notes
 ===============
 
 - **Neovim vs Vim**:
     - Neovim (nvim) is a more modern version of Vim, with better support for plugins and features.
-    - Example: In Neovim, try `:%s/Text/Replace/` to see live previews of replacements across all affected lines.
+    - e.g. by default in Neovim, `:%s/Text/Replace/` will live preview replacements on all affected lines.
 
 - **Breaking Out to Shell**:
     - **Ctrl+Z**: Suspends Vim (or any app) and sends it to the background. Use `fg` to bring it back.
@@ -36,6 +36,8 @@ Vim Quick Notes
     - In **Normal Mode**: Use `h`, `j`, `k`, `l` for navigation (or arrow keys).
     - In **Insert Mode**: Use arrow keys, PgUp/PgDn to navigate.
     - `dd`: Delete a line (into the buffer), `yy`: Yank a line, `p`: Paste the buffer.
+    - `d<h/j/k/l>` or `d<up/down/left/right>`: Delete plus movement (up/down delete current line plus next in direction, left/h the character before cursor, or right/l, the current character at cursor).
+    - `d$` or `D` (Shift+D): Delete to end of line.
 
 - **Visual Mode and Select**:
     - `v`: Enter visual mode at the cursor position; move with arrow keys or `^`/`$` to select text.
@@ -51,10 +53,11 @@ Vim Quick Notes
     - `G`: Go to the last line. `123G`: Go to line 123.
     - `dG`: Delete from the current cursor position to the end of the file. `yG`: Yank to the end of the file.
     - `dgg`: Delete from the cursor to the start of the file. `ygg`: Yank from the cursor to the start.
+    - `ggdG`: `gg` moves to start of file, `dG` deletes to end, so this deletes everything in file.
     - `0`: Go to the start of the current line. `$`: Go to the end of the line.
     - `w`: Jump forward a word, `b`: Jump backward a word, `e`: Go to the end of the current word.
     - `Ctrl+f`: Page forward, `Ctrl+b`: Page backward.
-
+  
 - **Deleting Words and Lines**:
     - Insert Mode:
         - `Ctrl+W`: Delete the word before the cursor.
@@ -73,9 +76,7 @@ Vim Quick Notes
     - Use `d` to delete text (which is also yanked into the buffer), and then use `p` to paste.
 
 - **Advanced Deleting**:
-    - `ggdG`: Delete everything from the start of the file to the end.
-    - `dgg`: Delete from the current position to the start of the file.
-    - `d/^fi/+1`: Delete lines matching a pattern (e.g., `fi` for `if-fi` block).
+    - `d/^fi/+1`: Delete lines matching a pattern, so if cursor is at start of a if-fi block, then this will delete from current position to the end of the block, but only do it once. Note that this is not a Command Mode operation, do not press `:` before starting the command, press `d` to start then type `/^fi/+1` which will appear at bottom of screen, then Enter to execute.
 
 EOF
 
