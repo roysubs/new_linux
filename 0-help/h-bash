@@ -1,14 +1,8 @@
 #!/bin/bash
 
-if ! command -v glow >/dev/null 2>&1; then
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
-    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
-    sudo apt update && sudo apt install glow
-fi
-cat <<'EOF' | glow -p -w $(( $(tput cols) - 6 ))
-Bash Quick Notes
-================
+cat <<'EOF' | mdcat | less -R
+
+# Bash Quick Notes
 
 - **Bash Login Shells and Startup Files**:
     1. **/etc/profile**: System-wide settings for all users.
@@ -33,22 +27,10 @@ Bash Quick Notes
     - `$()` is preferred over backticks for readability (e.g., `result=$(ls)`).
 
 - **Environment Variables**:
-    - Set a variable:
-      ```bash
-      MY_VAR="value"
-      ```
-    - Export to child processes:
-      ```bash
-      export MY_VAR
-      ```
-    - View all variables:
-      ```bash
-      env
-      ```
-    - Unset a variable:
-      ```bash
-      unset MY_VAR
-      ```
+    - Set a variable: `MY_VAR="value"`
+    - Export to child processes: `export MY_VAR`
+    - View all variables: `env`
+    - Unset a variable: `unset MY_VAR`
 
 - **Conditional Statements**:
     ```bash
