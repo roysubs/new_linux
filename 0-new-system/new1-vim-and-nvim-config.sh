@@ -40,8 +40,14 @@ fi
 
 # Vim settings and key mappings to apply
 vimrc_block="\" General Vim settings
-syntax on          \" Syntax highlighting
-colorscheme desert \" Syntax highlighting scheme
+\" Set tab behavior to use spaces instead of tabs
+set expandtab        \" Use spaces instead of tab characters
+set tabstop=4        \" Set tab width to 4 spaces
+set shiftwidth=4     \" Set indent width to 4 spaces
+set softtabstop=4    \" Set the number of spaces a tab character represents in insert mode
+
+syntax on            \" Syntax highlighting
+colorscheme desert   \" Syntax highlighting scheme
 \" Available themes:
 \" blue, darkblue, default, delek, desert, elflord, evening, habamax, industry,
 \" koehler, lunaperche, morning, murphy, pablo, peachpuff, quiet, ron, shine,
