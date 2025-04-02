@@ -1,0 +1,73 @@
+Analyzing directories and files in: /home/boss/new_linux
+Counting directories at 2025-04-02_09-37-37...
+
+Directory Method 1 (find)
+Running:
+sudo find '/home/boss/new_linux' -type d | wc -l
+Directory Method 1 (find)
+Running: sudo find '/home/boss/new_linux' -type d | wc -l
+Count: 254
+Time: .065608806 seconds
+
+Directory Method 2 (tree)
+Running:
+sudo tree -afi '/home/boss/new_linux' | tail -n 1 | awk '{print $1}'
+Directory Method 2 (tree)
+Running: sudo tree -afi '/home/boss/new_linux' | tail -n 1 | awk '{print $1}'
+Count: 254
+Time: .098083434 seconds
+
+Directory Method 5 (bash loop)
+Running:
+count=0; sudo find '/home/boss/new_linux' -type d | while IFS= read -r; do count=$((count + 1)); done; echo $count
+Directory Method 5 (bash loop)
+Running: count=0; sudo find '/home/boss/new_linux' -type d | while IFS= read -r; do count=$((count + 1)); done; echo $count
+Count: 0
+Time: .073862218 seconds
+
+Directory Method 6 (perl)
+Running:
+sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub {}, postprocess => sub { ++$n }}, "/home/boss/new_linux"); print $n'
+Directory Method 6 (perl)
+Running: sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub {}, postprocess => sub { ++$n }}, "/home/boss/new_linux"); print $n'
+Count: 254
+Time: .123525416 seconds
+
+Directory Method 7 (python)
+Running:
+sudo /usr/bin/python3 -c 'import os; print(sum([len(dirs) for _, dirs, _ in os.walk("/home/boss/new_linux")]) + 1)'
+Directory Method 7 (python)
+Running: sudo /usr/bin/python3 -c 'import os; print(sum([len(dirs) for _, dirs, _ in os.walk("/home/boss/new_linux")]) + 1)'
+Count: 254
+Time: .120574504 seconds
+
+
+
+
+Counting files at 2025-04-02_09-37-37...
+
+File Method 1 (find)
+Running: sudo find '/home/boss/new_linux' -type f | wc -l
+Count: 925
+Time: .068497707 seconds
+
+File Method 2 (tree)
+Running: sudo tree -a '/home/boss/new_linux' | tail -n1 | awk '{print $3}'
+Count: 925
+Time: .086025579 seconds
+
+File Method 4 (bash loop)
+Running: count=0; sudo find '/home/boss/new_linux' -type f | while IFS= read -r; do count=$((count + 1)); done; echo $count
+Count: 0
+Time: .101952650 seconds
+
+File Method 5 (perl)
+Running: sudo /usr/bin/perl -MFile::Find -le 'find({wanted => sub { ++$n },postprocess => sub {--$n}}, "/home/boss/new_linux"); print $n'
+Count: 925
+Time: .097743836 seconds
+
+File Method 6 (python)
+Running: sudo /usr/bin/python3 -c 'import os; print(sum([len(files) for _, _, files in os.walk("/home/boss/new_linux")]))'
+Count: 925
+Time: .099152825 seconds
+
