@@ -7,8 +7,8 @@ if [ $# -eq 0 ]; then
     echo "Options:"
     echo "  a                git add ., add all files to repo"
     echo "  c <message>      git commit -m <message>, quickly commit"
-    echo "  acp <message>    git add. / git commit -m <message> / git push"
     echo "  s                Status: Show the current repository status"
+    echo "  acp <message>    Add-Commit-Push. git status / git add. / git commit -m <message> / git push"
     echo "  d                Diff: Show unstaged changes"
     echo "  ds               Diff Staged: Show staged changes"
     echo "  l                Log: Show commit history (short format)"
@@ -32,6 +32,11 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
+run_command() {
+    echo -e "\033[1;34m$@\033[0m"
+    "$@"
+}
+
 option=$1
 shift  # Shift to access arguments
 
@@ -43,8 +48,16 @@ case "$option" in
         git commit -m "$@"
         ;;
     acp)
+    	run_command "git status"
+        git status
+        echo "====="
+    	run_command "git add ."
         git add .
+        echo "====="
+        run_command "git commit -m <message>"
         git commit -m "$@"
+        echo "====="
+        run_command "git push"
         git push
         ;;
     s)
