@@ -1,4 +1,5 @@
 #!/bin/bash
+if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
 
 cat <<'EOF' | mdcat | less -R
 

@@ -50,8 +50,8 @@ case "$option" in
     	echo_command "git status"
         git status
         echo "====="
-    	echo_command "git add ."
-        git add .
+    	echo_command "git add -A (stage all changes in full repo)"
+        git add -A
         echo "====="
         echo_command "git commit -m <message>"
         git commit -m "$@"
