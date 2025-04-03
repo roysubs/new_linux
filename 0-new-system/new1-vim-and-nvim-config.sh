@@ -76,15 +76,17 @@ nnoremap <S-Down> Vj       \" Shift-Down : Select one line down
 nnoremap <S-Up> Vk         \" Shift-Up   : Select one line up
 inoremap <S-Down> <Esc>Vj  \" Visual Line Select also from insert mode
 inoremap <S-Up> <Esc>Vk    \" Visual Line Select also from insert mode
-nnoremap <C-Down> <C-V>j   \" Ctrl-Down  : Block selection down
-nnoremap <C-Up> <C-V>k     \" Ctrl-Up    : Block selection up
+nnoremap <C-Down> <C-V>j   \" Ctrl-Down  : VISUAL BLOCK down
+nnoremap <C-Up> <C-V>k     \" Ctrl-Up    : VISUAL BLOCK up
 \" Alt-Left/Right for block selection sideways
 \" Do not use Ctrl-Left/Right as that is default navigate word action
-nnoremap <M-Right> <C-V>l  \" Alt-Right : Block select right
-nnoremap <M-Left> <C-V>h   \" Alt-Left  : Block select left
-nnoremap vv v      \" vv -> Enter character-wise visual mode (default 'v')
-nnoremap vV V      \" vV -> Enter line-wise visual mode (equivalent to 'V')
-nnoremap vb <C-V>  \" vb -> Enter block-wise visual mode (equivalent to 'Ctrl-V')
+nnoremap <M-Right> vw  \" Alt-Right : VISUAL right (l for 1 char, w for 1 word forward)
+nnoremap <M-Left> vb   \" Alt-Left  : VISUAL left (h for 1 char, b for 1 word back)
+\" v -> VISUAL (i.e. word by word with wrap at end of line)
+\" V -> VISUAL LINE (up/down to select more lines)
+\" Ctrl-v (or Ctrl-q) -> VISUAL BLOCK, with I (Shift-i) for bulk multi-line insert
+\" Can't use Ctrl-v when connected by some terminals, hence these mappings
+\" So, v (VISUAL), V (VISUAL LINE), vb (VISUAL BLOCK)
 
 "
 
