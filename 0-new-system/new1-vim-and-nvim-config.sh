@@ -85,7 +85,8 @@ nnoremap <M-Left> vb   \" Alt-Left  : VISUAL left (h for 1 char, b for 1 word ba
 \" v -> VISUAL (i.e. word by word with wrap at end of line)
 \" V -> VISUAL LINE (up/down to select more lines)
 \" Ctrl-v (or Ctrl-q) -> VISUAL BLOCK, with I (Shift-i) for bulk multi-line insert
-\" Can't use Ctrl-v when connected by some terminals, hence these mappings
+\" Often cannot use Ctrl-v when connect via ssh, so add 'vb' for a VISUAL BLOCK shortcut
+nnoremap vb <C-V>  \" vb -> Enter block-wise visual mode (equivalent to 'Ctrl-V')
 \" So, v (VISUAL), V (VISUAL LINE), vb (VISUAL BLOCK)
 
 "
