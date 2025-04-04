@@ -42,7 +42,7 @@ START_TIME=$(date +%s)
 # Get sizes of each subdirectory
 echo "Calculating directory sizes in: $FULL_TARGET"
 
-dir_sizes=$(find "$TARGET" -mindepth 1 -maxdepth 1 -type d -exec du -sb {} +)
+dir_sizes=$(sudo find "$TARGET" -mindepth 1 -maxdepth 1 -type d -exec du -sb {} +)
 sorted_sizes=$(echo "$dir_sizes" | sort -nr)
 
 # Find the longest directory name for alignment
