@@ -1,23 +1,33 @@
 #!/bin/bash
 
-# Set target directory (default: current directory)
-TARGET="${1:-.}"
+TARGET="."
 SHOW_COUNTS=false
-if [[ "$1" == "-c" ]]; then
-    SHOW_COUNTS=true
-    TARGET="${2:-.}"
-fi
+SHOW_ACTUAL=false
 
-# Resolve full path for display
+for arg in "$@"; do
+    case "$arg" in
+        -c) SHOW_COUNTS=true ;;
+        -actual) SHOW_ACTUAL=true ;;
+        -h|--help)
+            echo "Usage: $(basename $0) [options] [directory]"
+            echo "  -c         Show number of files and subdirectories"
+            echo "  -actual    Show actual disk usage (default: apparent)"
+            echo "  -h         Show this help"
+            exit 0 ;;
+        -*)
+            echo "Unknown option: $arg"
+            exit 1 ;;
+        *) TARGET="$arg" ;;
+    esac
+done
+
 FULL_TARGET=$(realpath "$TARGET")
 
-# Ensure TARGET exists
 if [[ ! -d "$TARGET" ]]; then
     echo "Error: '$TARGET' is not a directory."
     exit 1
 fi
 
-# Function to convert bytes to human-readable format
 human_readable() {
     local size=$1
     if ((size < 1024)); then
@@ -26,87 +36,66 @@ human_readable() {
         echo "$((size / 1024)) KB"
     elif ((size < 1073741824)); then
         echo "$((size / 1048576)) MB"
-    elif ((size < 1099511627776)); then
-        echo "$((size / 1073741824)) GB"
     else
-        echo "$((size / 1099511627776)) TB"
+        echo "$((size / 1073741824)) GB"
     fi
 }
 
-# Get terminal width
-TERMINAL_WIDTH=$(tput cols)
-
-# Start timer
-START_TIME=$(date +%s)
-
-# Get sizes of each subdirectory
 echo "Calculating directory sizes in: $FULL_TARGET"
+[[ "$SHOW_ACTUAL" == true ]] && echo "(using actual disk usage)" || echo "(using apparent size)"
 
-dir_sizes=$(sudo find "$TARGET" -mindepth 1 -maxdepth 1 -type d -exec du -sb {} +)
-sorted_sizes=$(echo "$dir_sizes" | sort -nr)
+# Get sizes
+DU_OPTS="-sb"
+[[ "$SHOW_ACTUAL" != true ]] && DU_OPTS+=" --apparent-size"
 
-# Find the longest directory name for alignment
+mapfile -t DIR_SIZES < <(find "$TARGET" -mindepth 1 -maxdepth 1 -type d -exec du $DU_OPTS {} + | sort -nr)
+
 longest_name=0
 max_size=0
-while IFS= read -r line; do
-    size=$(echo "$line" | awk '{print $1}')
-    dir=$(echo "$line" | awk '{print $2}')
+total_dirs_size=0
+
+for entry in "${DIR_SIZES[@]}"; do
+    size=$(awk '{print $1}' <<< "$entry")
+    dir=$(awk '{$1=""; sub(/^ /,""); print}' <<< "$entry")
     basename=$(basename "$dir")
-    max_size=$(( size > max_size ? size : max_size ))
+
     (( ${#basename} > longest_name )) && longest_name=${#basename}
-done <<< "$sorted_sizes"
+    (( size > max_size )) && max_size=$size
+    (( total_dirs_size += size ))
+done
 
-# Adjust bar max width to fit properly
-BAR_MAX_WIDTH=$((TERMINAL_WIDTH - longest_name - 30))
-if $SHOW_COUNTS; then
-    BAR_MAX_WIDTH=$((TERMINAL_WIDTH - longest_name - 50))
-fi
+BAR_MAX_WIDTH=$(( $(tput cols) - longest_name - 30 ))
+[[ "$SHOW_COUNTS" == true ]] && BAR_MAX_WIDTH=$((BAR_MAX_WIDTH - 20))
 
-# Print header if -c option is used
-if $SHOW_COUNTS; then
-    printf "%-*s  %8s  %8s  %8s\n" $((longest_name + 2)) "Directory" "Size" "Files" "Dirs"
-fi
+[[ "$SHOW_COUNTS" == true ]] && printf "%-*s  %8s  %8s  %8s\n" $((longest_name + 2)) "Directory" "Size" "Files" "Dirs"
 
-# Print sorted directory sizes with human-readable format and alignment
-while IFS= read -r line; do
-    size=$(echo "$line" | awk '{print $1}')
-    dir=$(echo "$line" | awk '{print $2}')
+for entry in "${DIR_SIZES[@]}"; do
+    size=$(awk '{print $1}' <<< "$entry")
+    dir=$(awk '{$1=""; sub(/^ /,""); print}' <<< "$entry")
     basename=$(basename "$dir")
     human_size=$(human_readable "$size")
 
-    # Count files and directories if -c option is enabled
     num_files="-"
     num_dirs="-"
     if $SHOW_COUNTS; then
-        num_files=$(find "$dir" -type f | wc -l)
-        num_dirs=$(find "$dir" -type d | wc -l)
-        num_dirs=$((num_dirs - 1))  # Exclude the dir itself
+        num_files=$(find "$dir" -type f 2>/dev/null | wc -l)
+        num_dirs=$(find "$dir" -type d 2>/dev/null | wc -l)
+        num_dirs=$((num_dirs - 1))
     fi
 
-    # Align name & size output
     printf "%-*s  %8s" $((longest_name + 2)) "$basename" "$human_size"
+    [[ "$SHOW_COUNTS" == true ]] && printf "  %8s  %8s" "$num_files" "$num_dirs"
 
-    if $SHOW_COUNTS; then
-        printf "  %8s  %8s" "$num_files" "$num_dirs"
-    fi
-
-    # Generate relative size bar (scale to terminal width)
-    bar_length=$((BAR_MAX_WIDTH * size / max_size))
+    bar_length=$(( (max_size > 0 ? BAR_MAX_WIDTH * size / max_size : 0) ))
     printf " %s\n" "$(printf '#%.0s' $(seq 1 $bar_length))"
-done <<< "$sorted_sizes"
+done
 
-# Calculate the total size of loose (non-directory) files
+# Loose files size
 LOOSE_SIZE=$(find "$TARGET" -mindepth 1 -maxdepth 1 -type f -exec stat --format="%s" {} + | awk '{sum+=$1} END {print sum}')
 HUMAN_LOOSE_SIZE=$(human_readable "$LOOSE_SIZE")
+TOTAL_SIZE=$((total_dirs_size + LOOSE_SIZE))
+HUMAN_TOTAL_SIZE=$(human_readable "$TOTAL_SIZE")
 
 echo -e "\nLoose files total size: $HUMAN_LOOSE_SIZE"
-
-# End timer
-END_TIME=$(date +%s)
-TIME_TAKEN=$((END_TIME - START_TIME))
-
-# If script took longer than 10 seconds, print the duration
-if (( TIME_TAKEN > 3 )); then
-    echo "Time taken: $TIME_TAKEN seconds."
-fi
+echo "Total size (all subdirs + loose files): $HUMAN_TOTAL_SIZE"
 

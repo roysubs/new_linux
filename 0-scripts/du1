@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Usage: du0 [-actual] [-c] [path]
+
+show_counts=false
+use_actual=false
+target_dir="."
+
+# Parse options
+while [[ "$1" == -* ]]; do
+    case "$1" in
+        -actual) use_actual=true ;;
+        -c) show_counts=true ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+    shift
+done
+
+# If there's an extra argument, it's the path
+if [ -n "$1" ]; then
+    target_dir="$1"
+fi
+
+echo "Calculating directory sizes in: $target_dir"
+
+# Set du flags
+if $use_actual; then
+    du_flags="-sb"
+    echo "(using actual disk usage)"
+else
+    du_flags="-s --apparent-size -B1"
+    echo "(using apparent size)"
+fi
+
+# Get terminal width for bar scaling
+term_width=$(tput cols)
+bar_width=$((term_width - 40))
+
+# Collect size info
+mapfile -t entries < <(find "$target_dir" -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 du $du_flags 2>/dev/null | sort -nr)
+
+# Get max size
+max_size=0
+for entry in "${entries[@]}"; do
+    size=$(echo "$entry" | awk '{print $1}')
+    (( size > max_size )) && max_size=$size
+done
+
+# Print table
+printf "%-25s %8s" "Directory" "Size"
+$show_counts && printf " %10s %8s" "Files" "Dirs"
+echo
+for entry in "${entries[@]}"; do
+    size=$(echo "$entry" | awk '{print $1}')
+    dir=$(echo "$entry" | cut -f2-)
+
+    # Format size in human-readable
+    hr_size=$(numfmt --to=iec --suffix=B "$size")
+
+    # Create bar
+    bar_len=$(( size * bar_width / max_size ))
+    bar=$(printf "%-${bar_len}s" "#" | tr ' ' '#')
+
+    # Count files and dirs
+    if $show_counts; then
+        files=$(find "$dir" -type f 2>/dev/null | wc -l)
+        dirs=$(find "$dir" -type d 2>/dev/null | wc -l)
+        printf "%-25s %8s %10s %8s %s\n" "$(basename "$dir")" "$hr_size" "$files" "$dirs" "$bar"
+    else
+        printf "%-25s %8s %s\n" "$(basename "$dir")" "$hr_size" "$bar"
+    fi
+done
+
+# Loose files size
+loose_size=$(find "$target_dir" -mindepth 1 -maxdepth 1 ! -type d -exec du $du_flags {} + | awk '{sum += $1} END {print sum}')
+loose_hr=$(numfmt --to=iec --suffix=B <<< "$loose_size")
+echo
+echo "Loose files total size: $loose_hr"
+
+# Total size
+total=0
+for entry in "${entries[@]}"; do
+    size=$(echo "$entry" | awk '{print $1}')
+    (( total += size ))
+done
+(( total += loose_size ))
+total_hr=$(numfmt --to=iec --suffix=B <<< "$total")
+echo "Total size (all subdirs + loose files): $total_hr"
+
