@@ -64,7 +64,7 @@ case "$option" in
                 if ! command -v apt-file > /dev/null 2>&1; then
                     echo "Installing 'apt-file' to view contents of packages that are not currently installed."
                     sudo apt install -y apt-file
-                    apt-file update
+                    sudo apt-file update
                 fi
                 apt-file list "$package"
             fi
