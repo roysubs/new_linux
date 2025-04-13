@@ -53,7 +53,7 @@ case "$option" in
     	echo_blue "git status"
         git status
         echo "====="
-    	echo_blue "git add -A (stage all changes in full repo)"
+    	echo_blue "git add -A   # stage all changes from root of repo"
         git add -A
         echo "====="
         echo_blue "git commit -m <message>"

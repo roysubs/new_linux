@@ -16,7 +16,8 @@ path="."
 
 # Check if any arguments are provided
 if [ $# -eq 0 ]; then
-    echo "Find Utility. Usage: f [option <modifier>] <path> <pattern(s)>
+    echo "
+Find Utility. Usage: f [option <modifier>] <path> <pattern(s)>
   If an option takes a modifier, that must be directly after the option
   Then a (single) path argument (optional, will default to \".\")
   Then search patterns (multiple, but also optional).
@@ -27,9 +28,8 @@ Options:
   td <days>    Find files modified in the last X days
   th <hours>   Find files modified in the last X hours
   tm <minutes> Find files modified in the last X minutes
-  ge <sizeMB>  Greater than or equal to size in MB
-  le <sizeMB>  Less than or equal to size in MB
-  be <s1-s2>   Between or equal to (>s1 and <s2) in MB
+  ge <size>    Greater than or equal to size, e.g., 100M, 1G
+  le <size>    Less than or equal to size, e.g., 100M, 1G
   exe          Find executable files
   sym          Find symbolic links
   empty        Find empty files and directories under path
@@ -154,41 +154,13 @@ case "$option" in
     ge)
         # Greater than or equal to size, e.g., 100M, 1G
         name_condition=$(build_name_condition "${args[@]:2}")
-        size=${args[1]}
-        # Ensure the size has the correct unit (M, G, etc.)
-        if [[ ! "$size" =~ [0-9]+[A-Za-z] ]]; then
-            size="${size}c"  # Default to bytes if no unit is provided
-        fi
-        run_find_named "$path -type f -size +${size} $name_condition"
+        run_find_named "$path -type f -size +${args[1]} $name_condition"
         ;;
     le)
         # Less than or equal to size, e.g., 100M, 1G
         name_condition=$(build_name_condition "${args[@]:2}")
         run_find_named "$path -type f -size -${args[1]} $name_condition"
         ;;
-    be)
-        range="${args[1]}"
-    
-        if [[ "$range" =~ ^([0-9]+)-([0-9]+)$ ]]; then
-            min_mb="${BASH_REMATCH[1]}"
-            max_mb="${BASH_REMATCH[2]}"
-    
-            if (( min_mb > max_mb )); then
-                echo "Error: Minimum value cannot be greater than maximum."
-                exit 1
-            fi
-    
-            min="+${min_mb}M"
-            max="-${max_mb}M"
-    
-            name_condition=$(build_name_condition "${args[@]:2}")
-            run_find_named "$path -type f -size $min -size $max $name_condition"
-        else
-            echo "Error: Invalid range format. Use: f be 100-300"
-            exit 1
-        fi
-        ;;
-
     ext)
         # Find by file extension
         ext="${args[0]}"
