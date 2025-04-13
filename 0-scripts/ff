@@ -5,15 +5,17 @@ if [[ $# -eq 0 || "$1" == "-h" ]]; then
     echo
     echo "Usage: $(basename "$0") <command> [num] [directory]"
     echo "Commands:"
-    echo "  big      - Find the largest files"
-    echo "  old      - Find the oldest files"
-    echo "  recent   - Find the most recently modified files"
-    echo "  unused   - Find files not accessed in a long time"
-    echo "  huge     - Find files larger than a given size"
-    echo "  corrupt  - Find potentially corrupted files"
-    echo "  perm     - Find files with specific permissions"
-    echo "  owner    - Find files owned by a specific user"
-    echo "  ext      - Find files with a specific extension"
+    echo "  big          - Find the largest files"
+    echo "  bigM <num>   - Find files larger than a given size"
+    echo "  small        - Find the smallest files"
+    echo "  smallM <num> - Find files smaller than a given size"
+    echo "  old          - Find the oldest files"
+    echo "  recent       - Find the most recently modified files"
+    echo "  unused       - Find files not accessed in a long time"
+    echo "  corrupt      - Find potentially corrupted files"
+    echo "  perm         - Find files with specific permissions"
+    echo "  owner        - Find files owned by a specific user"
+    echo "  ext          - Find files with a specific extension"
     echo "Options:"
     echo "  num       - (optional) Number of results to display (default: 20)"
     echo "  directory - (optional) Target directory (default: current directory)"
@@ -67,14 +69,14 @@ case "$cmd" in
     big)
         find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%s %p\n' | sort -nr | head -n \"$num\" | awk '{\$1=\$1; print \$1, \$2}' | numfmt --to=iec"
         ;;
+    bigM)
+        find_cmd="$use_sudo find \"$dir\" -xdev -type f -size +${num}M -printf '%s %p\n' | numfmt --to=iec"
+        ;;
     old)
         find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%T@ %p\n' | sort -n | head -n \"$num\" | awk '{timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2)}'"
         ;;
     recent)
         find_cmd="$use_sudo find \"$dir\" -xdev -type f -printf '%T@ %p\n' | sort -nr | head -n \"$num\" | awk '{timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2)}'"
-        ;;
-    huge)
-        find_cmd="$use_sudo find \"$dir\" -xdev -type f -size +${num}M -printf '%s %p\n' | numfmt --to=iec"
         ;;
     unused)
         find_cmd="$use_sudo find \"$dir\" -xdev -type f -atime +${num} -printf '%A@ %p\n' | sort -n | awk '{timestamp = \$1; \$1 = \"\"; print strftime(\"%Y-%m-%d %H:%M:%S\", timestamp), substr(\$0,2)}'"

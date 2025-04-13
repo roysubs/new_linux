@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# First line checks running as root or with sudo (exit 1 if not). Second line auto-elevates the script as sudo.
+# Checks if running as root or with sudo (exit 1 if not):
 # if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
+# Auto-elevates the script as sudo and reruns:
 if [ "$(id -u)" -ne 0 ]; then echo "Elevation required; rerunning as sudo..."; sudo "$0" "$@"; exit 0; fi
 
 # Check if at least 2 days have passed since the last apt update (to avoid constant updates)

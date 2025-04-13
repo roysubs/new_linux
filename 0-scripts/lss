@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+
+# Default options
+sort_by="name"
+recurse=false
+use_sudo=false
+human_readable=false
+show_counts=false
+
+# Function to convert to human-readable format
+human_readable_size() {
+  local size=$1
+  if [[ $size -ge 1073741824 ]]; then
+    echo "$(echo "scale=2; $size / 1073741824" | bc) G"
+  elif [[ $size -ge 1048576 ]]; then
+    echo "$(echo "scale=2; $size / 1048576" | bc) M"
+  elif [[ $size -ge 1024 ]]; then
+    echo "$(echo "scale=2; $size / 1024" | bc) K"
+  else
+    echo "$size B"
+  fi
+}
+
+# Function to show help
+show_help() {
+  cat <<EOF
+Usage: lss [OPTIONS] [DIR]
+
+Lists files in DIR (default: current) with logical size, disk usage, last modified time, and name.
+
+Options:
+  -bytes         Sort by logical file size (in bytes)
+  -disk          Sort by disk usage (actual space taken)
+  -r             Recurse into subdirectories
+  --help         Show this help message
+  -sudo          Use sudo to access restricted folders
+  -h             Show sizes in human-readable format (B, K, M, G)
+  -c             Show number of files and directories
+EOF
+  exit 0
+}
+
+# Parse arguments
+while [[ "$1" =~ ^- ]]; do
+  case "$1" in
+    -bytes) sort_by="bytes" ;;
+    -disk)  sort_by="disk" ;;
+    -r)     recurse=true ;;
+    --help) show_help ;;
+    -sudo)  use_sudo=true ;;
+    -h)     human_readable=true ;;
+    -c)     show_counts=true ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+  shift
+done
+
+# Directory to process
+DIR="${1:-.}"
+
+# Command prefix (with sudo if needed)
+CMD="find"
+[[ $use_sudo == true ]] && CMD="sudo find"
+
+# Get terminal width for dynamic adjustment
+cols=$(tput cols)
+
+# Get block size
+block_size=$(stat -f --format="%s" "$DIR")
+echo "Block Size in this folder: $block_size"
+echo
+header_format="%${cols}s"  # Dynamic header format
+printf "$header_format\n" "Logical Size    Disk Usage    Last Modified        Filename"
+printf "---------------  -----------  -------------------  ---------------------\n"
+
+# Build file list
+if $recurse; then
+  file_list=$($CMD "$DIR" -type f 2>/dev/null)
+else
+  file_list=$($CMD "$DIR" -maxdepth 1 -type f 2>/dev/null)
+fi
+
+# Collect and optionally sort
+file_data=()
+total_logical=0
+total_disk=0
+file_count=0
+dir_count=0
+
+while IFS= read -r file; do
+  [[ ! -e "$file" ]] && continue
+  logical_size=$(stat --format="%s" "$file" 2>/dev/null)
+  disk_usage=$(( $(stat --format="%b" "$file" 2>/dev/null) * 512 ))
+  last_mod=$(date -r "$file" "+%Y-%m-%d_%H-%M-%S" 2>/dev/null)
+  if [[ $file == .* ]]; then
+    file_data+=("$logical_size;$disk_usage;$last_mod;$(tput setaf 7)$file$(tput sgr0)")  # Hidden file in white
+  else
+    file_data+=("$logical_size;$disk_usage;$last_mod;$file")
+  fi
+  total_logical=$((total_logical + logical_size))
+  total_disk=$((total_disk + disk_usage))
+  file_count=$((file_count + 1))
+done <<< "$file_list"
+
+# Sorting
+case "$sort_by" in
+  name)
+    sorted_data=$(printf '%s\n' "${file_data[@]}" | sort -t';' -k4)
+    ;;
+  bytes)
+    sorted_data=$(printf '%s\n' "${file_data[@]}" | sort -t';' -k1 -n)
+    ;;
+  disk)
+    sorted_data=$(printf '%s\n' "${file_data[@]}" | sort -t';' -k2 -n)
+    ;;
+esac
+
+# Output file details
+while IFS=';' read -r logical disk ts file; do
+  if $human_readable; then
+    logical=$(human_readable_size "$logical")
+    disk=$(human_readable_size "$disk")
+  fi
+  printf "%-15s  %-12s  %-19s  %s\n" "$logical" "$disk" "$ts" "$file"
+done <<< "$sorted_data"
+
+# Separator line
+printf "===============  ===========  ====================  =====================\n"
+
+# Output total sizes and counts
+if $human_readable; then
+  total_logical=$(human_readable_size "$total_logical")
+  total_disk=$(human_readable_size "$total_disk")
+fi
+
+# Print file and directory count if -c is used
+if $show_counts; then
+  printf "%-15s  %-12s  %-19s  %s\n" "$file_count files" "$dir_count dirs" "" "Total count"
+else
+  printf "%-15s  %-12s  %-19s  %s\n" "$total_logical" "$total_disk" "" "Total sizes"
+fi
+

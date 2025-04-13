@@ -10,7 +10,8 @@ if [ $# -eq 0 ]; then
     echo "  r <package(s)>   Remove the specified package(s) with sudo"
     echo "  s <package(s)>   Search for the specified package(s)"
     echo "  u                Update, upgrade, and autoremove packages with sudo"
-    echo "  v <package(s)>   View info: version, dependencies, package contents, etc."
+    echo "  ar               Autoremove packages that are no longer required"
+    echo "  v <package(s)>   View info: version, dependencies, package contents, etc"
     echo "  d <package(s)>   Depends: Packages required to install the specified package(s)"
     echo "  dr <package(s)>  Reverse Depends: Packages that depend upon the specified package(s)"
     echo
@@ -42,6 +43,9 @@ case "$option" in
         ;;
     u)
         sudo apt update && sudo apt upgrade && sudo apt autoremove
+        ;;
+    ar)
+        sudo apt autoremove
         ;;
     v)
         for package in "$@"; do
