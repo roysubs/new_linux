@@ -128,7 +128,7 @@ case "$option" in
         echo "  - To undo last commit but keep changes: g r HEAD~1"
         echo "  - To forcefully reset to last commit: g rh HEAD"
         echo "  - If 'detached HEAD' appears: g ch <branch>"
-        echo "  - If a push is rejected due to conflicts: g f && g p"
+        echo "  - If a push is rejected due to conflicts: g f && g ps"
         echo "  - To delete a local branch: git branch -d <branch>"
         echo "  - To delete a remote branch: git push origin --delete <branch>"
         echo
