@@ -7,11 +7,7 @@ SORT=false
 # Check for -sort switch
 for arg in "$@"; do
     case $arg in
-        -sort)
-        SORT=true
-        shift
-        ;;
-        -s)
+        -sort|-s)
         SORT=true
         shift
         ;;
