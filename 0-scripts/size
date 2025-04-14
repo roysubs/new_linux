@@ -1,16 +1,19 @@
 #!/bin/bash
 
-# 'size' on its own will work out the size of the present working directory (including subdirectories)
-# 'size /path/to/check' will do the same for a given path
-# 'size -c' will do the above, but will also count the number of files and directories in the tree
-# 'size -c /path/to/check' or 'size /path/to/check -c' should both work
-
 count=false
 path="."
 
 # Parse arguments in any order
 for arg in "$@"; do
     case "$arg" in
+        -h)
+            echo "
+'size' on its own calculates the total size of the current directory and all subdirectories.
+'size /path/to/check' will do this for the given path.
+'size -c' will also count the number of files and directories in the checked path.
+"
+            exit
+            ;;
         -c)
             count=true
             ;;
@@ -59,19 +62,18 @@ elapsed_time=$(echo "$end_time - $start_time" | bc)
 elapsed_time=$(printf "%.1f" "$elapsed_time")
 
 # Print size information
-echo -e "$path size: ${size_info:-Permission denied}"
+# Count files and directories if -c was provided
+if [ "$count" = true ]; then
+    dir_count=$(find "$path" -type d 2>/dev/null | wc -l | awk '{printf "%'\''d\n", $1}')
+    file_count=$(find "$path" -type f 2>/dev/null | wc -l | awk '{printf "%'\''d\n", $1}')
+    echo "$path is ${size_info:-Permission denied} (with $file_count files, $dir_count directories)"
+else
+    echo -e "$path is ${size_info:-Permission denied}"
+fi
 echo -e "Located on $device, $use_percent used ($used) of $size"
 
 # Print runtime if script takes 10s or more
 if (( $(echo "$elapsed_time >= 10" | bc -l) )); then
     echo -e "(Script ran for ${elapsed_time}s)"
-fi
-
-# Count files and directories if -c was provided
-if [ "$count" = true ]; then
-
-    dir_count=$(find "$path" -type d 2>/dev/null | wc -l | awk '{printf "%'\''d\n", $1}')
-    file_count=$(find "$path" -type f 2>/dev/null | wc -l | awk '{printf "%'\''d\n", $1}')
-    echo "$path contains $dir_count directories and $file_count files"
 fi
 
