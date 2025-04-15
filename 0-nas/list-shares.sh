@@ -53,7 +53,8 @@ list_samba_shares() {
 
     # Show active Samba connections
     echo -e "\nActive Samba Connections (Clients Connected to This System):"
-    smbstatus -S 2>/dev/null | awk 'NR > 1 {print $1, $2, $3, $4}' | column -t || echo "No active connections."
+    smbstatus -S
+    # smbstatus -S 2>/dev/null | awk 'NR > 1 {print $1, $2, $3, $4}' | column -t || echo "No active connections."
 
     # Show Samba service status
     echo -e "\nSamba Service Status:"
@@ -105,8 +106,21 @@ list_outgoing_shares() {
 }
 
 # Main script
-echo "Checking Samba and NFS Shares..."
+echo
+echo "====================="
+echo "Checking Samba Shares"
+echo "====================="
 list_samba_shares
+
+echo
+echo "==================="
+echo "Checking NFS Shares"
+echo "==================="
 list_nfs_shares
+
+echo
+echo "====================================="
+echo "Checking connections to other servers"
+echo "====================================="
 list_outgoing_shares
 
