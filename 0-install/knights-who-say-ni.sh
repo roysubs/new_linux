@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Only run 'apt update' if last update was 2 days or more
 if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update; fi
 HOME_DIR="$HOME"
