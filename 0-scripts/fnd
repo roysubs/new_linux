@@ -1,0 +1,91 @@
+#!/bin/bash
+# Find Tool Script ("fnd")
+# Wrapper around 'find' for common search tasks with a user-friendly menu.
+
+# Colors
+BLUE='\033[1;34m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+print_line() {
+    echo -e "${BLUE}=====${NC}"
+}
+
+color_echo() {
+    echo -e "${GREEN}$1${NC}"
+}
+
+help_text() {
+    echo -e "Find Tool (fnd). Usage: fnd [option]"
+    echo -e "Options:"
+    echo -e "  f           ${BLUE}Find files by name${NC}"
+    echo -e "  d           ${BLUE}Find directories by name${NC}"
+    echo -e "  mtime       ${BLUE}Find files modified in the last N days${NC}"
+    echo -e "  size        ${BLUE}Find files by size (e.g., +100M, -1G)${NC}"
+    echo -e "  perm        ${BLUE}Find files by permission (e.g., 644)${NC}"
+    echo -e "  exec        ${BLUE}Find files and execute a command (e.g., rm)${NC}"
+    echo -e "  all         ${BLUE}Show all files under a path${NC}"
+    echo -e "  -h, --help  Show this help menu"
+}
+
+run_find() {
+    color_echo "Running: find $*"
+    print_line
+    find "$@"
+}
+
+case "$1" in
+    ""|-h|--help)
+        help_text
+        ;;
+
+    f)
+        read -rp "Path to search in: " path
+        read -rp "Filename to search (use * for wildcards): " pattern
+        run_find "$path" -type f -name "$pattern"
+        ;;
+
+    d)
+        read -rp "Path to search in: " path
+        read -rp "Directory name to search (use * for wildcards): " pattern
+        run_find "$path" -type d -name "$pattern"
+        ;;
+
+    mtime)
+        read -rp "Path to search in: " path
+        read -rp "Modified within how many days? (e.g., 7): " days
+        run_find "$path" -type f -mtime "-$days"
+        ;;
+
+    size)
+        read -rp "Path to search in: " path
+        read -rp "Size (e.g., +10M, -500k): " size
+        run_find "$path" -type f -size "$size"
+        ;;
+
+    perm)
+        read -rp "Path to search in: " path
+        read -rp "Permissions (e.g., 644): " perm
+        run_find "$path" -type f -perm "$perm"
+        ;;
+
+    exec)
+        read -rp "Path to search in: " path
+        read -rp "Filename pattern (e.g., *.tmp): " pattern
+        read -rp "Command to run on each (e.g., rm): " cmd
+        run_find "$path" -type f -name "$pattern" -exec "$cmd" {} \;
+        ;;
+
+    all)
+        read -rp "Path to search in: " path
+        run_find "$path"
+        ;;
+
+    *)
+        echo -e "${RED}Unknown option: $1${NC}" >&2
+        help_text
+        exit 1
+        ;;
+esac
+

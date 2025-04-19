@@ -58,8 +58,8 @@ elif [[ -n "$1" ]]; then
     run_docker_container "$@"
 else
     echo "Usage:"
-    echo "  $0 -list                    List available Docker images"
-    echo "  $0 <image> [options]        Pull and run a Docker container"
+    echo "  $(basename $0) -list                    List available Docker images"
+    echo "  $(basename $0) <image> [options]        Pull and run a Docker container"
     exit 1
 fi
 

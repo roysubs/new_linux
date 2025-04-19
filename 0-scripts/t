@@ -1,0 +1,186 @@
+#!/bin/bash
+# TMUX Tool Script ("t")
+# Unified wrapper for commonly used tmux commands with colorful output and aliases.
+
+# Colors
+BLUE='\033[1;34m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+print_line() {
+    echo -e "${BLUE}=====${NC}"
+}
+
+color_echo() {
+    echo -e "${GREEN}$1${NC}"
+}
+
+help_text() {
+    echo -e "Tmux Tool (t). Usage: t [option]"
+    echo -e "Options:"
+    echo -e "  ls            tmux list | List tmux sessions"
+    echo -e "  s             tmux | Start tmux"
+    echo -e "  b             List key binding defaults"
+    echo -e "  ren <name>    Rename session"
+    echo -e "  at <name>     tmux attach | Attach to session (or last if no name)"
+    echo -e "  dt            tmux detach | Detach from current session"
+    echo -e "  k             tmux kill | Kill current tmux pane"
+    echo -e "  help          Show tmux commands and key bindings (paged)"
+    echo -e "  cmds          List tmux commands"
+    echo -e "  keys          List tmux key bindings"
+    echo -e "  buf           Enter copy mode"
+    echo -e "  tff|tbb       Switch panes (forward/back)"
+    echo -e "  l|r|u|d       Resize current pane (L/R/U/D)"
+    echo -e "  hh            Split pane horizontally (split line is top to bottom)"
+    echo -e "  vv            Split pane vertically (split line is left to right)"
+    echo -e "  tswi <name>   Switch to session"
+    echo -e "  tmm           Toggle mouse mode"
+    echo -e "  -h, --help    Show this help menu"
+}
+
+case "$1" in
+    ""|-h|--help)
+        help_text
+        ;;
+
+    t)
+        color_echo "Starting tmux..."
+        tmux
+        ;;
+
+    ls)
+        color_echo "Listing tmux sessions..."
+        tmux list-sessions
+        ;;
+
+    k)
+        color_echo "Killing current tmux pane..."
+        tmux kill-pane
+        ;;
+
+    tbuffer)
+        tmux copy-mode
+        ;;
+
+    tff)
+        tmux select-pane -t :.+
+        ;;
+
+    tbb)
+        tmux select-pane -t :.-
+        ;;
+
+    tpl)
+        tmux resize-pane -L 5
+        ;;
+
+    tpr)
+        tmux resize-pane -R 5
+        ;;
+
+    tpu)
+        tmux resize-pane -U 5
+        ;;
+
+    tpd)
+        tmux resize-pane -D 5
+        ;;
+
+    thh)
+        tmux split-window -h -c "#{pane_current_path}"
+        ;;
+
+    tvv)
+        tmux split-window -v -c "#{pane_current_path}"
+        ;;
+
+    tren)
+        shift
+        tmux rename-session "$1"
+        ;;
+
+    tswi)
+        shift
+        tmux switch-client -t "$1"
+        ;;
+
+    tatt)
+        if [ -n "$2" ]; then
+            tmux attach-session -t "$2"
+        else
+            tmux attach
+        fi
+        ;;
+
+    tdet)
+        tmux detach
+        ;;
+
+    tmm)
+        current_status=$(tmux show -g mouse | awk '{print $2}')
+        if [ "$current_status" = "on" ]; then
+            tmux set -g mouse off
+            echo "Mouse mode turned ${RED}off${NC}."
+        else
+            tmux set -g mouse on
+            echo "Mouse mode turned ${GREEN}on${NC}."
+        fi
+        ;;
+
+    cmds)
+        tmux list-commands | less
+        ;;
+
+    keys)
+        tmux list-keys | less
+        ;;
+
+    help)
+        echo -e "${BLUE}TMUX COMMANDS${NC}\n"
+        tmux list-commands
+        print_line
+        echo -e "${BLUE}TMUX KEY BINDINGS${NC}\n"
+        tmux list-keys | less
+        ;;
+    b)
+        cat <<EOF
+Tmux Key Bindings Summary (Prefix: Ctrl+b)
+==========================================
+
+  Navigation & Panes                  Windows & Sessions
+  ---------------------               ---------------------
+  Up/Down/Left/Right : ↑↓←→ arrows    c : Create new window
+  o                  : Next pane      w : Choose window
+  ;                  : Last pane      n / p : Next / Prev window
+  x                  : Kill pane      , : Rename window
+  z                  : Toggle zoom    & : Kill window
+  Ctrl+<arrow>       : Resize pane    s : List sessions
+
+  Splits & Layouts                    Copy Mode
+  ----------------                    ---------------------
+  " : Split horizontally              [ : Enter copy mode
+  % : Split vertically                Space : Start selection
+  Alt+Up/Down/Left/Right : Resize     Enter : Copy selection
+  ! : Break pane into new window      ] : Paste buffer
+  Ctrl+Space : Cycle layouts
+
+  Misc & Utilities                    Mouse & Buffers
+  ------------------                  -----------------------
+  d : Detach from session             :show-buffer
+  ? : List all key bindings           :save-buffer ~/out.txt
+  t : Show clock                      :list-buffers
+  r : Reload config                   :clear-history
+  : : Command prompt
+
+  Use "t help" for full list, or "Ctrl+b + ?" inside tmux to view all bindings.
+EOF
+        ;;
+
+    *)
+        echo -e "${RED}Unknown option: $1${NC}" >&2
+        help_text
+        exit 1
+        ;;
+esac
+
