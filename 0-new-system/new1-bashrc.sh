@@ -102,14 +102,15 @@ alias exports='sudo vi /etc/exports'        # Edit NFS exports
 alias lsblkx='lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINTS -lp | grep -v -E "^/dev/sd[a-z]\\s*$"'
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
-alias cd..='cd ..'               # Windows typo
-alias cx='chmod +x'              # chmod add execute
-cxx() { chmod +x \$1; ./\$1; }   # chmod \$1 and then run it
+alias cd..='cd ..'               # Common typo by Windows users
+alias cd...='cd ..; cd..'        # Go up 2 directories
+alias cd....='cd ..; cd..; cd..' # Go up 3 directories
+alias cx='chmod +x'              # chmod add the execute permission
+cxx() { chmod +x \$1; ./\$1; }     # add execute to \$1 and also run it immediately
 alias ls.='ls -d .*'             # -d shows only the directory, not the contents (of .config etc)
 alias ll.='ls -ald .*'
 alias ifconfig='sudo ifconfig'   # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'   # Windows typo
-alias find1='find /etc /usr /opt /var ~ \\( -type d -o -name \"*.conf\" -o -name \"*.cfg\" -o -name \"*.sh\" -o -name \"*.bin\" -o -name \"*.exe\" -o -name \"*.txt\" -o -name \"*.log\" -o -name \"*.doc\" \\) 2>/dev/null'
 
 # This function must be in .bashrc to have visibility of all loaded shell functions and aliases
 def() {
@@ -135,11 +136,15 @@ def() {
     if command -v \"\$1\" >/dev/null 2>&1; then   # check for an 'external script'
         local SCRIPT_PATH=\$(command -v \"\$1\")
         if [[ -f \"\$SCRIPT_PATH\" ]]; then
-            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH':\" 
+            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH'\" 
         fi
     fi
     # Display overlaps
-    if [ \${#OVERLAPS[@]} -gt 1 ]; then echo -e \"\\033[0;31mNote: '\$1' is a \${OVERLAPS[*]}.\\033[0m\"; fi
+    if [ \${#OVERLAPS[@]} -gt 1 ]; then
+        joined=\$(printf \", %s\" \"\${OVERLAPS[@]}\")
+        joined=\${joined:2}
+        echo -e \"\\033[0;31mWarning: '\$1' has multiple types: \${joined}.\\033[0m\"   # \${OVERLAPS[*]}
+    fi
     # If no matches were found
     if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
 }
@@ -156,39 +161,14 @@ v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
 w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
 # white() { cd ~/192.168.1.29-d || return; ls; }  # can have various custom jump functions (this for 'WHITE' PC SMB share)
 
-# tmux shortcuts
-alias tt='tmux'
-alias tlist='tmux list'
-alias tkk='tmux kill-pane'; alias tkill='tmux kill-pane'
-alias thelp='echo -e \"TMUX COMMANDS\n=====\n\n\$(tmux list-commands)\n\nTMUX KEY BINDINGS\n=====\n\n\$(tmux list-keys)\n\n\n\" | less'
-alias tcommands='tmux list-commands | less' # Show tmux commands, with less
-alias tkeys='tmux list-keys | less' # Show key bindings, with less
-alias tbuffer='tmux copy-mode'      # C-b,[ then up/down, pgup/pgdn
-alias tff='tmux select-pane -t :.+' # Forward toggle through panes, C-b,
-alias tbb='tmux select-pane -t :.-' # Backward toggle through panes
-alias tpl='tmux resize-pane -L 5'   # Pane Resize Left 5
-alias tpr='tmux resize-pane -R 5'   # Pane Resize Right 5
-alias tpu='tmux resize-pane -U 5'   # Pane Resize Up 5
-alias tpd='tmux resize-pane -D 5'   # Pane Resize Down 5
-# 'horizontal' split means the line is vertical  |,  i.e. one pane on left, and another on right
-# 'vertical' split means the line is horizontal ---, i.e. one pane at top, and another pane at bottom
-alias thh=\"tmux split-window -h -c '#{pane_current_path}'\"
-alias tvv=\"tmux split-window -v -c '#{pane_current_path}'\"
-trename() { tmux rename-session \$1; };    alias tren='trename'
-tswitch() { tmux switch-client -t \$1; };  alias tswi='tswitch'
-tattach() { tmux attach-session -t \$1; }; alias tatt='tmux attach' # just attach to last active
-alias tdetach='tmux detach';              alias tdet='tdetach'  # C-b, d
-# toggle tmux mouse on/off
-tmm() {
-    current_status=\$(tmux show -g mouse | awk '{print \$2}')
-    if [ \"\$current_status\" = \"on\" ]; then
-        tmux set -g mouse off
-        echo \"Mouse mode turned off.\"
-    else
-        tmux set -g mouse on
-        echo \"Mouse mode turned on.\"
-    fi
-}
+# Optional alias and function packs that can be added
+# if [ -f ~/.bashrc-docker.sh ]; then
+#   source ~/.bashrc-docker.sh
+# fi
+# if [ -f ~/.bashrc-tmux.sh ]; then
+#   source ~/.bashrc-tmux.sh
+# fi
+
 "
 
 # Capture the first non-empty line of $bashrc_block, this is the header line
@@ -208,6 +188,14 @@ if ! grep -Fxq "$first_non_empty_line" "$BASHRC_FILE"; then
     echo "so will skip full removal and move to a line by line add of \$bashrc_block."
 else
     # Prompt user for confirmation to wipe from the found line downwards
+    if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+        # Script is sourced
+        echo "This script is sourced, so will update environment after updating..."
+    else
+        # Script is executed
+        echo "This script is not sourced, so to apply changes, quit and re-run as:  source ~/.bashrc"
+    fi
+
     echo "Do you want to wipe the existing bashrc_block from .bashrc starting from: $first_non_empty_line ? (y/n)"
     read -r wipe_confirm
 

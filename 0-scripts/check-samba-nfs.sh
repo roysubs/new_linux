@@ -17,11 +17,9 @@ fi
 echo "To restart Samba: sudo systemctl restart smbd"
 echo "To check Samba shares: smbclient -L localhost -U%"
 echo "To check Samba status: sudo systemctl status smbd"
-echo ""
-echo "Note: Samba consists of two main services:"
-echo "  - smbd: Handles file sharing and authentication."
-echo "  - nmbd: Handles NetBIOS name resolution, allowing Windows machines to find the Samba server by name."
-echo "    (Restart it if you are having name resolution issues: sudo systemctl restart nmbd)"
+echo "smbd: Handles file sharing and authentication."
+echo "nmbd: Handles NetBIOS name resolution, allowing Windows machines to find the Samba server by name."
+echo "      Restart nmbd if you are having name resolution issues:  sudo systemctl restart nmbd"
 echo ""
 
 # Check if NFS is installed

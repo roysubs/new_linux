@@ -208,7 +208,7 @@ for name in "${sorted_names[@]}"; do
     barlen=0
     (( TOTAL_SIZE > 0 )) && barlen=$(( size * bar_space / TOTAL_SIZE ))
     # Create the bar string using printf and tr
-    bar=$(printf "%-${barlen}s" "#" | tr ' ' '#')
+    bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
     # Format size to human-readable
     hsize=$(to_human "$size")
 
@@ -232,12 +232,12 @@ if (( LOOSE_TOTAL > 0 || $SHOW_COUNTS || ${#sorted_names[@]} > 0 )); then # Only
     hsize=$(to_human "$LOOSE_TOTAL")
     barlen=0
      (( TOTAL_SIZE > 0 )) && barlen=$(( LOOSE_TOTAL * bar_space / TOTAL_SIZE ))
-    bar=$(printf "%-${barlen}s" "#" | tr ' ' '#')
+    bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
 
     if $SHOW_COUNTS; then
-         printf "%-*s %*s  %10s %10s  [%s]\n" "$name_pad" "[ Loose Files ]" "$size_pad" "$hsize" "-" "-" "$bar"
+         printf "%-*s %*s  %10s %10s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "-" "-" "$bar"
     else
-         printf "%-*s %*s  [%s]\n" "$name_pad" "[ Loose Files ]" "$size_pad" "$hsize" "$bar"
+         printf "%-*s %*s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "$bar"
     fi
 fi
 

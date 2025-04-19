@@ -74,5 +74,5 @@ df -hT | tee -a "$OUTPUT_FILE"
 # Final message
 echo -e "\e[32m\nReport saved to: $OUTPUT_FILE\e[0m"
 
-cat "$OUTPUT_FILE"
+# cat "$OUTPUT_FILE"
 

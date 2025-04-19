@@ -26,14 +26,12 @@ These are pure console-based games that you can run in a terminal over SSH.
     - **Slash'EM** (`slashem`): A variant of NetHack with new features and improvements.
     - **TOME / Tales of Middle-earth 2.4 (`tome`): www.t-o-m-e.net Contains multiple versions tome-gcu (console), tome-gtk2, tome-x11
 
-Text Adventures
-===============
 - **Text-based**
-    - **Frotz** (`frotz`): Interpreter for Z-Machine interactive fiction games.
-    - **Gargoyle** (`gargoyle`): Cross-platform interpreter for interactive fiction games.
-    - **Adventure** (`adventure`): The first text-based interactive fiction game.
-    - **The Hitchhiker's Guide to the Galaxy** (`hhgg`): Interactive fiction based on the famous book.
     - **Zork** (`zork`): A classic text adventure game.
+    - **Frotz** (`frotz`): Interpreter for Z-Machine interactive fiction games (like Zork).
+    - **Gargoyle** (`gargoyle`): Cross-platform interpreter for interactive fiction games.
+    - **Adventure** (`adventure`): The first text-based interactive fiction game, a.k.a., Colossal Cave.
+    - **The Hitchhiker's Guide to the Galaxy** (`hhgg`): Interactive fiction based on the famous book.
     - **Planetfall** (`planetfall`): A text-based sci-fi adventure game.
     
 - **Strategy**:

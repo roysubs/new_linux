@@ -1,0 +1,139 @@
+#!/bin/bash
+# Docker Tool Script ("dk")
+# Unified wrapper for commonly used Docker commands, with auto-prune, color output, and compatibility for both bash and zsh.
+
+# Colors
+BLUE='\033[1;34m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+print_line() {
+    echo -e "${BLUE}=====${NC}"
+}
+
+color_echo() {
+    echo -e "${GREEN}$1${NC}"
+}
+
+help_text() {
+    echo -e "Docker Tool (dk). Usage: dk [option]"
+    echo -e "Options:"
+    echo -e "  im           ${BLUE}docker images${NC}   List all images (base images used to create containers)"
+    echo -e "  ps           ${BLUE}docker ps -a${NC}    List all containers (instances created from images)"
+    echo -e "  up [name]    ${BLUE}docker-compose up -d [name]${NC}   Start container(s) with docker-compose"
+    echo -e "  down         ${BLUE}docker-compose down${NC}           Stop and remove docker-compose containers"
+    echo -e "  ex <name>    ${BLUE}docker exec -it <name> bash${NC}   Enter bash shell in a running container"
+    echo -e "  st <name>    ${BLUE}docker start <name>${NC}   Start a stopped container"
+    echo -e "  sp <name>    ${BLUE}docker stop <name>${NC}    Stop a running container"
+    echo -e "  rmc <name>   ${BLUE}docker rm <name>${NC}      Remove a container"
+    echo -e "  rmi <img>    ${BLUE}docker rmi <img>${NC}      Remove an image"
+    echo -e "  logs <name>  ${BLUE}docker logs -f <name>${NC}   Follow logs from a container"
+    echo -e "  prune        ${BLUE}docker system prune -f${NC}  Remove unused data"
+    echo -e "  volprune     ${BLUE}docker volume prune -f${NC}  Remove unused volumes"
+    echo -e "  clean        Run all prune operations"
+    echo -e "  a            Alias helper to copy this script into ~/.bashrc-docker.sh or zshrc"
+    echo -e "  -h, --help   Show this help menu"
+}
+
+# Main logic
+cmd=$1
+shift
+
+case "$cmd" in
+    ""|-h|--help)
+        help_text
+        ;;
+
+    ps)
+        color_echo "docker ps -a"
+        docker ps -a
+        ;;
+
+    im)
+        color_echo "docker images"
+        docker images
+        ;;
+
+    up)
+        color_echo "docker-compose up -d $1"
+        docker-compose up -d "$1"
+        ;;
+
+    down)
+        color_echo "docker-compose down"
+        docker-compose down
+        ;;
+
+    ex)
+        color_echo "docker exec -it $1 bash"
+        docker exec -it "$1" bash
+        ;;
+
+    st)
+        color_echo "docker start $1"
+        docker start "$1"
+        ;;
+
+    sp)
+        color_echo "docker stop $1"
+        docker stop "$1"
+        ;;
+
+    rm)
+        color_echo "docker rm $1"
+        docker rm "$1"
+        ;;
+
+    rmi)
+        color_echo "docker rmi $1"
+        docker rmi "$1"
+        ;;
+
+    logs)
+        color_echo "docker logs -f $1"
+        docker logs -f "$1"
+        ;;
+
+    prune)
+        color_echo "docker system prune -f"
+        docker system prune -f
+        ;;
+
+    volprune)
+        color_echo "docker volume prune -f"
+        docker volume prune -f
+        ;;
+
+    clean)
+        print_line
+        color_echo "docker stop $(docker ps -q)"
+        docker stop $(docker ps -q)
+        print_line
+        color_echo "docker rm $(docker ps -aq)"
+        docker rm $(docker ps -aq)
+        print_line
+        color_echo "docker rmi $(docker images -q)"
+        docker rmi $(docker images -q)
+        print_line
+        color_echo "docker volume prune -f"
+        docker volume prune -f
+        ;;
+
+    a)
+        SCRIPT_PATH=$(realpath "$0")
+        TARGET_FILE="~/.bashrc-docker.sh"
+
+        if [[ $SHELL == *zsh ]]; then
+            TARGET_FILE="~/.zshrc-docker.sh"
+        fi
+
+        cp "$SCRIPT_PATH" "$TARGET_FILE" && echo -e "✅ Copied to $TARGET_FILE"
+        ;;
+
+    *)
+        echo -e "${RED}Unknown option: $cmd${NC}" >&2
+        help_text
+        exit 1
+        ;;
+esac
