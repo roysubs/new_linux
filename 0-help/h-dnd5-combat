@@ -5,10 +5,6 @@ cat <<'EOF' | mdcat | less -R
 
 # Dungeons & Dragons 5th Edition Combat Process Cheatsheet
 
-## Combat Sequence
-1. **Initiative**: 
-   - Each participant rolls a d20 and adds their Dexterity modifier to determine the initiative order.
-   - The DM decides the order for ties.
 
 2. **Combat Rounds**:
    - Each round represents 6 seconds of in-game time.

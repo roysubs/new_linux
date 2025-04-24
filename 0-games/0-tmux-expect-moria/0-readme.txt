@@ -1,7 +1,7 @@
 This script will demonstrate automating stat dice rolling to get a very high
-INT for a character (i.e. for a mage) in Moria. The expect script will perform
-the keypresses in the tmux session that will run in the background (like a VM
-running in the background, though the tmux is a subshell of the current shell).
+INT for a mage character in Moria. The expect script will perform keypresses
+in a tmux session that runs in the background like a VM, though the tmux is
+a subshell process of the current shell.
  
 - Open a tmux session that will be used just to automate Moria.
 - Get to the dice roller screen ready to automate.

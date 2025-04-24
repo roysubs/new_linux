@@ -1,0 +1,291 @@
+#!/bin/bash
+
+# dkdash - Docker Dashboard Script
+
+# ANSI Color Codes
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Check if docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "${RED}Error: docker command not found. Please install Docker.${NC}"
+    exit 1
+fi
+
+# Check if jq is installed (needed for robust parsing)
+if ! command -v jq &> /dev/null; then
+    echo "${RED}Error: jq command not found. Please install jq (e.g., sudo apt-get install jq).${NC}"
+    exit 1
+fi
+
+# Helper function to get human-readable size
+get_human_size() {
+    local size_bytes="$1"
+    if [[ -z "$size_bytes" || "$size_bytes" -eq 0 ]]; then
+        echo "0B"
+    elif command -v numfmt &> /dev/null; then
+        # Use numfmt if available (preferable)
+        numfmt --to=iec --format="%.1f" "$size_bytes" 2>/dev/null || echo "${size_bytes}B"
+    else
+        # Fallback for systems without numfmt (basic conversion)
+        local sizes=("B" "K" "M" "G" "T")
+        local i=0
+        local size_float="$size_bytes"
+        # Use awk for floating point arithmetic if bc is not available
+        if command -v bc &> /dev/null; then
+             while (( $(echo "$size_float >= 1024" | bc -l) && i < ${#sizes[@]} - 1 )); do
+                size_float=$(echo "$size_float / 1024" | bc -l)
+                i=$((i + 1))
+            done
+        elif command -v awk &> /dev/null; then
+             while (( $(awk -v s="$size_float" 'BEGIN { exit !(s >= 1024) }') && i < ${#sizes[@]} - 1 )); do
+                size_float=$(awk -v s="$size_float" 'BEGIN { printf "%.2f", s / 1024 }') # Use awk for division
+                i=$((i + 1))
+            done
+        else
+            # Really basic integer division fallback (less accurate)
+             while (( size_float >= 1024 && i < ${#sizes[@]} - 1 )); do
+                size_float=$(( size_float / 1024 ))
+                i=$((i + 1))
+            done
+        fi
+        printf "%.1f%s" "$size_float" "${sizes[$i]}" 2>/dev/null || echo "${size_bytes}B"
+    fi
+}
+
+
+show_containers() {
+    echo -e "\n${BLUE}=== Containers (Name, Image, Status, Ports, Image Size, Mounts) ===${NC}"
+    printf "${CYAN}%-25s %-30s %-20s %-35s %-12s %s${NC}\n" "NAME" "IMAGE" "STATUS" "PORTS" "IMG SIZE" "MOUNTS"
+
+    # Get all required container info in one go
+    # Format: Name||Image||Status||Ports||ID
+    # Handle potential empty container list gracefully
+    container_list=$(docker ps -a --format '{{.Names}}||{{.Image}}||{{.Status}}||{{.Ports}}||{{.ID}}' 2>/dev/null)
+
+    if [[ -z "$container_list" ]]; then
+        echo "No containers found."
+        return
+    fi
+
+    # Get image sizes once and store in an associative array
+    declare -A image_sizes
+    docker image ls --format '{{.ID}}||{{.Size}}' 2>/dev/null | while IFS='||' read -r img_id size_bytes; do
+        image_sizes["$img_id"]="$size_bytes"
+    done
+
+    echo "$container_list" | while IFS='||' read -r name image status ports cid; do
+
+        # Get the specific image ID used by this container reliably
+        container_image_id=$(docker inspect --format='{{.Image}}' "$cid" 2>/dev/null)
+
+        # Look up the size using the container's image ID
+        raw_size=${image_sizes["$container_image_id"]}
+        if [[ -z "$raw_size" ]]; then
+             # Fallback: If lookup by exact ID fails, try looking up by image name/tag
+             # This is less reliable but might work for simpler cases or old images
+             # Limit output to just the size field in case multiple images match
+             raw_size=$(docker image ls --filter "reference=$image" --format '{{.Size}}' 2>/dev/null | head -n 1)
+             if [[ -z "$raw_size" ]]; then
+                raw_size=0 # Default to 0 if size can't be found
+             fi
+        fi
+
+        image_size_human=$(get_human_size "$raw_size")
+
+        # Get mounts using docker inspect and jq for reliability
+        # We extract Destination paths for non-null volume names
+        mounts_json=$(docker inspect "$cid" 2>/dev/null | jq -c '.[]?.Mounts[]? | select(.Name != null) | .Destination' 2>/dev/null)
+        # Join the paths with space
+        mounts_list=$(echo "$mounts_json" | jq -r 'join(" ")' 2>/dev/null)
+
+        # Truncate long mount strings for better formatting (adjust length as needed)
+        local max_mount_len=60 # Maximum characters for mounts column
+        if [[ ${#mounts_list} -gt $max_mount_len ]]; then
+            mounts_list="${mounts_list:0:$max_mount_len}..."
+        fi
+
+        # Determine status color
+        status_color="${NC}"
+        if [[ "$status" == Up* ]]; then
+            status_color="${GREEN}"
+        elif [[ "$status" == Exited* ]]; then
+            status_color="${RED}"
+        elif [[ "$status" == Created* ]]; then
+             status_color="${YELLOW}"
+        fi
+
+
+        # Print the formatted row
+        printf "%-25s %-30s ${status_color}%-20s${NC} %-35s %-12s %s\n" \
+               "$name" \
+               "$image" \
+               "$status" \
+               "$ports" \
+               "$image_size_human" \
+               "$mounts_list"
+
+    done
+}
+
+show_images() {
+    echo -e "\n${BLUE}=== Images (Repo:Tag, ID, Size, Used by X containers) ===${NC}"
+    printf "${CYAN}%-35s %-15s %-10s %s${NC}\n" "REPOSITORY:TAG" "IMAGE ID" "SIZE" "USED BY"
+
+    # Get image IDs used by all containers and count them efficiently
+    declare -A image_usage_counts
+    # Get IDs of all containers (running and stopped)
+    container_ids=$(docker ps -aq 2>/dev/null)
+
+    if [[ -n "$container_ids" ]]; then
+        # Inspect all containers to get their exact image ID
+        # Use xargs to handle potentially many container IDs
+        # Ensure jq handles potential empty output from xargs or docker inspect
+        used_image_ids=$(echo "$container_ids" | xargs 2>/dev/null docker inspect --format '{{.Image}}' 2>/dev/null)
+
+        # Count occurrences of each image ID using sort and uniq
+        if [[ -n "$used_image_ids" ]]; then
+            echo "$used_image_ids" | sort | uniq -c | while read -r count img_id; do
+                image_usage_counts["$img_id"]="$count"
+            done < /dev/stdin # Read from the pipe
+        fi
+    fi
+
+    # Get all images and process
+    image_list=$(docker images --format '{{.Repository}}:{{.Tag}}||{{.ID}}||{{.Size}}' 2>/dev/null)
+
+    if [[ -z "$image_list" ]]; then
+         echo "No images found."
+         return
+    fi
+
+    echo "$image_list" | while IFS='||' read -r repo_tag image_id size_human; do
+        # Look up the usage count for this image ID
+        usage_count=${image_usage_counts["$image_id"]}
+        if [[ -z "$usage_count" ]]; then
+            usage_count=0 # Default to 0 if not used by any container
+        fi
+
+        # Print the formatted row
+        printf "%-35s %-15s %-10s %s\n" \
+               "$repo_tag" \
+               "$image_id" \
+               "$size_human" \
+               "$usage_count"
+
+    done
+}
+
+
+show_volumes() {
+    echo -e "\n${BLUE}=== Volumes (Name, Used by containers, Mount paths) ===${NC}"
+    # Corrected printf header - removed extra "${NC}"
+    printf "${CYAN}%-25s %-30s %s${NC}\n" "VOLUME" "USED BY CONTAINERS" "MOUNT PATHS"
+
+    # Get info about volumes used by containers efficiently
+    declare -A volume_mount_info # Maps volume name -> "container1:path1, container2:path2, ..."
+
+    # Get IDs of all containers
+    container_ids=$(docker ps -aq 2>/dev/null)
+
+    if [[ -n "$container_ids" ]]; then
+        # Simpler jq: Output "volname\tcontainername\tdestination" for each relevant mount across all containers
+        # Ensure jq handles potential empty output from xargs or docker inspect
+        container_mount_lines=$(echo "$container_ids" | xargs 2>/dev/null docker inspect 2>/dev/null | \
+            jq -r '.[]? | select(.Name) | .Name as $cname | .Mounts[]? | select(.Name != null) | .Name + "\t" + $cname + "\t" + .Destination' 2>/dev/null)
+
+        if [[ -n "$container_mount_lines" ]]; then
+            # Read the lines and build the volume_mount_info map
+            echo "$container_mount_lines" | while IFS=$'\t' read -r volname cname destpath; do
+                if [[ -z "${volume_mount_info[$volname]}" ]]; then
+                    volume_mount_info["$volname"]="$cname:$destpath"
+                else
+                    # Append, avoiding duplicate container names if a volume is mounted multiple times in the same container
+                    # This simple check might not catch all nuances if containers have ':' in names, but it's a common pattern
+                    if ! echo "${volume_mount_info[$volname]}" | grep -q "$cname:"; then
+                         volume_mount_info["$volname"]="${volume_mount_info[$volname]}, $cname:$destpath"
+                    else
+                         # If container already listed, just append the new mount path for that container
+                         volume_mount_info["$volname"]="${volume_mount_info[$volname]}, $cname:$destpath" # Append with comma and space
+                    fi
+                fi
+            done < /dev/stdin # Read from the pipe
+        fi
+    fi
+
+    # Get list of all volumes and print info
+    volume_list=$(docker volume ls --format '{{.Name}}' 2>/dev/null)
+
+    if [[ -z "$volume_list" ]]; then
+        echo "No volumes found."
+        return
+    fi
+
+    echo "$volume_list" | while read -r vol; do
+        mount_info_str=${volume_mount_info["$vol"]}
+
+        # Separate container names and mount paths for formatting
+        local used_by_str=""
+        local mount_paths_str=""
+
+        if [[ -n "$mount_info_str" ]]; then
+            # Parse the "container:path, container:path" string
+            # Split by comma and space, then split each part by colon
+            IFS=', ' read -r -a mount_entries <<< "$mount_info_str"
+            declare -A unique_containers # Use to track added containers
+
+            for entry in "${mount_entries[@]}"; do
+                 # Split by the first colon only
+                 cname="${entry%%:*}"
+                 destpath="${entry#*:}"
+
+                 if [[ -n "$cname" && -n "$destpath" ]]; then
+                     # Add container name if not already added
+                     if [[ -z "${unique_containers[$cname]}" ]]; then
+                          if [[ -n "$used_by_str" ]]; then used_by_str+=", "; fi
+                          used_by_str+="$cname"
+                          unique_containers["$cname"]=1
+                     fi
+                     # Add mount path
+                     if [[ -n "$mount_paths_str" ]]; then mount_paths_str+=", "; fi
+                     mount_paths_str+="$destpath"
+                 fi
+            done
+        fi
+
+
+        # Truncate long strings for better formatting (adjust lengths as needed)
+        local max_users_len=28 # Adjusted for column width
+        local max_mounts_len=60 # Adjusted for column width
+
+        if [[ ${#used_by_str} -gt $max_users_len ]]; then
+             used_by_str="${used_by_str:0:$max_users_len}..."
+        fi
+        if [[ ${#mount_paths_str} -gt $max_mounts_len ]]; then
+             mount_paths_str="${mount_paths_str:0:$max_mounts_len}..."
+        fi
+
+        # Print the formatted row
+        printf "%-25s %-30s %s\n" \
+               "$vol" \
+               "$used_by_str" \
+               "$mount_paths_str"
+    done
+}
+
+# Main script logic
+case "$1" in
+    --containers) show_containers ;;
+    --images) show_images ;;
+    --volumes) show_volumes ;;
+    ""|--all) show_containers; show_images; show_volumes ;;
+    --help|-h) echo "Usage: $0 [--containers|--images|--volumes|--all|--help]"; exit 0 ;;
+    *) echo "Usage: $0 [--containers|--images|--volumes|--all|--help]"; exit 1 ;;
+esac
+
+exit 0

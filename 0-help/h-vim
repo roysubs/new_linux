@@ -9,7 +9,7 @@ Vim Quick Notes
     - Neovim (nvim) is a more modern version of Vim, with better support for plugins and features.
     - e.g. by default in Neovim, `:%s/Text/Replace/` will live preview replacements on all affected lines.
 
-- **Breaking Out to Shell**:
+- **Breaking Out to Shell (bash jobs Ctrl+Z, fg, bg, and :sh)**:
     - **Ctrl+Z**: Suspends Vim (or any app) and sends it to the background. Use `fg` to bring it back.
     - **:sh**: Opens a new shell inside Vim. Use `Ctrl+D` to exit the shell (if opened with `:sh`).
     - **Note**: If not in a shell, `:sh` won't exit Vim/Neovim.
@@ -43,10 +43,19 @@ Vim Quick Notes
     - `v`: Enter visual mode at the cursor position; move with arrow keys or `^`/`$` to select text.
     - `V`: Select the whole line in visual mode.
     - `Ctrl+v` (or `Ctrl+q`): Block select multiple lines. Use `d` to delete, `I` to insert text across all selected lines.
-    - To append text to the end of multiple lines:
-      1. `Ctrl+v` (or `Ctrl+q`) to select lines.
-      2. `$` to go to the end of the lines.
-      3. `A` to append, type the text, then press `Esc` to apply.
+    - **Example: Append text at the end of multiple lines**:
+        - `Ctrl+v` (or `Ctrl+q`) to enter Visual Block mode at the first line.
+        - Use `↓` or `j` to select the lines you want.
+        - `$` to go to the end of the lines.
+        - `A` (i.e. `Shift+a`) to append, type the text, then press `Esc` to apply.
+    - **Example: Delete a " character at the end of multiple lines**:
+        - `Shift+v` to enter Visual Line mode at the first line
+        - Use `↓` or `j` to select the lines you want
+        - Now run a visual selection command: `:'<,'>s/"$//`
+        - `'<,'>` apply to all visual selected text
+    - **Alternatively, to globally remove " at the end of *every* line in the file: `:%s/"$//`**
+        - `%` apply to all lines, `s/` substitution, `"$` matches a double quote at the end of the line
+        - `//` replace with nothing (i.e., delete).
 
 - **Navigation**:
     - `gg`: Go to the start of the first line.

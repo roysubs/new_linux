@@ -1,0 +1,56 @@
+Curated Lists:
+https://github.com/Calinou/awesome-gamedev?tab=readme-ov-file#games
+
+https://github.com/topics/terminal-game?l=c&o=desc&s=updated
+
+
+
+
+Super Serif Brothers, find compiled console version
+https://foon.uk/farcade/ssb/
+
+ASCIIpOrtal
+https://www.moddb.com/games/asciiportal
+
+Portile
+https://www.increpare.com/2008/11/portile/
+
+
+
+Absolutely! If you're looking to explore unique and lesser-known console/terminal games for Linux, beyond the usual top lists, there are several curated resources and repositories that showcase a variety of such games. Here's a selection to get you started:
+
+🎮 Curated Lists of Terminal Games
+Awesome TUI Games
+This GitHub repository offers a collection of terminal-based games, including:
+awkaster: A pseudo-3D shooter written entirely in AWK using raycasting techniques.
+cbonsai: A bonsai tree generator for your terminal.
+chess-tui: Play chess directly in your terminal, built in Rust.
+clidle: A Wordle clone playable in the terminal, also accessible over SSH.
+
+Awesome TTY Games
+This list focuses on ASCII games for Unix terminals, featuring titles like:
+CAVEZ of PHEAR: A Boulder Dash clone adapted for terminal play.
+Zork: The classic text-based adventure game.
+
+Terminal Games Repository
+A GitHub repository containing a variety of terminal games written in C using the ncurses library. Games include:
+snake, tetris, pong, brick breaker, space invaders
+You can compile all games using make, or compile individual games as needed.
+
+Awesome CLI Apps
+While this list encompasses a broad range of command-line applications, it includes a section dedicated to games, offering a variety of entertainment options for the terminal.
+
+Awesome Linux Games
+A curated list hosted on GitLab, featuring a selection of games suitable for Linux distributions.
+
+🧵 Community Contributions
+Reddit: Big List of ASCII Games
+A Reddit thread compiling a comprehensive list of ASCII games playable in the terminal. Users have shared links to individual repositories, making it easier to explore and install these games.
+Reddit
+
+🔍 Exploring Further
+For more extensive collections, consider exploring GitHub topics like cli-games and terminal-based, which aggregate repositories tagged accordingly. These topics can lead you to a plethora of projects, ranging from simple games to complex simulations, all designed for terminal play.​
+
+Feel free to explore these resources to discover and enjoy a wide array of terminal-based games on your Linux system!
+
+
