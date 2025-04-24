@@ -42,7 +42,6 @@ git config --global core.pager less   # Set pager for 'git'
 # glob expansion for vi, e.g. 'vi *myf*' then tab should expand *myf* to a matching file
 complete -o filenames -o nospace -o bashdefault -o default vi
 shopt -s checkwinsize   # At every prompt check if the window size has changed
-shopt -s histappend     # Append commands to the bash history (~/.bash_history) instead of overwriting it
 # Extended globbing
 shopt -s extglob
 # Standard Globbing (enabled by default): *, ?, [], e.g. *file[123] will match myfile1, myfile2, myfile3.
@@ -53,6 +52,13 @@ shopt -s extglob
 # @(pattern1|pattern2|...), matches exactly one of the specified patterns, e.g., @(jpg|png) matches jpg or png.
 # !(pattern), matches anything except the pattern, e.g., !(abc) matches any string except abc.
 
+# history settings
+shopt -s histappend     # Append commands to the bash history (~/.bash_history) instead of overwriting it
+alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
+# https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
+export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time when run 'history'
+# Word Designatores: ls /etc/, cd !!:1 (:0 is the initial word), !!:1*, !!:1-$, !!:*     'cat /etc/hosst', then type '^hosst^hosts^' will immediately run the fixed command.
+# Modifiers: 'cat /etc/hosts', cd !!:$:h (will cd into /etc/ as :h chops the 'head' off, :t, 'tail' will remove 'cat /etc/', :r to remove trailing extension, :r:r to remove .tar.gz, :p is just to 'print', 'find ~ -name \"file1\"', try !119:0:p / !119:2*:p
 h() {
     set +H; history -a;
     case \"\$1\" in
@@ -74,18 +80,12 @@ h() {
     set -H
 }
 
-alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
-# https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
-export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time when run 'history'
-# Word Designatores: ls /etc/, cd !!:1 (:0 is the initial word), !!:1*, !!:1-$, !!:*     'cat /etc/hosst', then type '^hosst^hosts^' will immediately run the fixed command.
-# Modifiers: 'cat /etc/hosts', cd !!:$:h (will cd into /etc/ as :h chops the 'head' off, :t, 'tail' will remove 'cat /etc/', :r to remove trailing extension, :r:r to remove .tar.gz, :p is just to 'print', 'find ~ -name \"file1\"', try !119:0:p / !119:2*:p
-
-# These rely on the 'a' script that will be in the scripts folder (will not set if that script is not present)
+# aliases for the 'a' script (apt helper tool in 0-scripts; these will simply not set if that script is not present):
 if type -t a >/dev/null 2>&1; then alias ai='a i'; fi
 if type -t a >/dev/null 2>&1; then alias av='a v'; fi
 if type -t a >/dev/null 2>&1; then alias ah='a h'; fi
 
-# Simple aliases to open various configuration scripts
+# aliases to quickly open various configuration scripts:
 alias bashrc='vi ~/.bashrc'                 # Edit .bashrc (user)
 alias vimrc='vi ~/.vimrc'                   # Edit .vimrc (user)
 alias vimrcroot='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
@@ -97,14 +97,28 @@ alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
 alias smbconf='sudo vi /etc/samba/smb.conf' # Edit Samba configuration
 alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
 alias exports='sudo vi /etc/exports'        # Edit NFS exports
-# alias lsblkx='lsblk -lo NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -e 7'
-# alias lsblkx='lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINTS -lp | grep -v -E \'^/dev/sd[a-z]\s*$\''
-alias lsblkx='lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINTS -lp | grep -v -E "^/dev/sd[a-z]\\s*$"'
+alias sudoers='sudo visudo'                 # Edit /etc/sudoers
+alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
+# fs: useful filesystem output (filtered lsblk + /etc/fstab)
+# 1 RAM disks (/dev/ram*), 7 Loop devices (/dev/loop*), 11 CD-ROM (/dev/sr0)
+# 179 MMC/SD cards (optional), 252 Device mapper (optional, LVM, crypt), 253 Zram (swap compression)
+# NR==1  : keep the first line (the header)
+# NF > 1 : keep rows with more than 1 field (so, real partitions with data, e.g. /dev/sda2 was Extended partition, so just holds other partitions)
+# Optional | grep -v -E \"^/dev/sd[a-z]\\s*$\"'   # | grep -E \"/dev/.+[0-9]+\\b\" | awk \"NF > 1\"'
+# alias fs='awk '/^# <file/ {print; next} /^#/ {next} {print | \"sort\"}' /etc/fstab; echo; lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk \"NR==1 || NF > 1\"'
+alias fs=\"awk '/^# <file/ {print; next} /^#/ {next} {print | \\\"sort\\\"}' /etc/fstab; echo; lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk 'NR==1 || NF > 1'\"
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
-alias cd..='cd ..'               # Common typo by Windows users
-alias cd...='cd ..; cd..'        # Go up 2 directories
-alias cd....='cd ..; cd..; cd..' # Go up 3 directories
+alias cd..='cd ..'               # Common typo for Windows users (cd.. is normally an error in Linux)
+alias cd...='cd..;cd..'                   # cd up 2 directories
+alias cd....='cd..;cd..;cd..'             # cd up 3 directories
+alias cd.....='cd..;cd..;cd..;cd..'       # cd up 4 directories
+alias cd......='cd..;cd..;cd..;cd..;cd..' # cd up 5 directories
+alias u1='cd..'                     # cd up 1 directory
+alias u2='cd..;cd..'                # cd up 2 directories
+alias u3='cd..;cd..;cd..'           # cd up 3 directories
+alias u4='cd..;cd..;cd..;cd..'      # cd up 4 directories
+alias u5='cd..;cd..;cd..;cd..;cd..' # cd up 4 directories
 alias cx='chmod +x'              # chmod add the execute permission
 cxx() { chmod +x \$1; ./\$1; }     # add execute to \$1 and also run it immediately
 alias ls.='ls -d .*'             # -d shows only the directory, not the contents (of .config etc)
@@ -155,19 +169,15 @@ n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
 0h() { cd ~/new_linux/0-help || return; ls; }     # jump to new_linux/0-help
 0i() { cd ~/new_linux/0-install || return; ls; }  # jump to new_linux/0-install
 0n() { cd ~/new_linux/0-notes || return; ls; }    # jump to new_linux/0-notes
-0ns() { cd ~/new_linux/0-new-system || return; ls; } # jump to new_linux/0-new-system
+0ns() { cd ~/new_linux/0-new-system || return; ls; }  # jump to new_linux/0-new-system
 0s() { cd ~/new_linux/0-scripts || return; ls; }  # jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
 w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
-# white() { cd ~/192.168.1.29-d || return; ls; }  # can have various custom jump functions (this for 'WHITE' PC SMB share)
-
-# Optional alias and function packs that can be added
-# if [ -f ~/.bashrc-docker.sh ]; then
-#   source ~/.bashrc-docker.sh
-# fi
-# if [ -f ~/.bashrc-tmux.sh ]; then
-#   source ~/.bashrc-tmux.sh
-# fi
+D()  { cd /mnt/sdc1/Downloads || return; ls; }   # jump to 0-wip
+DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # jump to 0 Films
+DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # jump to 0 TV
+DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # jump to 0 Music
+# white() { cd ~/192.168.1.29-d || return; ls; }  # custom jump to my Windows PC named 'WHITE' SMB share)
 
 "
 
@@ -184,26 +194,32 @@ fi
 
 # Check if this line exists in .bashrc
 if ! grep -Fxq "$first_non_empty_line" "$BASHRC_FILE"; then
+    echo
     echo "No match for the header line in the \$bashrc_block was found in .bashrc."
     echo "so will skip full removal and move to a line by line add of \$bashrc_block."
 else
     # Prompt user for confirmation to wipe from the found line downwards
     if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
         # Script is sourced
+        echo
         echo "This script is sourced, so will update environment after updating..."
     else
         # Script is executed
+        echo
         echo "This script is not sourced, so to apply changes, quit and re-run as:  source ~/.bashrc"
     fi
 
-    echo "Do you want to wipe the existing bashrc_block from .bashrc starting from: $first_non_empty_line ? (y/n)"
+    echo "Delete all lines starting from '$first_non_empty_line' to end of .bashrc"
+    echo "(i.e., this will remove the existing bashrc_block created by this script)?"
     read -r wipe_confirm
 
     if [[ "$wipe_confirm" =~ ^[Yy]$ ]]; then
         # Delete from the found line to the end of the file
         sed -i "/$(printf '%s\n' "$first_non_empty_line" | sed 's/[.[\*^$]/\\&/g')/,\$d" "$BASHRC_FILE"
+        echo
         echo "Removed from '$first_non_empty_line' to the end of .bashrc."
     else
+        echo
         echo "No changes made to .bashrc."
     fi
 fi
@@ -316,9 +332,14 @@ echo "Finished updating $BASHRC_FILE."
 
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
   # Script is sourced
-  echo "This script is sourced, so will update environment now..."
+  echo
+  echo "This script was sourced when run, so the environment will update now..."
   source ~/.bashrc
+  echo
 else
   # Script is executed
-  echo "This script is not sourced, so to apply changes, run: source ~/.bashrc"
+  echo
+  echo "This script was not sourced, to apply changes to the current environment, run:"
+  echo "   source ~/.bashrc"
+  echo
 fi

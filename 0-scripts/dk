@@ -13,27 +13,36 @@ print_line() {
 }
 
 color_echo() {
-    echo -e "${GREEN}$1${NC}"
+    echo -e "${GREEN}$1${NC}\n"
 }
 
 help_text() {
-    echo -e "Docker Tool (dk). Usage: dk [option]"
-    echo -e "Options:"
-    echo -e "  im           ${BLUE}docker images${NC}   List all images (base images used to create containers)"
-    echo -e "  ps           ${BLUE}docker ps -a${NC}    List all containers (instances created from images)"
-    echo -e "  up [name]    ${BLUE}docker-compose up -d [name]${NC}   Start container(s) with docker-compose"
-    echo -e "  down         ${BLUE}docker-compose down${NC}           Stop and remove docker-compose containers"
-    echo -e "  ex <name>    ${BLUE}docker exec -it <name> bash${NC}   Enter bash shell in a running container"
-    echo -e "  st <name>    ${BLUE}docker start <name>${NC}   Start a stopped container"
-    echo -e "  sp <name>    ${BLUE}docker stop <name>${NC}    Stop a running container"
-    echo -e "  rmc <name>   ${BLUE}docker rm <name>${NC}      Remove a container"
-    echo -e "  rmi <img>    ${BLUE}docker rmi <img>${NC}      Remove an image"
-    echo -e "  logs <name>  ${BLUE}docker logs -f <name>${NC}   Follow logs from a container"
-    echo -e "  prune        ${BLUE}docker system prune -f${NC}  Remove unused data"
-    echo -e "  volprune     ${BLUE}docker volume prune -f${NC}  Remove unused volumes"
-    echo -e "  clean        Run all prune operations"
-    echo -e "  a            Alias helper to copy this script into ~/.bashrc-docker.sh or zshrc"
-    echo -e "  -h, --help   Show this help menu"
+    printf "
+Docker Tool (dk). Usage: dk [option]
+Options:
+  im           ${BLUE}docker images${NC}   List all images (base images used to create containers)
+  ps           ${BLUE}docker ps -a${NC}    List all containers (instances created from images)
+  ports        ${BLUE}docker ps --format${NC}  Name, Image, Status, Ports in table format
+  portslist    ${BLUE}docker ps --format${NC}  Ports, but in list output
+  mounts       ${BLUE}docker ps --format${NC}  Name, Image, Status, Mounts in table format
+  mountslist   ${BLUE}docker ps --format${NC}  Mounts, but in list format
+  ex           ${BLUE}docker exec -it <name> <process>${NC}   Interactively enter container <name> and runs <process>
+  run [name] [image]  ${BLUE}sudo docker run -it --name myname repo/im-name${NC}  Create and start container with friendly name
+  ex <name>    ${BLUE}docker exec -it <name> bash${NC}   Enter bash shell in a running container
+  start <name> ${BLUE}docker start <name>${NC}   Start a stopped container
+  stop <name>  ${BLUE}docker stop <name>${NC}    Stop a running container
+  rmc <name>   ${BLUE}docker rm <name>${NC}      Remove a container
+  rmi <img>    ${BLUE}docker rmi <img>${NC}      Remove an image
+  logs <name>  ${BLUE}docker logs -f <name>${NC}   Follow logs from a container
+  prune        ${BLUE}docker system prune -f${NC}  Remove unused data
+  volprune     ${BLUE}docker volume prune -f${NC}  Remove unused volumes
+  clean        Run all prune operations
+  a            Alias helper to copy this script into ~/.bashrc-docker.sh or zshrc
+  up [name]    ${BLUE}docker-compose up -d [name]${NC}   Start container(s) with docker-compose
+  down         ${BLUE}docker-compose down${NC}           Stop and remove docker-compose containers
+  -h, --help   Show this help menu
+
+"
 }
 
 # Main logic
@@ -50,9 +59,82 @@ case "$cmd" in
         docker ps -a
         ;;
 
+        # docker ps can use the --format flag.
+        # This flag uses Go's template formatting. You can specify which information fields you want to see.
+        # Provide a Template String: The string tells Docker what data points (placeholders) to display.
+        # Common placeholders include:
+        # .ID: Container ID
+        # .Image: Image name
+        # .Command: Command being run
+        # .CreatedAt: Time the container was created
+        # .RunningFor: Elapsed time since the container was started
+        # .Status: Container status (e.g., "Up 28 minutes", "Exited (0)")
+        # .Ports: Published ports
+        # .Names: Container name
+        # .Size: Container disk size (may require extra calculation steps sometimes)
+        # .Labels: All labels assigned to the container
+        # .Mounts: Volume mounts
+        # .Networks: Networks the container is attached to
+        # Format as a Table (Optional but Recommended): To get nicely aligned columns with headers like the default output,
+        # start your format string with table followed by the placeholders separated by \t (tab character).
+        # 
+        # Examples:
+        # Show only Container ID, Image, and Status:
+        # docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}"
+
+    ports)
+        color_echo "docker ps -a --format \"table {{.Names}}\\\t{{.Image}}\\\t{{.Status}}\\\t{{.Ports}}\""
+        docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+        ;;
+    
+    portslist)
+        color_echo "docker ps -a --format \"Names: {{.Names}}\\\nImage: {{.Image}}\\\nStatus: {{.Status}}\\\nPorts: {{.Ports}}\\\n\" --no-trunc"
+        docker ps -a --format "Names: {{.Names}}\nImage: {{.Image}}\nStatus: {{.Status}}\nPorts: {{.Ports}}\n" --no-trunc
+        ;;
+
+
+    mounts)
+        color_echo "docker ps -a --format \"table {{.Names}}\\\t{{.ID}}\\\t{{.Image}}\\\t{{.Status}}\\\t{{.Mounts}}\""
+        docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Mounts}}" --no-trunc        
+        ;;
+
+    mountslist)
+        color_echo "docker ps -a --format \"Names: {{.Names}}\\\nImage: {{.Image}}\\\nStatus: {{.Status}}\\\nMounts: {{.Mounts}}\\\n\" --no-trunc"
+        docker ps -a --format "Names: {{.Names}}\nImage: {{.Image}}\nStatus: {{.Status}}\nMounts: {{.Mounts}}\n" --no-trunc
+        ;;
+
     im)
         color_echo "docker images"
         docker images
+        ;;
+
+    imps)
+        color_echo "Images + Mounts"
+        # Headers
+        printf "%-20s %-20s %-15s %-10s %-10s %s\n" "NAME" "IMAGE" "STATUS" "PORTS" "IMG SIZE" "MOUNTS"
+        
+        # Iterate containers
+        docker ps -a --format '{{.Names}}||{{.Image}}||{{.Status}}||{{.Ports}}' | while IFS='||' read -r name image status ports; do
+            # Get image ID (could be sha256 or repo:tag)
+            image_id=$(docker inspect --format='{{.Image}}' "$name")
+            image_size=$(docker image inspect --format='{{.Size}}' "$image_id" 2>/dev/null || echo 0)
+            image_size_human=$(numfmt --to=iec $image_size 2>/dev/null || echo "${image_size}B")
+        
+            # Get mounts
+            mounts=$(docker inspect --format '{{range .Mounts}}{{.Destination}} {{end}}' "$name")
+        
+            printf "%-20s %-20s %-15s %-10s %-10s %s\n" "$name" "$image" "$status" "$ports" "$image_size_human" "$mounts"
+        done
+        ;;
+
+    ex)
+        color_echo "docker exec -it $1 $2"
+        docker exec -it $1 $2
+        ;;
+
+    run)
+        color_echo "sudo docker run -it --name $1 $2"
+        sudo docker run -it --name $1 $2
         ;;
 
     up)
@@ -65,17 +147,12 @@ case "$cmd" in
         docker-compose down
         ;;
 
-    ex)
-        color_echo "docker exec -it $1 bash"
-        docker exec -it "$1" bash
-        ;;
-
-    st)
+    start)
         color_echo "docker start $1"
         docker start "$1"
         ;;
 
-    sp)
+    stop)
         color_echo "docker stop $1"
         docker stop "$1"
         ;;

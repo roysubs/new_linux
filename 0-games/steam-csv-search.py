@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+
+# This script is identical to 'csv-search.py' in 0-scripts.
+# Just created this copy so that it's easily accessible when using 'steam-game-collect-info.py'
+
 import csv
 import sys
 import re

@@ -5,15 +5,15 @@
 if [ $# -eq 0 ]; then
     echo "Apt Tool. Usage: a [option] <package(s)>"
     echo "Options:"
-    echo "  i <package(s)>   Install the specified package(s) with sudo"
+    echo "  i <package(s)>   Install the specified package(s) (uses sudo)"
     echo "  h                History: show install/remove/upgrade history"
-    echo "  r <package(s)>   Remove the specified package(s) with sudo"
+    echo "  r <package(s)>   Remove the specified package(s) (uses sudo)"
     echo "  s <package(s)>   Search for the specified package(s)"
-    echo "  u                Update, upgrade, and autoremove packages with sudo"
-    echo "  ar               Autoremove packages that are no longer required"
+    echo "  u                Update, then upgrade, then autoremove (uses sudo)"
+    echo "  ar               Autoremove packages that are no longer required (uses sudo)"
     echo "  v <package(s)>   View info: version, dependencies, package contents, etc"
     echo "  d <package(s)>   Depends: Packages required to install the specified package(s)"
-    echo "  dr <package(s)>  Reverse Depends: Packages that depend upon the specified package(s)"
+    echo "  o                List other package managers install methods"
     echo
     exit 0
 fi
@@ -77,20 +77,90 @@ case "$option" in
         ;;
     d)
         for package in "$@"; do
-            echo "Dependencies for $package:"
+            echo "dependencies for $package:"
             apt-cache depends "$package"
             echo
         done
         ;;
     dr)
         for package in "$@"; do
-            echo "Reverse dependencies for $package:"
+            echo "reverse dependencies for $package:"
             apt-cache rdepends "$package"
             echo
         done
+        ;;
+    o)
+        printf "
+📦 JavaScript / Node.js
+npm – Node Package Manager
+Install, via Node.js:
+# sudo apt install nodejs npm
+Or install the latest via NodeSource
+# curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+Then:
+# sudo apt install -y nodejs
+yarn – Alternative JS package manager
+# npm install -g yarn
+or
+# corepack enable yarn
+
+🐍 Python
+pip – Python Package Installer
+sudo apt install python3-pip
+
+🦀 Rust
+cargo – Rust package manager
+curl https://sh.rustup.rs -sSf | sh
+
+🐘 PHP
+composer – PHP package/dependency manager
+sudo apt install curl php-cli php-mbstring unzip
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
+☕ Java
+maven – Java project and dependency manager
+sudo apt install maven
+gradle – Another Java build tool with dependency management
+sudo apt install gradle
+
+🐪 Perl
+cpan – Comprehensive Perl Archive Network
+sudo apt install perl
+Then:
+# cpan
+
+🐚 Shell Scripts / System Tools
+Homebrew (Linuxbrew) – Universal package manager for Linux
+# /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"
+Then:
+# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.profile
+# source ~/.profile
+
+🐍 Scientific / Data
+conda / miniconda – Python & R data science env manager
+Install Miniconda (lightweight Anaconda):
+# wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# bash Miniconda3-latest-Linux-x86_64.sh
+
+🧪 Haskell
+cabal – Haskell package manager
+# sudo apt install cabal-install
+
+🧱 Go (Golang)
+go get / go install – Used like a package manager
+sudo apt install golang
+Then:
+go install github.com/some/package@latest
+
+"
         ;;
     *)
         echo "Invalid option. Use 'a' without arguments to see usage."
         ;;
 esac
+
+
+
+
 

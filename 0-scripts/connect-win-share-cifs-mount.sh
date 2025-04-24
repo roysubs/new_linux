@@ -7,8 +7,9 @@ if [ "$#" -ne 3 ]; then
     exit 1
 fi
 
-# First line checks running as root or with sudo (exit 1 if not). Second line auto-elevates the script as sudo.
+# Check if running as root or with sudo (exit 1 if not):
 # if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
+# If not running as root, auto-elevate and rerun script with sudo:
 if [ "$(id -u)" -ne 0 ]; then echo "Elevation required; rerunning as sudo..."; sudo "$0" "$@"; exit 0; fi
 
 # Only update if it's been more than 2 days since the last update (to avoid constant updates)
