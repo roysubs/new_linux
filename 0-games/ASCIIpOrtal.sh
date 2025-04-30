@@ -1,4 +1,5 @@
 #!/bin/bash
+# https://asciisector.fandom.com/wiki/Ascii_Sector_Wiki
 
 set -e
 

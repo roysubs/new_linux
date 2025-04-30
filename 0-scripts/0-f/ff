@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Usage: f [dir] [pattern1] [pattern2] ...
+
+dir=$1
+shift
+
+# If no patterns are passed, default to '*'
+if [ $# -eq 0 ]; then
+    set -- "*"
+fi
+
+# Check if any of the args contain a wildcard character and were expanded
+had_glob_expansion=false
+for arg in "$@"; do
+    case "$arg" in
+        *[\*\?]*)
+            # Unquoted glob pattern still present (good)
+            ;;
+        *)
+            # If the pattern contains no glob metacharacters, it's likely an expanded file
+            had_glob_expansion=true
+            ;;
+    esac
+done
+
+# Only warn if expansion likely happened (i.e., *.py unquoted expanded into many specific files)
+if $had_glob_expansion && [ $# -gt 1 ]; then
+    echo -e "💡 Note: *.py was expanded by the shell."
+    echo -e "   To avoid this, quote it like: \"*.py\""
+fi
+
+# Build find expression
+find_args=()
+for pattern in "$@"; do
+    find_args+=(-name "$pattern" -o)
+done
+
+# Remove trailing -o
+unset 'find_args[${#find_args[@]}-1]'
+
+echo find "$dir" -type f \( "${find_args[@]}" \)
+echo =====
+find "$dir" -type f \( "${find_args[@]}" \)
+

@@ -165,6 +165,7 @@ def() {
 
 # Jump functions (cannot be in scripts as would need to dotsource each, so keep in .bashrc)
 n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
+0d() { cd ~/new_linux/0-docker || return; ls; }   # jump to new_linux/0-docker
 0g() { cd ~/new_linux/0-games || return; ls; }    # jump to new_linux/0-games
 0h() { cd ~/new_linux/0-help || return; ls; }     # jump to new_linux/0-help
 0i() { cd ~/new_linux/0-install || return; ls; }  # jump to new_linux/0-install
@@ -202,15 +203,16 @@ else
     if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
         # Script is sourced
         echo
-        echo "This script is sourced, so will update environment after updating..."
+        echo "This script is sourced, so will update the current environment after running."
+        echo
     else
         # Script is executed
         echo
         echo "This script is not sourced, so to apply changes, quit and re-run as:  source ~/.bashrc"
     fi
 
-    echo "Delete all lines starting from '$first_non_empty_line' to end of .bashrc"
-    echo "(i.e., this will remove the existing bashrc_block created by this script)?"
+    echo "Delete all lines starting from '$first_non_empty_line' to end of .bashrc?"
+    echo "(i.e., remove the existing code block created by a previous run of this script)"
     read -r wipe_confirm
 
     if [[ "$wipe_confirm" =~ ^[Yy]$ ]]; then

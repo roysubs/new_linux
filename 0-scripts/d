@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# du1 - Directory size summary with readable output and optional file/dir counts
+# d - Directory size summary with relative sizes and optional file/dir counts
 
 set -euo pipefail
 shopt -s nullglob dotglob

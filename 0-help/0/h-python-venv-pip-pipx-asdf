@@ -1,0 +1,208 @@
+#!/bin/bash
+if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
+
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
+mdcat --columns="$WIDTH" <(cat <<'EOF'
+
+# Python Environment Management: venv, --user, and Version Managers
+
+Managing Python packages and environments can seem complex, but understanding the different tools helps you choose the right approach for your needs. This document summarises the key methods: `pip install --user`, virtual environments (`venv`), and Python version managers (`asdf`/`pyenv`).
+
+## 1. `pip install --user`: The User-Specific Install
+
+This method installs Python packages directly into your user's home directory (`~/.local`) instead of system-wide directories (which often require administrator privileges) or project-specific virtual environments.
+
+### Why use `pip install --user`?
+
+* **No Root Required:** You don't need `sudo` or administrator rights to install packages.
+
+* **No Activation/Deactivation:** Unlike virtual environments, there's no need to activate or deactivate anything. Packages installed this way are generally available whenever you run Python as that user.
+
+* **Avoids System Conflicts:** It prevents accidentally modifying or breaking Python packages required by your operating system.
+
+* **Simple for Tools:** Ideal for installing command-line tools (like `black`, `httpie`, `yt-dlp`) or libraries you use across multiple projects without strict version requirements.
+
+### Where do packages go?
+
+Packages are installed into a directory structure within your home folder, typically:
+`~/.local/lib/pythonX.X/site-packages/`
+(where `X.X` is your Python minor version, e.g., `python3.10`).
+
+Python automatically adds this directory to its search path (`sys.path`), so installed packages are found when you run Python.
+
+### Gotchas
+
+* **PATH for Executables:** Command-line tools installed this way go into `~/.local/bin`. You might need to add this directory to your system's `PATH` environment variable to run these commands directly from your terminal. Add the following line to your shell's configuration file (like `~/.bashrc` or `~/.zshrc`) and then `source` the file:
+
+  ```bash
+  export PATH="$HOME/.local/bin:$PATH"
+  ```
+
+* **No Dependency Isolation:** This is the main limitation. All packages installed with `--user` share the same space. If two different projects require conflicting versions of the *same* library (e.g., Project A needs `requests==2.28.0` and Project B needs `requests==2.30.0`), you cannot satisfy both simultaneously using only `--user` installs.
+
+## 2. Virtual Environments (`venv`): Project Isolation
+
+Virtual environments are the standard way to manage dependencies on a per-project basis. A `venv` creates a self-contained directory with its own Python interpreter and `site-packages` directory.
+
+### Why use `venv`?
+
+* **Project Isolation:** Each project can have its own set of dependencies with specific versions, without affecting other projects or the system Python installation. This prevents conflicts.
+
+* **Reproducibility:** You can easily share a project's `requirements.txt` file, and others can recreate the exact environment needed to run the project.
+
+* **Clean Slate:** When you're done with a project, you can simply delete its `venv` directory.
+
+### When to use `venv`?
+
+* Any time you are working on a specific project that has dependencies.
+
+* When collaborating with others on code.
+
+* When you need to ensure your project uses exact versions of libraries.
+
+### How to setup and use `venv`
+
+1. **Create the environment:** Navigate to your project directory in the terminal.
+
+   ```bash
+   python3 -m venv .venv
+   ```
+
+   (This creates a directory named `.venv` inside your project folder. You can name it anything, but `.venv` is a common convention.)
+
+2. **Activate the environment:**
+
+   * On Linux/macOS:
+
+     ```bash
+     source .venv/bin/activate
+     ```
+
+   * On Windows (Command Prompt):
+
+     ```cmd
+     .venv\Scripts\activate.bat
+     ```
+
+   * On Windows (PowerShell):
+
+     ```powershell
+     .venv\Scripts\Activate.ps1
+     ```
+
+   Your terminal prompt will usually change to indicate the active environment (e.g., `(.venv) your_user@your_machine:...`).
+
+3. **Install packages:** While the `venv` is active, use `pip install` as usual. Packages will be installed into the `venv`'s `site-packages` directory.
+
+   ```bash
+   pip install requests
+   ```
+
+4. **Deactivate the environment:** When you're finished working on the project for now, simply type:
+
+   ```bash
+   deactivate
+   ```
+
+   Your terminal prompt will return to normal.
+
+## 3. Python Version Managers (`asdf`, `pyenv`): Managing Python Itself
+
+Tools like `asdf` and `pyenv` address a different problem: managing *which* Python version you are using. This is useful if you need to work with projects that require different Python versions (e.g., one project needs Python 3.8, another needs Python 3.10).
+
+### Why use `asdf` or `pyenv`?
+
+* **Install Multiple Python Versions:** Easily install and manage various Python releases (3.8, 3.9, 3.10, etc.) on the same machine without conflicts.
+
+* **Switch Versions:** Quickly switch between Python versions globally, per-user, or per-project.
+
+* **Avoid System Python:** Install Python versions independently of your operating system, reducing the risk of breaking system tools that rely on the default Python.
+
+### How they fit together
+
+Version managers like `asdf` or `pyenv` handle the *Python interpreter* version. Virtual environments (`venv`) are then created *using* a specific Python interpreter managed by `asdf` or `pyenv` to handle *project dependencies*.
+
+You might use `asdf` to set your project's Python version to 3.10, then create a `venv` using that 3.10 interpreter, and finally install your project's dependencies within that `venv`.
+
+## 4. Summary Table
+
+| Feature                | `pip install --user`         | `venv`                     | `asdf`/`pyenv`           |
+| :--------------------- | :--------------------------- | :------------------------- | :----------------------- |
+| **Purpose** | User-specific installs       | Project dependency isolation | Python version management |
+| **Requires `sudo`?** | No                           | No                         | No (after initial setup) |
+| **Activation Needed?** | No                           | Yes                        | Yes (for shell)          |
+| **Isolation Level** | None (user-global)           | Per-project                | Per-project (interpreter) |
+| **Best Use Case** | Installing personal tools    | Project development        | Working with multiple Python versions |
+| **Manages** | Packages                     | Packages & Interpreter (local copy) | Python Interpreter versions |
+
+## 5. Step-by-Step: Using `pip install --user` (Debian Example)
+
+This walks through installing a package (`requests`) using `--user` on a Debian-based system without `venv`.
+
+1.  **Check Python Version:** Ensure you are using Python 3.x.
+
+    ```bash
+    python3 --version
+    ```
+
+2.  **Check/Install `pip`:** Make sure `pip` is available for your Python 3.
+
+    ```bash
+    python3 -m pip --version
+    ```
+
+    If not found, install it (this one time requires `sudo`):
+
+    ```bash
+    sudo apt update
+    sudo apt install python3-pip
+    ```
+
+3.  **Install Package with `--user`:** Install the `requests` library into your user's local directory.
+
+    ```bash
+    python3 -m pip install --user requests
+    ```
+
+    This installs packages into `~/.local/lib/pythonX.X/site-packages/`.
+
+4.  **Test the Installation:** Open a Python interpreter and try importing the library.
+
+    ```python
+    python3
+    import requests
+    print(requests.get("[https://example.com](https://example.com)").status_code)
+    ```
+
+    You should see `200`. Type `exit()` to leave the interpreter.
+
+5.  **Add `~/.local/bin` to PATH (if needed for CLI tools):** If you install a tool with an executable command (like `httpie`), you might need to add `~/.local/bin` to your `PATH`.
+
+    ```bash
+    python3 -m pip install --user httpie
+    http [https://example.com](https://example.com) # Test if the command works
+    ```
+
+    If `command not found`, add the following to your `~/.bashrc` or `~/.zshrc`:
+
+    ```bash
+    export PATH="$HOME/.local/bin:$PATH"
+    ```
+
+    Then apply the changes:
+
+    ```bash
+    source ~/.bashrc # or source ~/.zshrc
+    ```
+
+6.  **Uninstall (Optional):** To remove a package installed with `--user`:
+
+    ```bash
+    python3 -m pip uninstall requests
+    ```
+
+This covers the main ways to handle Python environments and packages. Choose the method that best suits the task at hand: `--user` for simple personal tools, `venv` for project-specific work, and `asdf`/`pyenv` if you need to juggle different Python versions themselves.
+
+EOF
+) | less -R
+

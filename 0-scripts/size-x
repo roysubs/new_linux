@@ -1,0 +1,79 @@
+#!/bin/bash
+
+count=false
+path="."
+
+# Parse arguments in any order
+for arg in "$@"; do
+    case "$arg" in
+        -h)
+            echo "
+'size' on its own calculates the total size of the current directory and all subdirectories.
+'size /path/to/check' will do this for the given path.
+'size -c' will also count the number of files and directories in the checked path.
+"
+            exit
+            ;;
+        -c)
+            count=true
+            ;;
+        -*)
+            echo "Invalid option: $arg" >&2
+            exit 1
+            ;;
+        *)
+            if [[ -z "$path" || "$path" == "." ]]; then
+                path="$arg"
+            else
+                echo "Error: Multiple paths provided. Please specify only one directory." >&2
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# Resolve absolute path
+path=$(realpath "$path")
+
+start_time=$(date +%s.%N)
+
+# Check if it's a valid directory
+if [[ -f "$path" ]]; then
+    echo "'$path' is a file, not a directory."
+    exit 1
+elif [[ ! -d "$path" ]]; then
+    echo "size: Warning: '$path' is not a directory"
+    exit 1
+fi
+
+# Get size information
+size_info=$(du -sh "$path" 2>/dev/null | awk '{print $1}')
+
+# Get disk usage details
+df_output=$(df -h "$path" 2>/dev/null | tail -n 1)
+device=$(echo "$df_output" | awk '{print $1}')
+size=$(echo "$df_output" | awk '{print $2}')
+used=$(echo "$df_output" | awk '{print $3}')
+available=$(echo "$df_output" | awk '{print $4}')
+use_percent=$(echo "$df_output" | awk '{print $5}')
+
+end_time=$(date +%s.%N)
+elapsed_time=$(echo "$end_time - $start_time" | bc)
+elapsed_time=$(printf "%.1f" "$elapsed_time")
+
+# Print size information
+# Count files and directories if -c was provided
+if [ "$count" = true ]; then
+    dir_count=$(find "$path" -type d 2>/dev/null | wc -l | awk '{printf "%'\''d\n", $1}')
+    file_count=$(find "$path" -type f 2>/dev/null | wc -l | awk '{printf "%'\''d\n", $1}')
+    echo "$path is ${size_info:-Permission denied} (with $file_count files, $dir_count directories)"
+else
+    echo -e "$path is ${size_info:-Permission denied}"
+fi
+echo -e "Located on $device, $use_percent used ($used) of $size"
+
+# Print runtime if script takes 10s or more
+if (( $(echo "$elapsed_time >= 10" | bc -l) )); then
+    echo -e "(Script ran for ${elapsed_time}s)"
+fi
+

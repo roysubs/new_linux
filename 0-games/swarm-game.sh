@@ -27,31 +27,31 @@ if [[ -z "$BINARY_URL" || -z "$DATA_URL" ]]; then
   exit 1
 fi
 
-# Download the binary
-BINARY_PATH="swarm-Linux"
-echo "Downloading binary from $BINARY_URL..."
-curl -L -o "$BINARY_PATH" "$BINARY_URL"
-chmod +x "$BINARY_PATH"
-mv "$BINARY_PATH" "$BIN_DIR/swarm"
+if ! command -v swarm &> /dev/null; then
+    # Download the binary
+    BINARY_PATH="swarm-Linux"
+    echo "Downloading binary from $BINARY_URL..."
+    curl -L -o "$BINARY_PATH" "$BINARY_URL"
+    chmod +x "$BINARY_PATH"
+    mv "$BINARY_PATH" "$BIN_DIR/swarm"
+    
+    # Download and extract the data
+    DATA_ARCHIVE="swarm-data.zip"
+    echo "Downloading data from $DATA_URL..."
+    curl -L -o "$DATA_ARCHIVE" "$DATA_URL"
+    unzip -o "$DATA_ARCHIVE" -d "$INSTALL_DIR"
+    rm "$DATA_ARCHIVE"
+    
+    # Ensure the binary location is in the PATH
+    if ! grep -q "$BIN_DIR" "$HOME/.bashrc"; then
+      echo "Adding $BIN_DIR to PATH..."
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+      source "$HOME/.bashrc"
+    fi
 
-# Download and extract the data
-DATA_ARCHIVE="swarm-data.zip"
-echo "Downloading data from $DATA_URL..."
-curl -L -o "$DATA_ARCHIVE" "$DATA_URL"
-unzip -o "$DATA_ARCHIVE" -d "$INSTALL_DIR"
-rm "$DATA_ARCHIVE"
-
-# Ensure the binary location is in the PATH
-if ! grep -q "$BIN_DIR" "$HOME/.bashrc"; then
-  echo "Adding $BIN_DIR to PATH..."
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-  source "$HOME/.bashrc"
-fi
-
-# Create symlink for swarm if it's not already in PATH
-if ! command -v swarm &>/dev/null; then
-  echo "Creating symlink for swarm..."
-  ln -s "$BIN_DIR/swarm" "$BIN_DIR/swarm"
+    # Create symlink for swarm if it's not already in PATH
+    echo "Creating symlink for swarm..."
+    ln -s "$BIN_DIR/swarm" "$BIN_DIR/swarm"
 fi
 
 # Inform the user

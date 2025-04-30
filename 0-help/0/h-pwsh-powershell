@@ -1,0 +1,27 @@
+#!/bin/bash
+if ! command -v glow >/dev/null 2>&1; then echo "Install glow to render markdown."; fi
+
+cat <<'EOF' | mdcat | less -R
+
+PowerShell on Linux
+=====
+
+To set the shebang for a powershell script.
+```bash
+#!/usr/bin/pwsh
+```
+```bash
+#!/usr/bin/env pwsh
+```
+If this is set, the script does not require a `.ps1` extension.
+
+PowerShell editing in Vim
+=====
+If vim is not detecting the filetype in scripts without .ps1 extension:
+```bash
+:set filetype=ps1
+```
+
+
+EOF
+

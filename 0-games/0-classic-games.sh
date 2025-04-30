@@ -39,6 +39,7 @@ games=(
     "quiz|Trivia|Random knowledge quiz.|bsdgames"
     "robots|Puzzle|Avoid the robots game.|bsdgames"
     "sail|Strategy|Naval strategy game.|bsdgames"
+    "empire|Strategy|Sci-Fi strategy game.|empire"
     "snake|Arcade|Classic snake game.|bsdgames"
     "tetris|Arcade|Classic Tetris game.|bsdgames"
     "trek|Strategy|Star Trek game.|bsdgames"
