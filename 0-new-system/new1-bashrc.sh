@@ -59,38 +59,38 @@ shopt -s extglob
 # @(pattern1|pattern2|...), matches exactly one of the specified patterns, e.g., @(jpg|png) matches jpg or png.
 # !(pattern), matches anything except the pattern, e.g., !(abc) matches any string except abc.
 
-# history settings
+# History settings and 'h' History helper function
 shopt -s histappend     # Append commands to the bash history (~/.bash_history) instead of overwriting it
-alias hg='history | grep'       # 'history-grep'. After search, !201 will run item 201 in history
-# https://www.digitalocean.com/community/tutorials/how-to-use-bash-history-commands-and-expansions-on-a-linux-vps
-export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time when run 'history'
-# Word Designatores: ls /etc/, cd !!:1 (:0 is the initial word), !!:1*, !!:1-$, !!:*     'cat /etc/hosst', then type '^hosst^hosts^' will immediately run the fixed command.
-# Modifiers: 'cat /etc/hosts', cd !!:$:h (will cd into /etc/ as :h chops the 'head' off, :t, 'tail' will remove 'cat /etc/', :r to remove trailing extension, :r:r to remove .tar.gz, :p is just to 'print', 'find ~ -name \"file1\"', try !119:0:p / !119:2*:p
+export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000   # make history very big and show date-time
+# h function will not operate as a shell script as must be in .bashrc
 h() {
-    set +H; history -a;
     case \"\$1\" in
-        \"\" | help) echo -e \"History Tool. Usage: h <option> [string]\\n  all\\n  f (or s)\\n  n\\n  clear\\n  edit\\n  uniq\\n  top\\n  cmds\\n  hist\\n  root\\n\" ;;
- 
-        all) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' ;;
-        f | s) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' | grep -i --color=auto \"\$2\" ;;
-        fd | sd) history | grep -i --color=auto \"\$2\" ;; 
-        n) [[ \"\$2\" =~ ^[0-9]+$ ]] && history | tail -n \"\$2\" || echo \"Invalid number\" ;;
+        \"\" ) # Default case when no arguments are given (show main help)
+            echo -e \"History Tool. Usage: h <option> [string]\\n  a|an|ad|ab   show all history (a full, an numbers only, ad datetime only, ab bare commands)\\n  f|fn|fd|fb   find string (f full, fn numbers only, fd datetime only, fb bare commands)\\n  n <num>      Show last N history entries (full)\\n  help         Show extended help from 'h-history' script\\n  clear        Clear the history\\n  edit         Edit the history file in your editor\\n  uniq         Show unique history entries (bare)\\n  top          Show top 10 most frequent commands (bare roots)\\n  cmds         Show top 20 most frequent command roots (bare)\\n  root         Show commands run with sudo (bare)\" ;; # Removed 'r' and trailing \\n
+        a) history ;; # Show full history with numbers and dates
+        an) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' ;; # Show numbers only, remove date/time
+        ad) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' ;; # Show datetime only, remove numbers
+        ab) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} /#/' ;; # Show bare commands (no numbers or date/time), prefix each command with # as dangerous if copy and paste raw commands
+        f | s) history | grep -i --color=auto \"\$2\" ;; # Find in full history (with numbers and dates)
+        fn | sn) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' | grep -i --color=auto \"\$2\" ;; # Find in history with numbers only
+        fd | sd) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' | grep -i --color=auto \"\$2\" ;; # Find in history with datetime only
+        fb | sb) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} /#/' | grep -i --color=auto \"\$2\" ;; # Find in bare history (no numbers or date/time), prefix each command with # as dangerous if copy and paste raw commands
+        n) [[ \"\$2\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$2\" || echo \"Invalid number\" ;;
+        help) if command -v h-history >/dev/null 2>&1; then h-history; else echo \"Error: 'h-history' script not found in your PATH.\"; fi ;;
         clear) history -c && echo \"History cleared\" ;;
         edit) history -w && \${EDITOR:-vi} \"\$HISTFILE\" ;;
-        uniq) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' | sort -u ;;
-        top) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' | awk '{CMD[\$1]++} END {for (a in CMD) print CMD[a], a;}' | sort -nr | head -10 ;;
-        cmds) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' | awk '{print \$1}' | sort | uniq -c | sort -nr | head -20 ;;
-        hist) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' ;;
-        root) history | sed 's/^[[:space:]]*[0-9]\+[[:space:]]*[0-9-]\{10\} [0-9:]\{8\} //' | grep -w sudo ;;
-        *) [[ \"\$1\" =~ ^[0-9]+$ ]] && history | tail -n \"\$1\" || echo \"Invalid option\" ;;
-    esac;
-    set -H
-}
+        uniq) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | sort -u ;; # Bare unique
+        top) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{CMD[\$1]++} END {for (a in CMD) printf \"%5d %s\\n\", CMD[a], a;}' | sort -nr | head -10 ;; # Bare command roots top 10 - Use printf for alignment
+        cmds) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{print \$1}' | sort | uniq -c | sort -nr | head -20 ;; # Bare command roots top 20 - uniq -c provides alignment
+        root) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | grep -w sudo ;; # Bare sudo commands
 
-# aliases for the 'a' script (apt helper tool in 0-scripts; these will simply not set if that script is not present):
-if type -t a >/dev/null 2>&1; then alias ai='a i'; fi
-if type -t a >/dev/null 2>&1; then alias av='a v'; fi
-if type -t a >/dev/null 2>&1; then alias ah='a h'; fi
+        # --- Fallback: Treat bare number as 'n' ---
+        *) [[ \"\$1\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$1\" || echo \"Invalid option or number\" ;;
+    esac;
+
+    # Always print history tips at the end with adjusted formatting
+    echo -e \"\\nHistory tips: !N (run cmd N), !! (run last cmd), !-N (run Nth last cmd),\\n  !str (run last cmd starting w/str), !?str? (run last cmd containing str)\"
+}
 
 # aliases to quickly open various configuration scripts:
 alias bashrc='vi ~/.bashrc'                 # Edit .bashrc (user)

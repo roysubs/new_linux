@@ -26,7 +26,7 @@ Options:
   portslist    ${BLUE}docker ps --format${NC}  Ports, but in list output
   mounts       ${BLUE}docker ps --format${NC}  Name, Image, Mounts in table format
   mountslist   ${BLUE}docker ps --format${NC}  Mounts, but in list format
-  status       ${BLUE}docker ps --format${NC}  Created time and uptime only
+  s|up|status  ${BLUE}docker ps --format${NC}  Created time and uptime only
   run [name] [image]  ${BLUE}sudo docker run -it --name [name] [image]${NC}  Create and start container
   it [name] <process> ${BLUE}docker exec -it [name] [process]${NC}  Interactive TTY
       Interactively enter container and start a process (could be bash, sh, top, etc)
@@ -106,7 +106,7 @@ case "$cmd" in
         docker ps --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nMounts: {{.Mounts}}\n" --no-trunc $@
         ;;
     
-    status)
+    s|up|status)
         color_echo "docker ps --format \"table {{.Names}}\\\t{{truncate .ID 12}}\\\t{{.Image}}\\\t{{.CreatedAt}}\\\t{{.Staus}}\""
         docker ps --format "table {{.Names}}\t{{truncate .ID 12}}\t{{.Image}}\t{{.CreatedAt}}\t{{.Status}}" --no-trunc $@
         ;;
