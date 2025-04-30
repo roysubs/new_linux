@@ -44,13 +44,15 @@ EMU_CONTAINER_DATA_DIR="/data"   # Internal data path inside the container (fixe
 # --- Default Port Settings ---
 # You can change these if ports are already in use on your host.
 # Format is HOST_PORT=CONTAINER_PORT for clarity.
-WEBUI_HOST_PORT=3333  # Host port for the Web UI (uploading ROMs, config)
-WEBUI_CONTAINER_PORT=3000 # Internal container port for WebUI
+# EmulatorJS by default wants to use port 80 for the frontend UI and 3000 for the backend manager.
+# We will map the frontend to 8888 and the backend to 8887 to avoid conflicts.
+WEBUI_HOST_PORT=8887         # Host port for the Web UI (uploading ROMs, config)
+WEBUI_CONTAINER_PORT=3000    # Internal container port for WebUI
 
-GAME_HOST_PORT=8888   # Host port for serving the emulator/game, it defaults to 80, so we map it elsewhere
-GAME_CONTAINER_PORT=80   # Internal container port for Game Serving
+GAME_HOST_PORT=8888          # Host port for serving the emulator/game, it defaults to 80, so we map it elsewhere
+GAME_CONTAINER_PORT=80       # Internal container port for Game Serving
 
-OPTIONAL_HOST_PORT=4001 # Optional port from the article's command (e.g., Netplay?) - set to 0 to disable mapping
+OPTIONAL_HOST_PORT=8889      # Optional port from the article's command (e.g., for Netplay?), we won't use this by default
 OPTIONAL_CONTAINER_PORT=4001 # Corresponding container port internal to container
 
 # --- Environment Settings ---
