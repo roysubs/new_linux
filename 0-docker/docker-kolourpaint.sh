@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Define container parameters
-CONTAINER_NAME="gui-app-container"
-VNC_PORT=6901 # Default port for web access in linuxserver/webtop
+CONTAINER_NAME="kolourpaint"
+VNC_PORT=6901 # Default port for web access to linuxserver/webtop
 APP_TO_INSTALL="kolourpaint" # The GUI application to install
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
 then
-    echo "Docker is not installed. Please install Docker on your Debian box first."
-    echo "See instructions: https://docs.docker.com/engine/install/debian/"
+    echo "Docker is not installed. Please install Docker and rerun."
+    echo "See instructions: https://docs.docker.com/engine/install/"
     exit 1
 fi
 

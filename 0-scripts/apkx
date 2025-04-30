@@ -20,7 +20,6 @@ show_help() {
     echo "  depends <package(s)> Show direct dependencies of packages"
     echo "  rdepends <package(s)> Show packages that depend on specified packages"
     echo "  h             Show last few apk commands from shell history (basic)"
-    echo "  o             List other package managers and install methods (General Info)"
     echo
 }
 
@@ -136,55 +135,6 @@ case "$option" in
         echo "Last 10 'apk' commands from shell history:"
         history | grep ' apk ' | tail -n 10
         echo
-        ;;
-    o) # Other package managers (General Info)
-        # This section remains largely the same as it lists general methods,
-        # but availability inside the container depends on the image.
-        printf "
-📦 JavaScript / Node.js
-npm – Node Package Manager
-Install, via Node.js:
-# sudo apk add nodejs npm
-Or install the latest via NodeSource (Less common on Alpine, use apk if possible)
-
-🐍 Python
-pip – Python Package Installer
-sudo apk add py3-pip
-
-🦀 Rust
-cargo – Rust package manager
-curl https://sh.rustup.rs -sSf | sh (Installs rustup, then rust/cargo)
-# Or sudo apk add rust cargo
-
-🐘 PHP
-composer – PHP package/dependency manager
-sudo apk add php php-json composer
-
-☕ Java
-maven – Java project and dependency manager
-sudo apk add maven
-gradle – Another Java build tool with dependency management
-sudo apk add gradle
-
-🐪 Perl
-cpan – Comprehensive Perl Archive Network
-sudo apk add perl
-
-🐚 Shell Scripts / System Tools
-Homebrew (Linuxbrew) – Universal package manager for Linux (Less common/officially supported on Alpine)
-
-🐍 Scientific / Data
-conda / miniconda – Python & R data science env manager (Usually not installed via apk)
-
-🧪 Haskell
-cabal – Haskell package manager
-# sudo apk add haskell-cabal
-
-🧱 Go (Golang)
-go get / go install – Used like a package manager
-sudo apk add go
-
-"
         ;;
     *) # Unknown option
         echo -e "${RED}Unknown option: $option${NC}\n"

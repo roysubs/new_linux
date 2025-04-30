@@ -3,6 +3,14 @@
 # nginx Docker automated deployment with example note taking app exposed on port 8888
 # ────────────────────────────────────────────────
 
+# Check if Docker is installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker is not installed. Please install Docker and rerun."
+    echo "See instructions: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
 # Set up variables
 APP_DIR="webapp"
 CONTAINER_NAME="nginx_webapp"

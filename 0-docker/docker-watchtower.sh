@@ -3,6 +3,14 @@
 # Watchtower (automatic container updates) Docker automated deployment
 # ────────────────────────────────────────────────
 
+# Check if Docker is installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker is not installed. Please install Docker and rerun."
+    echo "See instructions: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
 # ──[ Styling ]────────────────────────────────────
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -82,11 +90,9 @@ echo -e "- ${CYAN}--cleanup${NC}: This tells Watchtower to remove the old image 
 echo -e "- ${CYAN}--interval 3600${NC}: This sets the check interval to 3600 seconds (1 hour). Watchtower will check for updates every hour."
 echo
 echo -e "${BOLD}🔧 Container Management Commands:${NC}"
-echo -e "  ${CYAN}docker start $CONTAINER_NAME${NC}   - Start the Watchtower container"
-echo -e "  ${CYAN}docker stop $CONTAINER_NAME${NC}    - Stop the Watchtower container"
-echo -e "  ${CYAN}docker restart $CONTAINER_NAME${NC} - Restart the Watchtower container"
+echo -e "  ${CYAN}docker start|stop|restart $CONTAINER_NAME${NC}   - Start|Stop|Restart the Watchtower container"
 echo -e "  ${CYAN}docker logs $CONTAINER_NAME${NC}    - View Watchtower logs to see update activity"
-echo -e "  ${CYAN}docker rm -f $CONTAINER_NAME${NC}   - Remove the container (stops auto-updates!)"
+echo -e "  ${CYAN}docker rm -f $CONTAINER_NAME${NC}   - Remove the container (this will stop Watchtower container auto-updates!)"
 echo
 echo -e "${BOLD}📝 Notes:${NC}"
 echo    "By default, Watchtower will monitor ALL running containers on the host."

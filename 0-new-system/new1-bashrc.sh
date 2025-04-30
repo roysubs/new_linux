@@ -31,6 +31,13 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 
+alias ls='ls --color=auto'  # Add color output by default
+alias ls.='ls -d .*'        # -d shows only the directory, not the contents (of .config etc)
+alias la='ls -A'            # 
+alias ll.='ls -ald .*'
+alias ll='ls -l'
+alias l='ls -CF'
+
 # Alias/Function/Export definitions
 export EDITOR=vi
 export PAGER=less
@@ -87,6 +94,7 @@ if type -t a >/dev/null 2>&1; then alias ah='a h'; fi
 
 # aliases to quickly open various configuration scripts:
 alias bashrc='vi ~/.bashrc'                 # Edit .bashrc (user)
+alias inputrc='vi ~/.inputrc'               # Edit .inputrc (user)
 alias vimrc='vi ~/.vimrc'                   # Edit .vimrc (user)
 alias vimrcroot='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
 alias vimrcsudo='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
@@ -164,21 +172,22 @@ def() {
 }
 
 # Jump functions (cannot be in scripts as would need to dotsource each, so keep in .bashrc)
-n()  { cd ~/new_linux || return; ls; }            # jump to new_linux
-0d() { cd ~/new_linux/0-docker || return; ls; }   # jump to new_linux/0-docker
-0g() { cd ~/new_linux/0-games || return; ls; }    # jump to new_linux/0-games
-0h() { cd ~/new_linux/0-help || return; ls; }     # jump to new_linux/0-help
-0i() { cd ~/new_linux/0-install || return; ls; }  # jump to new_linux/0-install
-0n() { cd ~/new_linux/0-notes || return; ls; }    # jump to new_linux/0-notes
-0ns() { cd ~/new_linux/0-new-system || return; ls; }  # jump to new_linux/0-new-system
-0s() { cd ~/new_linux/0-scripts || return; ls; }  # jump to new_linux/0-scripts
-v()  { cd ~/.vnc || return; ls; }                 # jump to .vnc
-w()  { cd ~/new_linux/0-wip || return; ls; }      # jump to 0-wip
-D()  { cd /mnt/sdc1/Downloads || return; ls; }   # jump to 0-wip
-DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # jump to 0 Films
-DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # jump to 0 TV
-DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # jump to 0 Music
-# white() { cd ~/192.168.1.29-d || return; ls; }  # custom jump to my Windows PC named 'WHITE' SMB share)
+config() { cd ~/.config || return; ls; }          # Jump to ~/.config
+n()  { cd ~/new_linux || return; ls; }            # Jump to new_linux
+0d() { cd ~/new_linux/0-docker || return; ls; }   # Jump to new_linux/0-docker
+0g() { cd ~/new_linux/0-games || return; ls; }    # Jump to new_linux/0-games
+0h() { cd ~/new_linux/0-help || return; ls; }     # Jump to new_linux/0-help
+0i() { cd ~/new_linux/0-install || return; ls; }  # Jump to new_linux/0-install
+0n() { cd ~/new_linux/0-notes || return; ls; }    # Jump to new_linux/0-notes
+0ns() { cd ~/new_linux/0-new-system || return; ls; }  # Jump to new_linux/0-new-system
+0s() { cd ~/new_linux/0-scripts || return; ls; }  # Jump to new_linux/0-scripts
+v()  { cd ~/.vnc || return; ls; }                 # Jump to .vnc
+w()  { cd ~/new_linux/0-wip || return; ls; }      # Jump to 0-wip
+D()  { cd /mnt/sdc1/Downloads || return; ls; }    # Jump to 0-wip
+DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to 0 Films
+DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # Jump to 0 TV
+DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to 0 Music
+# white() { cd ~/192.168.1.29-d || return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
 
 "
 

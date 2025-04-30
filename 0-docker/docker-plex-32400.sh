@@ -3,6 +3,14 @@
 # Plex Media Server in Docker automated deployment (web gui on port 32400)
 # ────────────────────────────────────────────────
 
+# Check if Docker is installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker is not installed. Please install Docker and rerun."
+    echo "See instructions: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
 DOCKER_IMAGE="pull plexinc/pms-docker"
 
 # ──[ Styling ]────────────────────────────────────

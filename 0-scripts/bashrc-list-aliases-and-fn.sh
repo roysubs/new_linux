@@ -35,15 +35,25 @@ functions=$(grep -E '^[a-zA-Z0-9_]+\(\)\s*\{' "$bashrc_file")
 # Sort if -s or -sort is passed
 if [[ "$sort" == true ]]; then
     # Sort aliases first, then functions
-    echo "Aliases:"
+    echo "Aliases in .bashrc:"
+    echo "=========="
     echo "$aliases" | sort
     echo
-    echo "Functions:"
+    echo "Functions in .bashrc:"
+    echo "=========="
     echo "$functions" | sort
+    echo
 else
     # Just show as they appear
-    echo "Aliases and Functions from .bashrc:"
+    echo "Aliases in .bashrc:"
+    echo "=========="
     echo "$aliases"
+    echo
+    echo "Functions in .bashrc:"
+    echo "=========="
     echo "$functions"
+    echo
+    echo "The above are unsorted, just listed by how they appear in .bashrc"
+    echo "use '$(basename $0) -s' to sort them alphabetically."
 fi
 

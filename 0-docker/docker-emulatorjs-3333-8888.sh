@@ -9,6 +9,14 @@
 # https://archive.org/details/nes-hack-collection
 # ───────────────────────────────────────────────────────────────
 
+# Check if Docker is installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker is not installed. Please install Docker and rerun."
+    echo "See instructions: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
 # ───[ Styling ]─────────────────────────────────────────────────
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -36,10 +44,10 @@ EMU_CONTAINER_DATA_DIR="/data"   # Internal data path inside the container (fixe
 # --- Default Port Settings ---
 # You can change these if ports are already in use on your host.
 # Format is HOST_PORT=CONTAINER_PORT for clarity.
-WEBUI_HOST_PORT=3000  # Port for the Web UI (uploading ROMs, config)
+WEBUI_HOST_PORT=3333  # Host port for the Web UI (uploading ROMs, config)
 WEBUI_CONTAINER_PORT=3000 # Internal container port for WebUI
 
-GAME_HOST_PORT=8088   # Port for serving the emulator/game, it defaults to 80, so obviously move that
+GAME_HOST_PORT=8888   # Host port for serving the emulator/game, it defaults to 80, so we map it elsewhere
 GAME_CONTAINER_PORT=80   # Internal container port for Game Serving
 
 OPTIONAL_HOST_PORT=4001 # Optional port from the article's command (e.g., Netplay?) - set to 0 to disable mapping
