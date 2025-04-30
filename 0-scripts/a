@@ -1,198 +1,83 @@
 #!/bin/bash
-# Apt Tool Script
-# Provides utilities for apt package management with concise history and detailed info.
+# Application Package Manager Wrapper
+# Checks which package manager is in use on this system, and runs the the corresponding helper script.
+# Currently only checks for apt and apk, but will be extended to cover other package managers.
+# See end of this script for list of package managers to be added.
 
 # Define colors
 RED='\e[31m'
-GREEN='\e[32m'
 NC='\e[0m' # No Color
 
-# Function to show usage help
-show_help() {
-    echo "Apt Tool.   Usage: a [option] <package(s)>"
-    echo "Options:"
-    echo "  i <package(s)>    Install the specified package(s) (uses sudo)"
-    echo "  h                 History: show install/remove/upgrade history"
-    echo "  r <package(s)>    Remove the specified package(s) (uses sudo)"
-    echo "  s <package(s)>    Search for the specified package(s)"
-    echo "  u                 Update, then upgrade, then autoremove (uses sudo)"
-    echo "  ar                Autoremove packages that are no longer required (uses sudo)"
-    echo "  v <package(s)>    View info: version, dependencies, package contents, etc"
-    echo "  d <package(s)>    Depends: Packages required to install the specified package(s)"
-    echo "  dr <package(s)>   Reverse Depends: Packages that depend on the specified package(s)"
-    echo "  o                 List other package managers and install methods"
-    echo
+# Get the directory of the current script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" &> /dev/null
 }
 
-# Function to print a command in green and execute it
-run_command() {
-    local full_cmd_string="$1"
-    echo -e "# ${GREEN}${full_cmd_string}${NC}"
-    # Execute the command string. Using bash -c is generally safe for constructed strings.
-    bash -c "$full_cmd_string"
-    return $? # Return the exit status of the executed command
-}
-
-# Show help if no arguments are provided
-if [ $# -eq 0 ]; then
-    show_help
-    exit 0
+# Check if apt is available
+if command_exists apt; then
+    APTX_SCRIPT="${SCRIPT_DIR}/aptx"
+    # Check if aptx script exists and is executable
+    if [ -x "$APTX_SCRIPT" ]; then
+        # Execute aptx script with all arguments
+        exec "$APTX_SCRIPT" "$@"
+    else
+        echo -e "${RED}Error: 'apt' command found, but 'aptx' script not found or not executable at '$APTX_SCRIPT'.${NC}"
+        exit 1
+    fi
+# Check if apk is available
+elif command_exists apk; then
+    APKX_SCRIPT="${SCRIPT_DIR}/apkx"
+     # Check if apkx script exists and is executable
+    if [ -x "$APKX_SCRIPT" ]; then
+        # Execute apkx script with all arguments
+        exec "$APKX_SCRIPT" "$@"
+    else
+        echo -e "${RED}Error: 'apk' command found, but 'apkx' script not found or not executable at '$APKX_SCRIPT'.${NC}"
+        exit 1
+    fi
+else
+    # Neither apt nor apk found
+    echo -e "${RED}Error: Neither 'apt' nor 'apk' package manager found on this system.${NC}"
+    exit 1
 fi
 
-option=$1
-shift  # Shift to access package arguments
+# The script should not reach here due to 'exec'
+exit 0
 
-case "$option" in
-    i)
-        run_command "sudo apt install $@";
-        ;;
-    h)
-        # History command is complex pipeline, no simple command to print via run_command
-        zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log.1.gz |
-            sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\n/ /;p}' |
-            sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' |
-            grep --color=auto -v 'Start-Date:'
-        ;;
-    r)
-        run_command "sudo apt remove $@";
-        ;;
-    s)
-        for package in "$@"; do
-            echo "Search results for $package:"
-            run_command "apt search $package";
-            echo
-        done
-        ;;
-    u)
-        # Use run_command and check exit status for chaining
-        if run_command "sudo apt update"; then
-            if run_command "sudo apt upgrade"; then
-                run_command "sudo apt autoremove"
-            fi
-        fi
-        ;;
-    ar)
-        run_command "sudo apt autoremove";
-        ;;
-    v)
-        for package in "$@"; do
-            echo "Information for '$package' (apt info in Debian, apt show in Mint):"
-            local info_cmd # Define local variable for the command string
-            if grep --color=auto -q "Mint" /etc/os-release; then
-                info_cmd="apt show $package";
-            else
-                info_cmd="apt info $package";
-            fi
-            run_command "$info_cmd";
+####################
 
-            echo
-            read -n 1 -s -r -p "Press any key to show package dependencies for $package"
-            echo
-            run_command "apt-cache depends $package";
+# - APT (Advanced Package Tool): This is one of the most widely used package management systems. It's known for its robust dependency resolution and ease of use.
+# Associated Distributions: Debian, Ubuntu, Linux Mint, Kali Linux, and many other Debian-based distributions.   
+# Package Format: .deb
 
-            echo
-            read -n 1 -s -r -p "Press any key to show package contents for $package"
-            echo
+# apk (Alpine Package Keeper): A simple, fast, and lightweight package manager designed for the Alpine Linux distribution, which is popular in container environments.    
+# Associated Distributions: Alpine Linux.
+# Package Format: .apk
 
-            if dpkg -s "$package" > /dev/null 2>&1; then
-                run_command "dpkg -L $package";
-            else
-                if ! command -v apt-file > /dev/null 2>&1; then
-                    echo "Installing 'apt-file' to view contents of packages that are not currently installed."
-                    run_command "sudo apt install -y apt-file"; # Use run_command here too
-                    run_command "sudo apt-file update";      # Use run_command here too
-                fi
-                run_command "apt-file list $package";
-            fi
-            echo
-        done
-        ;;
-    d)
-        for package in "$@"; do
-            echo "dependencies for $package:"
-            run_command "apt-cache depends $package";
-            echo
-        done
-        ;;
-    dr)
-         for package in "$@"; do
-            echo "reverse dependencies for $package:"
-            run_command "apt-cache rdepends $package";
-            echo
-        done
-        ;;
-    o)
-        # A simple output of other package managers and techniques
-        printf "
-📦 JavaScript / Node.js
-npm – Node Package Manager
-Install, via Node.js:
-# sudo apt install nodejs npm
-Or install the latest via NodeSource
-# curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-Then:
-# sudo apt install -y nodejs
-yarn – Alternative JS package manager
-# npm install -g yarn
-or
-# corepack enable yarn
+# - DNF (Dandified YUM): DNF is the next-generation version of YUM (Yellowdog Updater, Modified) and is the default package manager for newer Red Hat-based distributions.
+# Associated Distributions: Fedora, CentOS Stream, Rocky Linux, AlmaLinux, Red Hat Enterprise Linux (RHEL) 8 and later.   
+# Package Format: .rpm
 
-🐍 Python
-pip – Python Package Installer
-sudo apt install python3-pip
+# - YUM (Yellowdog Updater, Modified): While largely replaced by DNF in newer releases, YUM is still found in older versions of Red Hat-based distributions.
+# Associated Distributions: CentOS 7 and earlier, RHEL 7 and earlier, Fedora 21 and earlier, Amazon Linux (older versions).
+# Package Format: .rpm
 
-🦀 Rust
-cargo – Rust package manager
-curl https://sh.rustup.rs -sSf | sh
+# Zypper: This is the command-line package manager for openSUSE, built on top of the ZYpp library.   
+# Associated Distributions: openSUSE Leap, openSUSE Tumbleweed.
+# Package Format: .rpm
 
-🐘 PHP
-composer – PHP package/dependency manager
-sudo apt install curl php-cli php-mbstring unzip
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
+# - Pacman: Known for its speed and simplicity, Pacman is the package manager for Arch Linux and its derivatives.   
+# Associated Distributions: Arch Linux, Manjaro, EndeavourOS.   
+# Package Format: .tar.xz (often compressed)   
 
-☕ Java
-maven – Java project and dependency manager
-sudo apt install maven
-gradle – Another Java build tool with dependency management
-sudo apt install gradle
+# Portage: Distinct from binary package managers, Portage is a source-based package management system. It downloads the source code and compiles the software locally according to the user's specifications.
+# Associated Distributions: Gentoo Linux, Funtoo Linux.   
+# Package Format: Source-based (managed via ebuild scripts)
 
-🐪 Perl
-cpan – Comprehensive Perl Archive Network
-sudo apt install perl
-Then:
-# cpan
+# pkgtool / installpkg / upgradepkg / removepkg: Slackware uses a collection of command-line tools for package management, operating more directly with compressed tarball packages. slackpkg is a common community-contributed tool for managing packages from repositories.
+# Associated Distributions: Slackware Linux.
+# Package Format: .tgz, .txz
 
-🐚 Shell Scripts / System Tools
-Homebrew (Linuxbrew) – Universal package manager for Linux
-# /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"
-Then:
-# echo 'eval \"\$(\$HOME/linuxbrew/.linuxbrew/bin/brew shellenv)\"' >> ~/.profile
-# source ~/.profile
-
-🐍 Scientific / Data
-conda / miniconda – Python & R data science env manager
-Install Miniconda (lightweight Anaconda):
-# wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-# bash Miniconda3-latest-Linux-x86_64.sh
-
-🧪 Haskell
-cabal – Haskell package manager
-# sudo apt install cabal-install
-
-🧱 Go (Golang)
-go get / go install – Used like a package manager
-sudo apt install golang
-Then:
-go install github.com/some/package@latest
-
-"
-        ;;
-    *)
-        echo -e "${RED}Unknown option: $option${NC}\n"
-        show_help
-        exit 1 # Indicate error
-        ;;
-esac
-
-exit 0 # Indicate success

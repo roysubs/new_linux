@@ -3,35 +3,107 @@
 # Check and update ~/.vimrc and ~/.config/nvim/init.vim line by line
 # Only add a line if it is not currently present.
 # Adds bindings to both Vim and Neovim (nvim)
-# Designed to be run by the user whose configuration is being modified in Alpine Linux.
+# Designed to be run by the user whose configuration is being modified.
+# Automatically detects common Linux package managers (apt, apk, dnf, yum, pacman, zypper).
 
 echo "Starting Vim/Neovim configuration update..."
 
-# --- Package Installation (using apk for Alpine Linux) ---
+# --- Package Manager Detection ---
 
-# Ensure apk repositories are updated
-echo "Updating apk repositories..."
-apk update
+# Function to detect the available package manager
+detect_package_manager() {
+    if command -v apt &> /dev/null; then
+        echo "apt"
+    elif command -v dnf &> /dev/null; then
+        echo "dnf" # Prefer dnf over yum
+    elif command -v yum &> /dev/null; then
+        echo "yum"
+    elif command -v pacman &> /dev/null; then
+        echo "pacman"
+    elif command -v apk &> /dev/null; then
+        echo "apk"
+    elif command -v zypper &> /dev/null; then
+        echo "zypper"
+    else
+        echo "unknown"
+    fi
+}
 
-# Ensure vim is installed
-if ! command -v vim &> /dev/null; then
-    echo "Vim is not installed. Installing vim..."
-    apk add --no-cache vim
-else
-    echo "Vim is already installed."
-fi
+# Detect the package manager
+PKG_MANAGER=$(detect_package_manager)
 
-# Ensure neovim is installed
-if ! command -v nvim &> /dev/null; then
-    echo "Neovim is not installed. Installing neovim..."
-    # Check if neovim is in main repo or testing; might need to enable testing repo if not found
-    # For standard alpine, 'nvim' should be in the main repository
-    apk add --no-cache neovim
-else
-    echo "Neovim is already installed."
-fi
+echo "Detected package manager: $PKG_MANAGER"
 
-# Ensure the nvim config directory and file exist using the user's home directory
+# --- Package Installation ---
+
+install_package() {
+    local pkg_name="$1"
+    echo "Ensuring '$pkg_name' is installed..."
+
+    # Check if the package command already exists
+    if command -v "$pkg_name" &> /dev/null; then
+        echo "'$pkg_name' is already installed."
+        return 0 # Package already installed
+    fi
+
+    # Determine installation commands based on package manager
+    case "$PKG_MANAGER" in
+        apt)
+            # For apt, update first, then install with -y for non-interactive
+            sudo apt update && sudo apt install -y "$pkg_name"
+            ;;
+        apk)
+            # For apk, update first, then add with --no-cache
+            sudo apk update
+            sudo apk add --no-cache "$pkg_name"
+            ;;
+        dnf)
+            # For dnf, check-update is good practice, install with -y
+            sudo dnf check-update || true # Ignore check-update errors
+            sudo dnf install -y "$pkg_name"
+            ;;
+        yum)
+            # For yum, check-update is good practice, install with -y
+            sudo yum check-update || true # Ignore check-update errors
+            sudo yum install -y "$pkg_name"
+            ;;
+        zypper)
+            # For zypper, refresh first, then install with -y
+            sudo zypper refresh
+            sudo zypper install -y "$pkg_name"
+            ;;
+        pacman)
+            # For pacman, sync package lists first (-Sy), then install (-S) non-interactively (--noconfirm)
+            sudo pacman -Sy --noconfirm
+            sudo pacman -S --noconfirm "$pkg_name"
+            ;;
+        unknown)
+            echo "Error: Could not detect a supported package manager."
+            echo "Please install '$pkg_name' manually using your system's package manager."
+            return 1 # Indicate failure
+            ;;
+        *)
+            echo "Error: Unsupported package manager '$PKG_MANAGER'."
+            echo "Please install '$pkg_name' manually."
+            return 1 # Indicate failure
+            ;;
+    esac
+
+    # Verify installation success
+    if command -v "$pkg_name" &> /dev/null; then
+        echo "'$pkg_name' installed successfully."
+        return 0 # Success
+    else
+        echo "Error: Failed to install '$pkg_name'."
+        return 1 # Indicate failure
+    fi
+}
+
+# Install vim and neovim - exit if either fails
+install_package "vim" || { echo "Aborting due to failed vim installation."; exit 1; }
+install_package "neovim" || { echo "Aborting due to failed neovim installation."; exit 1; }
+
+# --- Ensure Neovim config directory exists ---
 echo "Ensuring Neovim configuration directory exists..."
 mkdir -p "$HOME/.config/nvim"
 nvim_init_file="$HOME/.config/nvim/init.vim"
@@ -39,6 +111,7 @@ if [ ! -f "$nvim_init_file" ]; then
     touch "$nvim_init_file"
     echo "Created new $nvim_init_file."
 fi
+
 
 # --- Vim settings and key mappings to apply ---
 # (Your existing settings block)
@@ -220,16 +293,18 @@ update_config_file() {
         if ! grep -Fxq "$line" "$target_file"; then
              # Add the line to the temporary file
              echo "$line" >> "$temp_file"
-             echo "  Added: $line" # Optional: show what was added
+             # Optional: show what was added (uncomment below line to enable)
+             # echo "  Added: $line"
         fi
     done <<< "$config_block"
 
     # Remove any completely blank lines added at the very end from the block processing
     # Use tac, sed to remove trailing blank lines, then tac again
+    # Handles files that might end with multiple blank lines.
     tac "$temp_file" | sed '/^[[:space:]]*$/d; q' | tac > "${temp_file}.cleaned" && mv "${temp_file}.cleaned" "$temp_file"
 
     # Replace the original file with the updated content from the temporary file
-    # Since we are working in the user's home directory, no sudo is needed.
+    # Since we are working in the user's home directory, no sudo is needed for these files.
     mv "$temp_file" "$target_file"
 
     echo "Finished processing $target_file."

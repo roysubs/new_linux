@@ -4,6 +4,14 @@
 # https://github.com/syncthing/syncthing/blob/main/README-Docker.md
 # ───────────────────────────────────────────────────────────────
 
+# Check if Docker is installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker is not installed. Please install Docker and rerun."
+    echo "See instructions: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
 # ───[ Styling ]─────────────────────────────────────────────────
 RED='\033[1;31m'
 GREEN='\033[1;32m'

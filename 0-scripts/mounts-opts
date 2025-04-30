@@ -9,6 +9,8 @@ COLOR_NFS_HEADER="\033[1;35m"       # Magenta bold for NFS header
 COLOR_FIELD="\033[1;34m"             # Blue bold for fields (Source and Mount Point) as requested
 COLOR_RESET="\033[0m"         # Reset color to default
 
+echo -e "${COLOR_LOCAL_HEADER}\nDisplay all current mount options:${COLOR_RESET}"
+
 # Regex to exclude common system/virtual mounts and the root mount
 # This pattern looks for filesystem types or mount points to exclude.
 # Add or remove patterns here if you see other unwanted entries.
@@ -108,7 +110,7 @@ fi
 # Print Remote SAMBA Mounts section if any were found
 if [[ -n "$samba_mounts" ]]; then
     # echo -e interprets the color codes and the header newline
-    echo -e "${COLOR_REMOTE_SAMBA_HEADER}\n--- Remote SAMBA/CIFS Mounts ---${COLOR_RESET}"
+    echo -e "${COLOR_REMOTE_SAMBA_HEADER}--- Remote SAMBA/CIFS Mounts ---${COLOR_RESET}"
      while IFS= read -r mount_line; do
         # Pass each individual line to the coloring function
         print_colored_line "$mount_line"
@@ -118,7 +120,7 @@ fi
 # Print NFS Mounts section if any were found
 if [[ -n "$nfs_mounts" ]]; then
     # echo -e interprets the color codes and the header newline
-    echo -e "${COLOR_NFS_HEADER}\n--- NFS Mounts ---${COLOR_RESET}"
+    echo -e "${COLOR_NFS_HEADER}--- NFS Mounts ---${COLOR_RESET}"
      while IFS= read -r mount_line; do
         # Pass each individual line to the coloring function
         # The coloring function will highlight the 1st (server:/share) and 3rd (mount point) fields
@@ -127,8 +129,8 @@ if [[ -n "$nfs_mounts" ]]; then
 fi
 
 # Add a final newline for cleaner output separation if any sections were printed
-if [[ -n "$local_mounts" ]] || [[ -n "$samba_mounts" ]] || [[ -n "$nfs_mounts" ]]; then
-    echo ""
-fi
+# if [[ -n "$local_mounts" ]] || [[ -n "$samba_mounts" ]] || [[ -n "$nfs_mounts" ]]; then
+#     echo ""
+# fi
 
 exit 0

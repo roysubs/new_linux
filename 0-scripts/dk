@@ -86,24 +86,24 @@ case "$cmd" in
         # docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}"
 
     ports)
-        color_echo "docker ps -a --format \"table {{.Names}}\\\t{{.Image}}\\\t{{.Ports}}\""
-        docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
+        color_echo "docker ps --format \"table {{.Names}}\\\t{{.Image}}\\\t{{.Ports}}\""
+        docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}" $@
         ;;
     
     portslist)
-        color_echo "docker ps -a --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nPorts:  {{.Ports}}\\\n\" --no-trunc"
-        docker ps -a --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nPorts:  {{.Ports}}\n" --no-trunc
+        color_echo "docker ps --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nPorts:  {{.Ports}}\\\n\" --no-trunc"
+        docker ps --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nPorts:  {{.Ports}}\n" --no-trunc $@
         ;;
 
 
     mounts)
-        color_echo "docker ps -a --format \"table {{.Names}}\\\t{{.ID}}\\\t{{.Image}}\\\t{{.Mounts}}\""
-        docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Mounts}}" --no-trunc        
+        color_echo "docker ps --format \"table {{.Names}}\\\t{{.ID}}\\\t{{.Image}}\\\t{{.Mounts}}\""
+        docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Mounts}}" --no-trunc $@
         ;;
 
     mountslist)
-        color_echo "docker ps -a --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nMounts: {{.Mounts}}\\\n\" --no-trunc"
-        docker ps -a --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nMounts: {{.Mounts}}\n" --no-trunc
+        color_echo "docker ps --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nMounts: {{.Mounts}}\\\n\" --no-trunc"
+        docker ps --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nMounts: {{.Mounts}}\n" --no-trunc $@
         ;;
     
     status)
