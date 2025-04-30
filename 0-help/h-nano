@@ -6,7 +6,6 @@ cat <<'EOF' | mdcat | less -R
 # h-nano Help File
 
 ## Basic Commands
-- **Open file**: `nano filename`
 - **Save file**: `Ctrl+O`, then press `Enter`
 - **Exit nano**: `Ctrl+X`
 - **Cut text**: `Ctrl+K`
@@ -35,11 +34,11 @@ cat <<'EOF' | mdcat | less -R
 - **Spell check**: `Ctrl+T`, then choose spell checker
 
 ## Key Bindings Summary
-- **Ctrl+C**: Cancel command
 - **Ctrl+X**: Exit
-- **Ctrl+O**: Save
 - **Ctrl+K**: Cut text
 - **Ctrl+U**: Paste text
+- **Ctrl+O**: Save
+- **Ctrl+C**: Cancel command
 - **Ctrl+W**: Search
 - **Ctrl+G**: Help
 

@@ -2,12 +2,20 @@
 
 # Display help summary for Vim
 cat <<'EOF' | mdcat | less -R
-Vim Quick Notes
+
+Vim Notes
 ===============
+
+- **Basic Commands**:
+    - `i` to enter **Insert Mode**, and `Esc` to get back to **Normal Mode**.
+    - `dd`: Delete a line (saved in buffer), `yy`: Yank a line (saved in buffer), `p`: Paste the buffer.
+    - `d<h/j/k/l>` or `d+arrow-key`: Delete plus movement (up/down deletes current line plus next in that direction, `left` the character before cursor, or `right`, the current character at cursor).
+    - `d$` or `D` (Shift+d): Delete to end of line. `dG` (`d` then Shift+g): Delete to end of the file.
+    - `C-v` (or `C-q`): VISUAL BLOCK (then Shift+i to insert on every line), `V` (Shift+v): VISUAL LINE, `v`: VISUAL MODE. `C-q` works also for VISUAL BLOCK due to `C-v` being a common terminal mapping.
 
 - **Neovim vs Vim**:
     - Neovim (nvim) is a more modern version of Vim, with better support for plugins and features.
-    - e.g. by default in Neovim, `:%s/Text/Replace/` will live preview replacements on all affected lines.
+    - e.g. by default in Neovim, `:%s/Text/Replace/` will live-preview replacements on all affected lines, and indentation is automated for most languages (for `if-else` keywords etc) etc
 
 - **Breaking Out to Shell (bash jobs Ctrl+Z, fg, bg, and :sh)**:
     - **Ctrl+Z**: Suspends Vim (or any app) and sends it to the background. Use `fg` to bring it back.
@@ -19,7 +27,10 @@ Vim Quick Notes
       1. Open file2: `:e file2`
       2. Paste the text: `p`
       3. Go back to file1: `:e file1`
-    - Alternatively, use `:split filename` or `:vsplit filename` to open a new file in a split window and use `Ctrl-w` to navigate between splits.
+    - Alternatively, copy text by creating split windows and copying between them:
+      1. `:split filename` (horizontal, new window is above) or `:vsplit filename` (side by side) to open new or  
+         existing file in the new split window.
+      2. use `Ctrl-w` to navigate between splits, and `p` as normal to paste.
 
 - **Opening Another File**:
     - `:e filename`: Open another file and replace the current buffer.
@@ -32,12 +43,17 @@ Vim Quick Notes
     - **Command-line Mode**: Perform commands like `:w`, `:%s/text/replace/g`, etc.
     - **Paste Mode**: Use `:set paste` to temporarily disable auto-indentation and text formatting when pasting text.
 
-- **Quick Basics**:
-    - In **Normal Mode**: Use `h`, `j`, `k`, `l` for navigation (or arrow keys).
-    - In **Insert Mode**: Use arrow keys, PgUp/PgDn to navigate.
-    - `dd`: Delete a line (into the buffer), `yy`: Yank a line, `p`: Paste the buffer.
-    - `d<h/j/k/l>` or `d<up/down/left/right>`: Delete plus movement (up/down delete current line plus next in direction, left/h the character before cursor, or right/l, the current character at cursor).
-    - `d$` or `D` (Shift+D): Delete to end of line.
+- **Visual Modes**:
+Vim has three main Visual modes (press these keys from Normal mode)
+    - Visual mode (gets a continuous series of characters)  : `v`
+    - Visual Line Mode (selects one or more full lines)     : `V` (`Shift+v`)
+    - Visual Block Mode (gets a rectangular block of text)) : `<C-v>` (`Ctrl+v`, *or*, `Ctrl+q` alternative)
+      In many emulators, Ctrl+v is intercepted by the terminal itself (often to paste), hence `Ctrl+q`
+    - Selecting Last Visual Area: `gv`
+      After you've exited any Visual mode, pressing gv in Normal mode will re-select the exact same text you had selected previously. Very useful!
+    - Entering from Insert Mode: By default, you have to exit Insert mode (Esc) before you can press v, V, or Ctrl+v. Users often create custom mappings in their .vimrc (e.g., `inoremap <S-Down> <Esc>Vj`) to quickly exit Insert mode and enter a specific Visual mode with a single key combination. These are not default Vim bindings.
+    - Custom Mappings: (e.g., mapping a <Leader> key combination or vb to <C-v> or <C-q>) to provide alternative, easier-to-type, or conflict-free ways to enter these modes. These vary widely based on personal preference and environment.
+So, the default keys you'll find in any standard Vim installation are `v`, `V`, and `<C-v>` (or `<C-q>`).
 
 - **Visual Mode and Select**:
     - `v`: Enter visual mode at the cursor position; move with arrow keys or `^`/`$` to select text.
@@ -78,11 +94,6 @@ Vim Quick Notes
         - `d$` or `D`: Delete to the end of the line.
         - `d^`: Delete to the start of the line.
         - `d5j`: Delete 5 lines down, `dG`: Delete from the cursor to the end of the file.
-
-- **Yanking (Copying) and Pasting**:
-    - `y`: Yank text (copy) into the buffer.
-    - `p`: Paste the buffer at the cursor position.
-    - Use `d` to delete text (which is also yanked into the buffer), and then use `p` to paste.
 
 - **Advanced Deleting**:
     - `d/^fi/+1`: Delete lines matching a pattern, so if cursor is at start of a if-fi block, then this will delete from current position to the end of the block, but only do it once. Note that this is not a Command Mode operation, do not press `:` before starting the command, press `d` to start then type `/^fi/+1` which will appear at bottom of screen, then Enter to execute.

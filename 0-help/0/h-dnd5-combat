@@ -1,0 +1,129 @@
+#!/bin/bash
+if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
+
+cat <<'EOF' | mdcat | less -R
+
+# Dungeons & Dragons 5th Edition Combat Process Cheatsheet
+
+
+2. **Combat Rounds**:
+   - Each round represents 6 seconds of in-game time.
+   - During a round, each participant takes a turn, starting with the highest initiative.
+
+## Actions in Combat
+### Common Actions:
+- **Attack**: Make a melee or ranged attack.
+- **Cast a Spell**: Cast a spell with a casting time of 1 action.
+- **Dash**: Double your movement for the turn.
+- **Disengage**: Your movement doesn’t provoke opportunity attacks for the rest of the turn.
+- **Dodge**: Until the start of your next turn, any attack roll made against you has disadvantage if you can see the attacker, and you make Dexterity saving throws with advantage.
+- **Help**: Grant an ally advantage on their next ability check or attack roll.
+- **Hide**: Attempt to hide using a Dexterity (Stealth) check.
+- **Ready**: Prepare to take an action when a specified trigger occurs.
+
+### Attack Roll:
+- Roll a d20 and add your attack bonus (Proficiency + Ability Modifier).
+- Compare the result to the target’s AC (Armor Class).
+- If the roll is equal to or higher, the attack hits.
+
+### Damage Roll:
+- Roll the damage dice for the weapon or spell and add the relevant modifier.
+- Apply any resistances or vulnerabilities the target has.
+
+### Critical Hits:
+- When you roll a natural 20 on an attack roll, roll all the attack’s damage dice twice and add them together.
+
+### Example of an Attack:
+1. **Player**: "I attack the goblin with my longsword!"
+2. **DM**: "Roll to hit."
+3. **Player**: Rolls d20 + Attack bonus (d20 + 5) and gets 17.
+4. **DM**: "That hits. Roll for damage."
+5. **Player**: Rolls damage (1d8 + 3) and gets 6.
+6. **DM**: "The goblin takes 6 points of damage."
+
+## Movement
+- Your speed in feet determines how far you can move during your turn.
+- You can break up your movement and take it at any time during your turn.
+- Moving through difficult terrain costs 1 extra foot of movement for every foot moved.
+
+## Example Movement:
+1. **Player**: "I move 15 feet to get within melee range of the goblin."
+2. **DM**: "You can move and then take your action to attack."
+
+## Conditions
+### Common Conditions:
+- **Blinded**: Can’t see and automatically fails any ability check that requires sight. Attack rolls against the creature have advantage, and the creature’s attack rolls have disadvantage.
+- **Grappled**: A grappled creature’s speed becomes 0.
+- **Invisible**: An invisible creature is impossible to see without special means. Attack rolls against the creature have disadvantage, and the creature’s attack rolls have advantage.
+
+### Example Table of Conditions:
+
+| Condition   | Effect                                                                    |
+|-------------|---------------------------------------------------------------------------|
+| Blinded     | Can’t see, attacks against have advantage, attacks have disadvantage.     |
+| Grappled    | Speed becomes 0, can't benefit from bonuses to speed.                     |
+| Invisible   | Can't be seen, attacks against have disadvantage, attacks have advantage. |
+
+## Spells
+### Casting a Spell:
+1. **Choose the spell**: Select from those prepared or known.
+2. **Check components**: Make sure you have the necessary material, verbal, or somatic components.
+3. **Casting time**: Spells have a casting time, often 1 action.
+4. **Range**: Determine if the target is within range.
+5. **Effect**: Follow the spell’s description for its effects.
+
+### Example of Casting a Spell:
+1. **Player**: "I cast Fireball at the group of goblins!"
+2. **DM**: "Roll for damage."
+3. **Player**: Rolls 8d6 for damage and gets 26.
+4. **DM**: "The goblins make a Dexterity saving throw." Rolls for each goblin.
+5. **DM**: "Two goblins fail and take 26 damage, while one succeeds and takes 13."
+
+## Example Combat Scenario
+
+### Setup:
+- **Participants**: 2 Players and the DM.
+- **Players**: A Fighter and a Wizard.
+- **Enemies**: 3 Goblins.
+- **Initiative**: Fighter (17), Goblins (15), Wizard (12).
+
+### Round 1:
+#### Fighter's Turn:
+- **Action**: Attack nearest goblin with a longsword.
+- **Roll to hit**: d20 + 5 = 18 (hits).
+- **Damage**: 1d8 + 3 = 7.
+- **Result**: Goblin takes 7 damage and falls.
+
+#### Goblins' Turn:
+- **First Goblin**: Attacks Fighter.
+  - **Roll to hit**: d20 + 4 = 16 (hits).
+  - **Damage**: 1d6 + 2 = 5.
+- **Second Goblin**: Moves towards Wizard and attacks.
+  - **Roll to hit**: d20 + 4 = 12 (misses).
+
+#### Wizard's Turn:
+- **Action**: Casts Magic Missile at remaining goblins.
+- **Effect**: Automatically hits, rolls 3d4 + 3 = 11 damage total.
+- **Result**: Splits damage, second goblin takes 6, third goblin takes 5.
+
+### Round 2:
+#### Fighter's Turn:
+- **Action**: Moves to third goblin and attacks.
+- **Roll to hit**: d20 + 5 = 20 (hits).
+- **Damage**: 1d8 + 3 = 9.
+- **Result**: Third goblin takes 9 damage and falls.
+
+#### Remaining Goblin's Turn:
+- **First Goblin**: Attacks Fighter again.
+  - **Roll to hit**: d20 + 4 = 9 (misses).
+
+#### Wizard's Turn:
+- **Action**: Casts Fire Bolt at the first goblin.
+- **Roll to hit**: d20 + 6 = 14 (hits).
+- **Damage**: 1d10 = 7.
+- **Result**: First goblin takes 7 damage and falls.
+
+EOF
+
+echo "Script execution completed."
+

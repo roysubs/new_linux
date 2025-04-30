@@ -1,7 +1,7 @@
 #!/bin/bash
 if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
-
-cat <<'EOF' | mdcat | less -R
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
+mdcat --columns="$WIDTH" <(cat <<'EOF'
 
 # h- help system 
 These are a set of customised help and summary files in Markdown format.

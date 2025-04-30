@@ -58,8 +58,8 @@ list_docker_images() {
             end
         '
     else
-        echo "Top 20 official Docker images:"
-        response=$(curl -s "https://hub.docker.com/v2/repositories/library/?page_size=20")
+        echo "Top 100 official Docker images:"
+        response=$(curl -s "https://hub.docker.com/v2/repositories/library/?page_size=100")
         if [[ $? -ne 0 ]]; then
             echo "Error: Failed to connect to Docker Hub."
             return 1
@@ -148,7 +148,7 @@ elif [[ -n "$1" ]]; then
     run_docker_container "$@"
 else
     echo "Usage:"
-    echo "  $(basename "$0") -list                   → List top 20 Docker images"
+    echo "  $(basename "$0") -list                    → List top 20 Docker images"
     echo "  $(basename "$0") -list <search-term>      → Search Docker Hub for image"
     echo "  $(basename "$0") <image> [options]        → Pull and run a Docker container"
     exit 1

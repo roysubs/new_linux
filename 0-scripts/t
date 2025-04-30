@@ -17,14 +17,15 @@ color_echo() {
 }
 
 help_text() {
-    printf "Tmux Wrapper. Usage: t [option]
+    printf "Tmux Wrapper.   Usage: t [option]
 Options:
   list          List buffers, clients, panes, sessions, windows
   s             ${BLUE}tmux${NC} | Start tmux
   b             ${BLUE}byobu${NC} | Start tmux with byobu
-  sh            Create split pane horizontally (split line is top to bottom)
-  sv            Create split pane vertically (split line is left to right)
-  ff/<|bb/>     Switch panes (forward/back)
+  sh            Split Horizontal (create pane, split line is top to bottom)
+  sv            Split Vertical (create pane, split line is left to right)
+  sg            Split Grid (create panes to form a 2x2 grid)
+  ff||bb        Jump/Switch panes (forward/back)
   rl|rr|ru|rd   Resize current pane (L/R/U/D)
   copy          Enter copy mode
   mouse         Toggle mouse mode (if 'off', copy mode will span multiple panes)
@@ -86,11 +87,37 @@ case "$1" in
         ;;
 
     sh)
-        tmux split-window -h -c "#{pane_current_path}"
+        if [ -z "$TMUX" ]; then
+            tmux new-session -d -c "$PWD"
+            tmux split-window -h -c "$PWD"
+            tmux attach
+        else
+            tmux split-window -h -c "#{pane_current_path}"
+        fi
         ;;
 
     sv)
-        tmux split-window -v -c "#{pane_current_path}"
+        if [ -z "$TMUX" ]; then
+            tmux new-session -d -c "$PWD"
+            tmux split-window -v -c "$PWD"
+            tmux attach
+        else
+            tmux split-window -h -c "#{pane_current_path}"
+        fi
+        ;;
+
+    sg)
+        if [ -z "$TMUX" ]; then
+            tmux new-session -d -c "$PWD"
+            tmux attach
+            exit
+        fi
+    
+        tmux split-window -h -c "#{pane_current_path}"     # split right
+        tmux select-pane -L                               # move back to left pane
+        tmux split-window -v -c "#{pane_current_path}"     # split bottom of left
+        tmux select-pane -R                               # move to right pane
+        tmux split-window -v -c "#{pane_current_path}"     # split bottom of right
         ;;
 
     ff)
@@ -224,7 +251,7 @@ hb)
         ;;
 
     *)
-        echo -e "${RED}Unknown option: $1${NC}" >&2
+        echo -e "${RED}Unknown option: $1${NC}\n" >&2
         help_text
         exit 1
         ;;

@@ -3,7 +3,7 @@
 # Provides utilities for zipping, unzipping, and compressing files and folders.
 
 show_help() {
-    echo "Zip Tool. Usage: z [option] <file(s)>"
+    echo "Zip Tool.   Usage: z [option] <file(s)>"
     echo "Options:"
     echo "  a  <zipfile> <file(s)>       Add files to an archive (7z preferred, gzip fallback)"
     echo "  an <zipfile> <file(s)>       Add files, no recursion, ignore all subdirectories"

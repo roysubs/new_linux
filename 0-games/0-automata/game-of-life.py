@@ -3,6 +3,9 @@
 # Conway's Game of Life
 # This version after various prompts with ChatGPT
 
+# Lexicon of known patterns
+# https://playgameoflife.com/lexicon
+
 # Alternative python implemention
 # https://www.geeksforgeeks.org/conways-game-life-python-implementation/
 

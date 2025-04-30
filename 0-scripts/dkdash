@@ -58,7 +58,6 @@ get_human_size() {
     fi
 }
 
-
 show_containers() {
     echo -e "\n${BLUE}=== Containers (Name, Image, Status, Ports, Image Size, Mounts) ===${NC}"
     printf "${CYAN}%-25s %-30s %-20s %-35s %-12s %s${NC}\n" "NAME" "IMAGE" "STATUS" "PORTS" "IMG SIZE" "MOUNTS"
@@ -74,10 +73,12 @@ show_containers() {
     fi
 
     # Get image sizes once and store in an associative array
+    # Use process substitution to populate array in current shell
     declare -A image_sizes
-    docker image ls --format '{{.ID}}||{{.Size}}' 2>/dev/null | while IFS='||' read -r img_id size_bytes; do
+    while IFS='||' read -r img_id size_bytes; do
         image_sizes["$img_id"]="$size_bytes"
-    done
+    done < <(docker image ls --format '{{.ID}}||{{.Size}}' 2>/dev/null)
+
 
     echo "$container_list" | while IFS='||' read -r name image status ports cid; do
 
@@ -85,6 +86,7 @@ show_containers() {
         container_image_id=$(docker inspect --format='{{.Image}}' "$cid" 2>/dev/null)
 
         # Look up the size using the container's image ID
+        # This lookup now works because image_sizes is populated in the current shell
         raw_size=${image_sizes["$container_image_id"]}
         if [[ -z "$raw_size" ]]; then
              # Fallback: If lookup by exact ID fails, try looking up by image name/tag
@@ -149,10 +151,11 @@ show_images() {
         used_image_ids=$(echo "$container_ids" | xargs 2>/dev/null docker inspect --format '{{.Image}}' 2>/dev/null)
 
         # Count occurrences of each image ID using sort and uniq
+        # Use process substitution to populate array in current shell
         if [[ -n "$used_image_ids" ]]; then
-            echo "$used_image_ids" | sort | uniq -c | while read -r count img_id; do
+            while read -r count img_id; do
                 image_usage_counts["$img_id"]="$count"
-            done < /dev/stdin # Read from the pipe
+            done < <(echo "$used_image_ids" | sort | uniq -c)
         fi
     fi
 
@@ -166,6 +169,7 @@ show_images() {
 
     echo "$image_list" | while IFS='||' read -r repo_tag image_id size_human; do
         # Look up the usage count for this image ID
+        # This lookup now works because image_usage_counts is populated in the current shell
         usage_count=${image_usage_counts["$image_id"]}
         if [[ -z "$usage_count" ]]; then
             usage_count=0 # Default to 0 if not used by any container
@@ -184,7 +188,6 @@ show_images() {
 
 show_volumes() {
     echo -e "\n${BLUE}=== Volumes (Name, Used by containers, Mount paths) ===${NC}"
-    # Corrected printf header - removed extra "${NC}"
     printf "${CYAN}%-25s %-30s %s${NC}\n" "VOLUME" "USED BY CONTAINERS" "MOUNT PATHS"
 
     # Get info about volumes used by containers efficiently
@@ -195,13 +198,14 @@ show_volumes() {
 
     if [[ -n "$container_ids" ]]; then
         # Simpler jq: Output "volname\tcontainername\tdestination" for each relevant mount across all containers
-        # Ensure jq handles potential empty output from xargs or docker inspect
+        # Use process substitution to ensure array population works
         container_mount_lines=$(echo "$container_ids" | xargs 2>/dev/null docker inspect 2>/dev/null | \
             jq -r '.[]? | select(.Name) | .Name as $cname | .Mounts[]? | select(.Name != null) | .Name + "\t" + $cname + "\t" + .Destination' 2>/dev/null)
 
         if [[ -n "$container_mount_lines" ]]; then
             # Read the lines and build the volume_mount_info map
-            echo "$container_mount_lines" | while IFS=$'\t' read -r volname cname destpath; do
+            # Use process substitution to populate array in current shell
+            while IFS=$'\t' read -r volname cname destpath; do
                 if [[ -z "${volume_mount_info[$volname]}" ]]; then
                     volume_mount_info["$volname"]="$cname:$destpath"
                 else
@@ -214,7 +218,7 @@ show_volumes() {
                          volume_mount_info["$volname"]="${volume_mount_info[$volname]}, $cname:$destpath" # Append with comma and space
                     fi
                 fi
-            done < /dev/stdin # Read from the pipe
+            done < <(echo "$container_mount_lines")
         fi
     fi
 
