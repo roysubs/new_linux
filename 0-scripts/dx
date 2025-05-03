@@ -80,133 +80,101 @@ TOTAL_SIZE=0            # Running total size (subdirs + loose files)
 LOOSE_TOTAL=0           # Running total size for loose files only
 
 # --- Collect Subdirectory Sizes ---
-# Iterate through items in the target directory ending with '/' (directories)
 for d in "$DIR"/*/; do
-    # Skip if not a directory, is a symlink, or is '.' or '..' (redundant with dotglob off, safety)
     [[ -d "$d" && ! -L "$d" ]] || continue
 
     name=$(basename "$d")
-    # Run du with the selected flags (-s summarize, -B1 bytes, --apparent-size if -datasize)
-    # stderr is redirected to avoid permission denied messages (use -sudo if needed)
-    # cut -f1 extracts the size number
     size=$($SUDO du "${DU_FLAGS[@]}" "$d" 2>/dev/null | cut -f1)
-
-    # Ensure we got a valid number
     [[ "$size" =~ ^[0-9]+$ ]] || continue
 
-    SIZES["$name"]=$size          # Store size keyed by directory name
-    (( TOTAL_SIZE += size ))      # Add to the overall total
+    SIZES["$name"]=$size
+    (( TOTAL_SIZE += size ))
 
-    # If counts are requested, find files and directories
     if $SHOW_COUNTS; then
-        # Count files (-type f) within the subdirectory
         files=$($SUDO find "$d" -type f 2>/dev/null | wc -l)
-        # Count directories (-type d) within the subdirectory
         dirs=$($SUDO find "$d" -type d 2>/dev/null | wc -l)
         NUM_FILES["$name"]=$files
-        # Subtract 1 from dir count because find includes the starting directory itself
         NUM_DIRS["$name"]=$((dirs - 1))
     fi
 done
 
 # --- Collect Loose File Sizes ---
-# Find items in the target directory (-mindepth 1 -maxdepth 1) that are files (-type f)
-# -print0 uses null characters to separate filenames, safe for weird names
-# read -r -d '' reads null-separated input safely
 while IFS= read -r -d '' file; do
-    # Run du with the selected flags on the individual file
     size=$($SUDO du "${DU_FLAGS[@]}" "$file" 2>/dev/null | cut -f1)
     [[ "$size" =~ ^[0-9]+$ ]] || continue
-    (( LOOSE_TOTAL += size ))     # Add to the loose file total
+    (( LOOSE_TOTAL += size ))
 done < <($SUDO find "$DIR" -mindepth 1 -maxdepth 1 -type f -print0)
 
-# Add loose file total to the grand total
 (( TOTAL_SIZE += LOOSE_TOTAL ))
 
 # --- Helper Function: Format Bytes to Human Readable ---
 to_human() {
     local size=$1 B K M G T P
-    if (( size == 0 )); then printf "0 B"; return; fi # Handle zero separately
+    if (( size == 0 )); then printf "0 B"; return; fi
     B=1 K=1024 M=$((1024*1024)) G=$((1024*1024*1024)) T=$((1024*1024*1024*1024)) P=$((1024*1024*1024*1024*1024))
-    # Compare size against thresholds and format accordingly
     if (( size < K )); then printf "%d B" "$size"
     elif (( size < M )); then printf "%.1f KB" "$(bc <<< "scale=1; $size/$K")"
     elif (( size < G )); then printf "%.1f MB" "$(bc <<< "scale=1; $size/$M")"
     elif (( size < T )); then printf "%.1f GB" "$(bc <<< "scale=1; $size/$G")"
     elif (( size < P )); then printf "%.1f TB" "$(bc <<< "scale=1; $size/$T")"
-    else                   printf "%.1f PB" "$(bc <<< "scale=1; $size/$P")" # Future proofing!
+    else                   printf "%.1f PB" "$(bc <<< "scale=1; $size/$P")"
     fi
 }
 
 # --- Output Formatting Setup ---
-cols=$(tput cols || echo 80)  # Get terminal width, default 80
-name_pad=25                  # Width for the name column
-size_pad=10                  # Width for the size column
-extra_pad=0                  # Extra padding if counts are shown
-$SHOW_COUNTS && extra_pad=22 # Adjust padding for file/dir counts
-# Calculate remaining space for the bar, ensure minimum width
-bar_space=$(( cols - name_pad - size_pad - extra_pad - 5 )) # Adjusted spacing
+cols=$(tput cols || echo 80)
+name_pad=25
+size_pad=10
+extra_pad=0
+$SHOW_COUNTS && extra_pad=22
+bar_space=$(( cols - name_pad - size_pad - extra_pad - 5 ))
 (( bar_space < 10 )) && bar_space=10
 
 # --- Print Header ---
 if $SHOW_COUNTS; then
-    # Header with Name, Size, NumFiles, NumDirs, Bar
     printf "\n%-*s %*s  %10s %10s  %s\n" "$name_pad" "Directory/Item" "$size_pad" "Size" "NumFiles" "NumDirs" "Size Bar"
     printf "%-*s %*s  %10s %10s  %s\n" "$name_pad" "-------------------------" "$size_pad" "----------" "----------" "----------" "--------------------"
 else
-    # Header with Name, Size, Bar
     printf "\n%-*s %*s  %s\n" "$name_pad" "Directory/Item" "$size_pad" "Size" "Size Bar"
     printf "%-*s %*s  %s\n" "$name_pad" "-------------------------" "$size_pad" "----------" "--------------------"
 fi
 
 # --- Sorting ---
-declare -a sorted_names # Array to hold sorted directory names
+declare -a sorted_names
 if $SORT_BY_NAME; then
-    # Sort keys (directory names) alphabetically
     mapfile -t sorted_names < <(printf "%s\n" "${!SIZES[@]}" | sort)
 else
-    # Sort by size (descending)
-    # Print "name size", sort numerically on 2nd field (-k2 -nr), print only 1st field (name)
     mapfile -t sorted_names < <(
         for k in "${!SIZES[@]}"; do
             echo "$k ${SIZES[$k]}"
         done | sort -k2 -nr
     )
-    # awk '{print $1}' is removed because names can contain spaces. Use process substitution with read.
     declare -a temp_sorted_names
     while read -r name size; do
         temp_sorted_names+=("$name")
     done < <(
          for k in "${!SIZES[@]}"; do
-             # Use printf for safer handling of names potentially starting with '-'
              printf "%s %s\n" "$k" "${SIZES[$k]}"
          done | sort -k2 -nr
     )
     sorted_names=("${temp_sorted_names[@]}")
-
 fi
 
 # --- Apply -top N Filter ---
 if (( TOP_N > 0 && ${#sorted_names[@]} > TOP_N )); then
-    # Slice the array to keep only the top N elements
     sorted_names=("${sorted_names[@]:0:TOP_N}")
 fi
 
 # --- Output Directory Details ---
 for name in "${sorted_names[@]}"; do
-    # Skip if the key somehow doesn't exist (safety)
     [[ -v SIZES["$name"] ]] || continue
 
     size="${SIZES[$name]}"
-    # Calculate bar length proportional to total size (avoid division by zero)
     barlen=0
     (( TOTAL_SIZE > 0 )) && barlen=$(( size * bar_space / TOTAL_SIZE ))
-    # Create the bar string using printf and tr
     bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
-    # Format size to human-readable
     hsize=$(to_human "$size")
 
-    # Print formatted line based on whether counts are shown
     if $SHOW_COUNTS; then
         printf "%-*s %*s  %10s %10s  [%s]\n" \
             "$name_pad" "$name" \
@@ -222,10 +190,10 @@ for name in "${sorted_names[@]}"; do
 done
 
 # --- Print Loose Files Summary ---
-if (( LOOSE_TOTAL > 0 || $SHOW_COUNTS || ${#sorted_names[@]} > 0 )); then # Only print if there's something to show
+if (( LOOSE_TOTAL > 0 || $SHOW_COUNTS || ${#sorted_names[@]} > 0 )); then
     hsize=$(to_human "$LOOSE_TOTAL")
     barlen=0
-     (( TOTAL_SIZE > 0 )) && barlen=$(( LOOSE_TOTAL * bar_space / TOTAL_SIZE ))
+    (( TOTAL_SIZE > 0 )) && barlen=$(( LOOSE_TOTAL * bar_space / TOTAL_SIZE ))
     bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
 
     if $SHOW_COUNTS; then
@@ -236,14 +204,5 @@ if (( LOOSE_TOTAL > 0 || $SHOW_COUNTS || ${#sorted_names[@]} > 0 )); then # Only
 fi
 
 # --- Print Total Size Summary ---
-printf "%-*s %*s\n" "$name_pad" "-------------------------" "$size_pad" "----------"
-printf "%-*s %*s\n" "$name_pad" "** Total Size:" "$size_pad" "$(to_human "$TOTAL_SIZE")"
+printf "%-*s %*s\n" "$name_pad" "-------------------------" "$size_pad" "----------
 
-# --- Print Execution Time ---
-END_TIME=$(date +%s)
-RUN_TIME=$(( END_TIME - START_TIME ))
-# Only show runtime if it's significant (e.g., > 5 seconds)
-if (( RUN_TIME > 5 )); then
-    echo "" # Add a blank line before runtime
-    echo "Script execution time: ${RUN_TIME} seconds"
-fi

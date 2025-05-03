@@ -20,17 +20,22 @@ help_text() {
     printf "
 Docker Tool (dk). Usage: dk [option]
 Options:
-  im           ${BLUE}docker images${NC}   List all images (base images used to create containers)
-  ps           ${BLUE}docker ps -a${NC}    List all containers (instances created from images)
-  ports        ${BLUE}docker ps --format${NC}  Name, Image, Ports in table format
-  portslist    ${BLUE}docker ps --format${NC}  Ports, but in list output
-  mounts       ${BLUE}docker ps --format${NC}  Name, Image, Mounts in table format
-  mountslist   ${BLUE}docker ps --format${NC}  Mounts, but in list format
-  s|up|status  ${BLUE}docker ps --format${NC}  Created time and uptime only
+  look [name]   Look at container info (from outside with docker commands, and from within the container if a shell exists)
+  im            ${BLUE}docker images${NC}   List all images (base images used to create containers)
+  ps            ${BLUE}docker ps${NC} Can also add -a (all), -n N (last N created), -l (latest created), -f (filter)
+  a             ${BLUE}docker ps -a${NC}  List all containers (including those that are stopped)
+  n <N>         ${BLUE}docker ps -n N${NC}  List last <N> created (if N omitted, default to N=1)
+  l             ${BLUE}docker ps -l${NC}  List latest created (can add -a to also check stopped)
+  ps            ${BLUE}docker ps${NC}  -a (all), -n N (last N created), -l (latest created), -f (filter)
+  f             ${BLUE}docker ps -f [filtername=string]${NC}  Type 'dk f' to see all filter options
+  p|ports       ${BLUE}docker ps --format${NC}  Name, Image, Ports in table format
+  pl|portslist  ${BLUE}docker ps --format${NC}  Ports, but in list output
+  m|mounts      ${BLUE}docker ps --format${NC}  Name, Image, Mounts in table format
+  ml|mountslist ${BLUE}docker ps --format${NC}  Mounts, but in list format
+  s|size|up|status    ${BLUE}docker ps --format${NC}  Created time and uptime only
   run [name] [image]  ${BLUE}sudo docker run -it --name [name] [image]${NC}  Create and start container
   it [name] <process> ${BLUE}docker exec -it [name] [process]${NC}  Interactive TTY
       Interactively enter container and start a process (could be bash, sh, top, etc)
-  info [name]  Use docker exec -it to pass return info about the container
   exbash       ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
   start <name> ${BLUE}docker start <name>${NC}   Start a stopped container
   stop <name>  ${BLUE}docker stop <name>${NC}    Stop a running container
@@ -40,7 +45,6 @@ Options:
   prune        ${BLUE}docker system prune -f${NC}  Remove unused data
   volprune     ${BLUE}docker volume prune -f${NC}  Remove unused volumes
   clean        Run all prune operations
-  a            Alias helper to copy this script into ~/.bashrc-docker.sh or zshrc
   up [name]    ${BLUE}docker-compose up -d [name]${NC}   Start container(s) with docker-compose
   down         ${BLUE}docker-compose down${NC}           Stop and remove docker-compose containers
   -h, --help   Show this help menu
@@ -58,8 +62,44 @@ case "$cmd" in
         ;;
 
     ps)
+        color_echo "docker ps $@"
+        docker ps -a $@
+        ;;
+
+    a)
         color_echo "docker ps -a"
         docker ps -a
+        ;;
+
+    n)
+        color_echo "docker ps -n $@"
+        docker ps -n $@
+        ;;
+
+    l)
+        color_echo "docker ps -l"
+        docker ps -l
+        ;;
+
+    f)
+        if [ "$#" -eq 0 ]; then
+            echo "Available filters for 'dk f name=value' i.e., 'docker ps -f name=value':"
+            echo "  dk f status=   e.g. running (no wildcards)"
+            echo "  dk f name=     e.g. web-*"
+            echo "  dk f id=       e.g. a1b2 (no wildcards)"
+            echo "  dk f label=    e.g. com.example.*"
+            echo "  dk f ancestor= e.g. ubuntu (no wildcards)"
+            echo "  dk f since=    e.g. container_name (no wildcards)"
+            echo "  dk f before=   e.g. container_id (no wildcards)"
+            echo "  dk f network=  e.g. my-net (no wildcards)"
+            echo "  dk f publish=  e.g. 80 (no wildcards)"
+            echo "  dk f health=   e.g. healthy (no wildcards)"
+            echo "  dk f is-task=  e.g. true (no wildcards)"
+            echo "  dk f desired-state= e.g. running (no wildcards)"
+        else
+            color_echo "docker ps -f $@"
+            docker ps -f $@
+        fi
         ;;
 
         # docker ps can use the --format flag.
@@ -85,30 +125,29 @@ case "$cmd" in
         # Show only Container ID, Image, and Status:
         # docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}"
 
-    ports)
-        color_echo "docker ps --format \"table {{.Names}}\\\t{{.Image}}\\\t{{.Ports}}\""
+    p|ports)
+        color_echo "docker ps --format \"table {{.Names}}\\\t{{.Image}}\\\t{{.Ports}}\" $@"
         docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}" $@
         ;;
     
-    portslist)
-        color_echo "docker ps --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nPorts:  {{.Ports}}\\\n\" --no-trunc"
+    pl|portslist)
+        color_echo "docker ps --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nPorts:  {{.Ports}}\\\n\" --no-trunc $@"
         docker ps --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nPorts:  {{.Ports}}\n" --no-trunc $@
         ;;
 
-
-    mounts)
-        color_echo "docker ps --format \"table {{.Names}}\\\t{{.ID}}\\\t{{.Image}}\\\t{{.Mounts}}\""
+    m|mounts)
+        color_echo "docker ps --format \"table {{.Names}}\\\t{{.ID}}\\\t{{.Image}}\\\t{{.Mounts}}\" $@"
         docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Mounts}}" --no-trunc $@
         ;;
 
-    mountslist)
-        color_echo "docker ps --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nMounts: {{.Mounts}}\\\n\" --no-trunc"
+    ml|mountslist)
+        color_echo "docker ps --format \"Names:  {{.Names}}\\\nImage:  {{.Image}}\\\nStatus: {{.Status}}\\\nMounts: {{.Mounts}}\\\n\" --no-trunc$@"
         docker ps --format "Names:  {{.Names}}\nImage:  {{.Image}}\nStatus: {{.Status}}\nMounts: {{.Mounts}}\n" --no-trunc $@
         ;;
     
-    s|up|status)
-        color_echo "docker ps --format \"table {{.Names}}\\\t{{truncate .ID 12}}\\\t{{.Image}}\\\t{{.CreatedAt}}\\\t{{.Staus}}\""
-        docker ps --format "table {{.Names}}\t{{truncate .ID 12}}\t{{.Image}}\t{{.CreatedAt}}\t{{.Status}}" --no-trunc $@
+    s|size|up|status)
+        color_echo "docker ps --format \"table {{.Names}}\\\t{{truncate .ID 12}}\\\t{{.Image}}\\\t{{.Status}}\\\t{{.Size}}\" $@"
+        docker ps --format "table {{.Names}}\t{{truncate .ID 12}}\t{{.Image}}\t{{.Status}}\t{{.Size}}" --no-trunc $@
         ;;
 
     im)
@@ -117,21 +156,40 @@ case "$cmd" in
         ;;
 
     imps)
-        color_echo "Images + Mounts"
-        # Headers
-        printf "%-20s %-20s %-15s %-10s %-10s %s\n" "NAME" "IMAGE" "STATUS" "PORTS" "IMG SIZE" "MOUNTS"
-        
-        # Iterate containers
-        docker ps -a --format '{{.Names}}||{{.Image}}||{{.Status}}||{{.Ports}}' | while IFS='||' read -r name image status ports; do
-            # Get image ID (could be sha256 or repo:tag)
-            image_id=$(docker inspect --format='{{.Image}}' "$name")
-            image_size=$(docker image inspect --format='{{.Size}}' "$image_id" 2>/dev/null || echo 0)
-            image_size_human=$(numfmt --to=iec $image_size 2>/dev/null || echo "${image_size}B")
-        
-            # Get mounts
-            mounts=$(docker inspect --format '{{range .Mounts}}{{.Destination}} {{end}}' "$name")
-        
-            printf "%-20s %-20s %-15s %-10s %-10s %s\n" "$name" "$image" "$status" "$ports" "$image_size_human" "$mounts"
+        color_echo "DEBUGGING: Checking docker inspect Output and Parsing"
+        print_line # Separator
+
+        container_ids=$(docker ps -a -q)
+        if [ -z "$container_ids" ]; then echo "No containers found."; fi
+
+        for container_id in $container_ids; do
+            echo "--- Inspecting Container ID: $container_id ---"
+
+            # --- Step 1: Get Raw Inspect Output ---
+            # Execute docker inspect and capture its output
+            # Use cat -A to clearly show delimiters and line endings
+            inspect_output=$(docker inspect --format='{{.Name}}____{{.Config.Image}}____{{.State.Status}}____{{json .NetworkSettings.Ports}}____{{json .Mounts}}' "$container_id" 2>/dev/null | cat -A)
+
+            echo "Raw output from docker inspect --format (shown with cat -A):"
+            echo "$inspect_output"
+            echo "---------------------------------------------------"
+
+            # --- Step 2: Attempt to Parse and Print Variables ---
+            echo "Attempting to parse the raw output with IFS='____' read -r ..."
+            # Pipe the output of the inspect command directly to read, without cat -A
+             docker inspect --format='{{.Name}}____{{.Config.Image}}____{{.State.Status}}____{{json .NetworkSettings.Ports}}____{{json .Mounts}}' "$container_id" 2>/dev/null | \
+             IFS='____' read -r container_name image_name container_status raw_ports raw_mounts
+
+            echo "Values read into variables:"
+            echo "container_name: '$container_name'"
+            echo "image_name:     '$image_name'"
+            echo "container_status: '$container_status'"
+            echo "raw_ports:      '$raw_ports'"
+            echo "raw_mounts:     '$raw_mounts'"
+            echo "---------------------------------------------------"
+
+            # Comment out the rest of the imps logic below this for focused debugging
+
         done
         ;;
 
@@ -165,7 +223,7 @@ case "$cmd" in
         docker stop "$1"
         ;;
 
-    info)
+    look)
         # Check if container name ($1) is provided for the info command
         if [ $# -eq 0 ]; then
             echo "Usage: dk info <container_name>"
@@ -184,7 +242,9 @@ case "$cmd" in
         # Fallback for environments without tput
         if [ -z "$BLUE" ]; then BLUE="\e[1;34m"; BOLD="\e[1m"; RESET="\e[0m"; fi;
     
-        echo "Gathering information for container '$container_name'..."
+        echo
+        echo "Gathering information for container '$container_name' using 'docker' commands:"
+        echo
     
         # --- Docker Container Info (External View) ---
         echo "${BOLD}${BLUE}--- Docker Container Info ---${RESET}"
@@ -219,7 +279,10 @@ Labels: {{.Labels}}' \
     
         # --- Container Info (as seen from inside container) ---
         # Execute the chain of info commands inside the container, trying shells
-        echo -e "${BOLD}${BLUE}--- Container Info (as seen from inside container) ---${RESET}" # Use main script colors here
+        echo
+        echo "Gathering information for container '$container_name' from inside container (exec -it sh|bash|ash):"
+        echo
+        echo -e "${BOLD}${BLUE}--- Container Info ---${RESET}" # Use main script colors here
     
         # Define the internal script content once
         # IMPORTANT: Comments are removed from inside the single quotes below
@@ -289,7 +352,7 @@ Labels: {{.Labels}}' \
             echo "" ;
             echo -e "${BOLD_INT}${BLUE_INT}--- Relevant Mounted Filesystems ---${RESET_INT}";
             # Filter out common pseudo/docker internal mounts and standard device/loopback mounts
-            mount 2>/dev/null | grep -vE "^(proc|sysfs|tmpfs|mqueue|shm|overlay|cgroup|devpts|/dev/|/sys/|/proc/|devicemapper|/dev/loop)" || echo "(Not available or none beyond standard pseudo-filesystems)" ;
+            mount 2>/dev/null | grep -vE "^(proc|sysfs|tmpfs|mqueue|shm|overlay|cgroup|devpts|/dev/|/sys/|/proc/|devicemapper|/dev/loop)" || echo "(Not available. Note that docker volume mounts are pseudo-filesystems, so are not shown here)" ;
     
             echo "" ; # Final blank line
 EOF
@@ -397,17 +460,6 @@ EOF
         print_line
         color_echo "docker volume prune -f"
         docker volume prune -f
-        ;;
-
-    a)
-        SCRIPT_PATH=$(realpath "$0")
-        TARGET_FILE="~/.bashrc-docker.sh"
-
-        if [[ $SHELL == *zsh ]]; then
-            TARGET_FILE="~/.zshrc-docker.sh"
-        fi
-
-        cp "$SCRIPT_PATH" "$TARGET_FILE" && echo -e "✅ Copied to $TARGET_FILE"
         ;;
 
     *)

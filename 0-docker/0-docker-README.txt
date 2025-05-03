@@ -1,9 +1,12 @@
-These scripts are designed to always deploy in a repeatable manner and provide notes to refresh a
-user on usage for that container without affecting the running container (i.e. various important
-how-to information for Plex or EmulatorJS).
+These scripts are designed to always deploy in a repeatable/idempotent manner. If the container exists,
+they simply provide additional notes to refresh a user on usage for that container without affecting
+the running container (i.e. various important how-to information for Plex or EmulatorJS).
 
 Docker resouce sharing (particularly the kernel) is amazingly lightweight. You can run docker on very
 old systems with almost no overhead from running them as a local install (i.e. great for old systems).
+
+Docker images are usually stored on Linux at: /var/lib/docker (can be changed in daemon.json). Images
+themselves are usually in a directory related to the storage driver Docker is using (e.g., overlay2).   
 
 Always run docker commands without sudo. This is standard practice and makes managing containers much
 more convenient.

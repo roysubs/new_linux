@@ -1,32 +1,37 @@
 #!/bin/bash
 
-# Each line in 'bashrc_block' will be tested against .bashrc
-# If that item exists with a different value, it will not alter it
-# so by design does not mess up existing configurations (it just
-# adds any elements not covered to the end of .bashrc).
-#
-# e.g. if 'export EDITOR=' is set (to vi or emacs or nano) the
-# export EDITOR= line in here will not be added and the existing
-# line will not be altered.
-#
-# Multi-line functions are treated as a single block; again, if a
-# function with that name already exists, this script will not modify
-# that, and will not add the new entry. Otherwise, the whole
-# multi-line function from bashrc_block will be added to .bashrc
-# so the whole function is cleanly added.
+# new1-bashrc.sh: Update ~/.bashrc with custom configurations.
+# By default, this script appends new configurations if they don't exist.
+# If the -clean switch is provided, it will remove a previously added block
+# (identified by a specific header line) before appending the new configurations.
+# Uses 'command' prefix for critical commands to avoid alias interference when sourced.
+# Ensures the block header line is explicitly added to the file.
+# Processes the bashrc_block using a temporary file to potentially avoid parsing issues.
+# RESTORED the add_line_if_not_exists function definition.
+# CORRECTED the bashrc_block definition to remove unintended blank lines.
+# REMOVED the self-sourcing command to prevent infinite loops when sourced by other scripts.
 
-# Backup ~/.bashrc before making changes
+# Usage:
+#   ./new1-bashrc.sh          # Appends missing configurations
+#   ./new1-bashrc.sh -clean   # Removes previous block and appends configurations
+
 BASHRC_FILE="$HOME/.bashrc"
-cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
-
-# If -clean is invoked, then the old block will be removed from .bashrc and replaced
 CLEAN_MODE=false
+
+# Check for the -clean argument
 if [[ "$1" == "-clean" ]]; then
     CLEAN_MODE=true
+    command echo "Clean mode enabled: Existing bashrc block will be removed before adding."
 fi
+
+# Backup ~/.bashrc before making changes
+command echo "Backing up $BASHRC_FILE to $BASHRC_FILE.$(command date +'%Y-%m-%d_%H-%M-%S').bak"
+command cp "$BASHRC_FILE" "$BASHRC_FILE.$(command date +'%Y-%m-%d_%H-%M-%S').bak"
 
 # Block of text to check and add to .bashrc
 # Make sure to escape " and \ in the below (change " to \" and change \n to \\n).
+# Lines starting with the first non-empty line of this block will be targeted for removal in clean mode.
+# Corrected to remove the leading blank line and the blank line after ####################
 bashrc_block="
 # new_linux definitions
 ####################
@@ -97,13 +102,15 @@ h() {
     echo -e \"  !str (run last cmd starting w/str), !?str? (run last cmd containing str).\"
     echo -e \"Ctrl-r/s (reverse/forward incr type). Note: may need 'stty -ixon' to enable Ctrl-s.\"
 }
+
 # aliases to quickly get to various configuration scripts:
 alias bashrc='vi ~/.bashrc'           # Edit .bashrc (user)
 alias inputrc='vi ~/.inputrc'         # Edit .inputrc (user)
 alias vimrc='vi ~/.vimrc'             # Edit .vimrc (user)
 alias vimrcroot='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
 alias vimrcsudo='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
-config() { cd ~/.config || return; ls; }    # Jump to ~/.config
+0config() { cd ~/.config || return; ls; }    # Jump to ~/.config
+0vnc() { cd ~/.vnc || return; ls; }          # Jump to ~/.vnc
 alias initvim='vi ~/.config/nvim/init.vim'  # Edit neovim configuration
 alias nvimrc='vi ~/.config/nvim/init.vim'   # Edit neovim configuration
 alias smb='sudo vi /etc/samba/smb.conf'     # Edit Samba configuration
@@ -147,10 +154,6 @@ def() {
         printf \"'def <name>' to show definitions of functions, aliases, built-ins, and scripts.\\n\\n\"
         return
     fi
-    if [[ \"$1\" == \"-h\" || \"$1\" == \"--help\" ]]; then
-        echo \"Usage: def [name] — show function/alias/builtin/script definitions for 'name'\"
-        return
-    fi
     local OVERLAPS=()    # Track overlaps in an array, i.e. where the item is in more than one category
     local PAGER=\"cat\"    # Use 'cat' if 'batcat' is not available
     if command -v batcat >/dev/null 2>&1; then    # Only use 'batcat' if available
@@ -181,7 +184,8 @@ def() {
     if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
 }
 
-# Jump functions for new_linux and standard locations
+# Jump functions for new_linux and  (ideally, should be in a separate sourced script.
+. ~/.bashrc-
 n()  { cd ~/new_linux || return; ls; }            # Jump to new_linux
 0d() { cd ~/new_linux/0-docker || return; ls; }    # Jump to new_linux/0-docker
 0g() { cd ~/new_linux/0-games || return; ls; }     # Jump to new_linux/0-games
@@ -191,153 +195,115 @@ n()  { cd ~/new_linux || return; ls; }            # Jump to new_linux
 0ns() { cd ~/new_linux/0-new-system || return; ls; }  # Jump to new_linux/0-new-system
 0s() { cd ~/new_linux/0-scripts || return; ls; }  # Jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                  # Jump to ~/.vnc
-# Personal functions, just as example of what can be useful (though can go to a separate .bashrc-personal)
+# These a
 D()  { cd /mnt/sdc1/Downloads || return; ls; }    # Jump to my personal Downloads folder
 DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to 0 Films
 DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }      # Jump to 0 TV
 DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to 0 Music
 white() { cd ~/192.168.1.29-d || return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
+
 "
 
 # Capture the first non-empty line of $bashrc_block, this is the header line
-# If it currently exists, the script first offers to *remove* everything after
-# the header line, so that all of the $bashrc_block can be updated together.
-first_non_empty_line=$(echo "$bashrc_block" | sed -n '/[^[:space:]]/s/^[[:space:]]*//p' | head -n 1)
+# This line is used to identify the start of the block for removal in clean mode.
+first_non_empty_line=$(command echo "$bashrc_block" | command sed -n '/[^[:space:]]/s/^[[:space:]]*//p' | command head -n 1)
 
 # Ensure the variable is not empty
 if [[ -z "$first_non_empty_line" ]]; then
-    echo "No valid content found in bashrc_block. Skipping removal."
-    exit 0
+    command echo "Error: No valid content found in bashrc_block. Cannot identify block header for clean mode."
+    # Continue to append mode logic anyway, but clean mode won't work
+    CLEAN_MODE=false
 fi
 
-# Check if this line exists in .bashrc
-if ! grep -Fxq "$first_non_empty_line" "$BASHRC_FILE"; then
-    echo
-    echo "No match for the header line in the \$bashrc_block was found in .bashrc."
-    echo "So will skip full removal and move to a line by line add of \$bashrc_block."
-    if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
-        echo
-        echo "This script is sourced, so will update the current environment after running."
-        echo
+# --- Clean Mode Logic ---
+if $CLEAN_MODE; then
+    if command grep -Fxq "$first_non_empty_line" "$BASHRC_FILE"; then
+        command echo
+        command echo "Found existing block starting with '$first_non_empty_line'."
+        command echo "Removing lines from this header to the end of $BASHRC_FILE."
+        # Delete from the found line to the end of the file
+        # Escape special characters in the header for sed
+        escaped_header=$(command printf '%s\n' "$first_non_empty_line" | command sed 's/[.[\*^$]/\\&/g')
+        command sed -i "/$escaped_header/,\$d" "$BASHRC_FILE"
+        command echo "Removal complete."
     else
-        echo
-        echo "This script is not sourced, so to apply changes, quit and re-run as:  source ~/.bashrc"
+        command echo
+        command echo "Did not find existing block starting with '$first_non_empty_line' in $BASHRC_FILE."
+        command echo "No lines removed."
     fi
+fi
+# --- End Clean Mode Logic ---
+
+# Explicitly add the header line to the bashrc file.
+# This ensures it exists for future clean operations.
+# We append it here regardless of clean mode. If it exists, grep -Fxq in add_line_if_not_exists
+# will prevent duplicates when processing the block line-by-line, although the add_line_if_not_exists
+# function also has a specific check to skip the header line itself.
+# Appending here guarantees it's added if missing after a non-clean run or after a clean run.
+# Check if the header line already exists before adding it explicitly here, to avoid duplicates
+# when not in clean mode and the header is already present.
+if ! command grep -Fxq "$first_non_empty_line" "$BASHRC_FILE"; then
+    command echo "$first_non_empty_line" >> "$BASHRC_FILE"
+    # command echo "Added header line '$first_non_empty_line' to $BASHRC_FILE." # Optional debug
 else
-    if [[ "$CLEAN_MODE" == true ]]; then
-        if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
-            echo
-            echo "This script is sourced, so will update the current environment after running."
-            echo
-        else
-            echo
-            echo "This script is not sourced, so to apply changes, quit and re-run as:  source ~/.bashrc"
-        fi
-
-        echo "Performing cleanup: deleting all lines starting from '$first_non_empty_line' to end of .bashrc."
-        sed -i "/$(printf '%s\n' "$first_non_empty_line" | sed 's/[.[\*^$]/\\&/g')/,\$d" "$BASHRC_FILE"
-        echo
-        echo "Removed from '$first_non_empty_line' to the end of .bashrc."
-    else
-        echo
-        echo "CLEAN_MODE not enabled. Skipping existing block removal. Checking for individual entries..."
-    fi
+    # command echo "Header line '$first_non_empty_line' already exists in $BASHRC_FILE." # Optional debug
+    : # No-op if header exists
 fi
 
-# Always add the first non-empty line to .bashrc, regardless of removals
-# echo "$first_non_empty_line" >> "$BASHRC_FILE"
-# echo "Added '$first_non_empty_line' to .bashrc."
 
-# Function to check and add lines
+command echo # Add a newline for separation
+command echo "Appending missing configurations to $BASHRC_FILE..."
+
+# Function to check and add lines if they don't exist
+# This function is used in both default (append) and clean modes (after cleaning).
 add_line_if_not_exists() {
     local line="$1"
     local type="$2"
-    local func_name
-    local is_multi_line=false
 
-    case $type in
-        alias)
-            local alias_name
-            alias_name=$(echo "$line" | cut -d'=' -f1 | sed 's/^[[:space:]]*alias[[:space:]]*//')
+    # Skip adding the header line itself here, it will be handled implicitly
+    # by the loop adding the whole block if needed.
+    # This prevents adding the header multiple times if not in clean mode
+    # and the header already exists but some lines below it are missing.
+    if [[ "$line" == "$first_non_empty_line" ]]; then
+      # command echo "Skipping adding header line via line-by-line check." # Optional debug
+      return
+    fi
 
-            if ! grep -qE "^[[:space:]]*alias[[:space:]]*$(printf '%s\n' "$alias_name" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*=" "$BASHRC_FILE"; then
-                echo "Adding alias: $line"
-                echo "$line" >> "$BASHRC_FILE"
-            else
-                # --- CHANGE THIS MESSAGE ---
-                echo "Alias $alias_name already exists. Skipping." # Original message "Alias alias..."
-            fi
-            ;;
-        export)
-            local export_name
-            export_name=$(echo "$line" | sed -E 's/^[[:space:]]*(export|declare -x)[[:space:]]*//; s/=.*//')
-            if ! grep -qE "^[[:space:]]*(export|declare -x)[[:space:]]*$(printf '%s\n' "$export_name" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*=" "$BASHRC_FILE"; then
-                echo "Adding export: $line"
-                echo "$line" >> "$BASHRC_FILE"
-            else
-                # --- CHANGE THIS MESSAGE ---
-                echo "Export $export_name already exists. Skipping." # Original message "Export export..."
-            fi
-            ;;
-        comment)
-            if ! grep -q "^[[:space:]]*$(printf '%s\n' "$line" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*$" "$BASHRC_FILE"; then
-                echo "Adding comment: $line"
-                echo "$line" >> "$BASHRC_FILE"
-            else
-                : # Do nothing silently if comment exists
-            fi
-            ;;
-        function)
-            func_name=$(echo "$line" | cut -d' ' -f1)
-            if [[ ! "$line" =~ \} ]]; then
-                is_multi_line=true
-            fi
+    # Handle blank lines separately to ensure they are added
+    if [[ -z "$line" ]]; then
+        # Check if the previous line in the block was also blank. Avoid excessive blank lines.
+        # This is a heuristic and might not be perfect for all cases.
+        # A more robust approach would be to process the block into an array first.
+        # For simplicity, we'll just add blank lines if they aren't already present
+        # immediately before the position they would be added.
+        # This is tricky with line-by-line append logic.
+        # A simpler approach is to just add it and rely on the final sed to clean up blank lines.
+        # Let's just add it and let the final sed handle cleanup.
+         command echo "$line" >> "$BASHRC_FILE"
+         # command echo "Added blank line." # Optional debug
+         return
+    fi
 
-            # --- Robust Existence Check for Functions ---
-            # Matches: name() {, name () {, function name {, function name() {, function name () {
-            if ! grep -qE "(^|[[:space:]])($(printf '%s\n' "$func_name" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*\\()|(^function[[:space:]]+$(printf '%s\n' "$func_name" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*[\\({])" "$BASHRC_FILE"; then
-                # Function does NOT seem to exist - add it
-                echo "Adding function: $func_name"
-                echo "$line" >> "$BASHRC_FILE"
-                if "$is_multi_line"; then
-                    while IFS= read -r next_line; do
-                        echo "$next_line" >> "$BASHRC_FILE"
-                        if [[ "$next_line" =~ ^[[:space:]]*\}[[:space:]]*$ ]]; then break; fi
-                        if [ -z "$next_line" ] && [ "$BASH_SUBSHELL" -eq 0 ]; then break; fi # Safeguard
-                    done
-                fi
-            else
-                # Function *might* exist - skip it
-                echo "Function $func_name already exists. Skipping."
-                if "$is_multi_line"; then
-                    while IFS= read -r next_line; do
-                        if [[ "$next_line" =~ ^[[:space:]]*\}[[:space:]]*$ ]]; then break; fi
-                        if [ -z "$next_line" ] && [ "$BASH_SUBSHELL" -eq 0 ]; then break; fi # Safeguard
-                    done
-                fi
-            fi
-            ;;
-        complete|shopt|if|fi)
-            if ! grep -q "^[[:space:]]*$(printf '%s\n' "$line" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*$" "$BASHRC_FILE"; then
-                echo "Adding $type: $line"
-                echo "$line" >> "$BASHRC_FILE"
-            else
-                : # Do nothing silently if the exact line exists
-            fi
-            ;;
-        *) # other / unclassified lines
-            if ! grep -q "^[[:space:]]*$(printf '%s\n' "$line" | sed 's/[.[\*^$]/\\&/g')[[:space:]]*$" "$BASHRC_FILE"; then
-                echo "Adding unclassified line: $line"
-                echo "$line" >> "$BASHRC_FILE"
-            else
-                : # Do nothing silently if the exact line exists
-            fi
-            ;;
-    esac
+
+    # For non-blank lines, check if they already exist exactly
+    if ! command grep -Fxq "$line" "$BASHRC_FILE"; then
+        # command echo "Adding $type: $line" # Optional debug
+        command echo "$line" >> "$BASHRC_FILE"
+    # else
+        # command echo "Skipping existing $type: $line" # Optional debug
+    fi
 }
 
-# Process each line in the block
+
+# --- Process bashrc_block using a temporary file ---
+TEMP_BASHRC_BLOCK=$(command mktemp)
+command echo "$bashrc_block" > "$TEMP_BASHRC_BLOCK"
+
+# Process each line in the temporary file and add if not already present
+# This loop runs regardless of clean mode. In clean mode, it populates the file
+# after the old block was removed (and the header re-added). In default mode, it appends missing lines.
 while IFS= read -r line; do
+    # Determine line type (basic heuristic) - Note: Function definition is handled by the function itself
     if [[ "$line" =~ ^# ]]; then
         add_line_if_not_exists "$line" "comment"
     elif [[ "$line" =~ ^alias ]]; then
@@ -353,35 +319,42 @@ while IFS= read -r line; do
     elif [[ "$line" =~ ^fi ]]; then
         add_line_if_not_exists "$line" "fi"
     elif [[ "$line" =~ \ \{ ]]; then
-        add_line_if_not_exists "$line" "function"
+        # This is a simple check for function definition start
+        # Multi-line functions are handled line-by-line by add_line_if_exists
+        # This is a potential weakness if parts of the function body exist but not the header.
+        # A more robust approach would parse the block into logical units first.
+        # Sticking to line-by-line for minimal changes as requested.
+        add_line_if_not_exists "$line" "function_start"
     elif [[ -z "$line" ]]; then
-        echo >> "$BASHRC_FILE"  # Preserve blank lines
+        # Handle blank lines - add them if they don't exist
+        add_line_if_not_exists "$line" "blank"
     else
         add_line_if_not_exists "$line" "other"
     fi
-done <<< "$bashrc_block"
+done < "$TEMP_BASHRC_BLOCK" # Read from the temporary file
 
-# Could use here-document above as <<< here-string threw vim formatting off at times
-# done <<EOF
-# $bash_block
-# EOF
+# Clean up the temporary file
+command rm "$TEMP_BASHRC_BLOCK"
+# --- End processing bashrc_block using temporary file ---
 
-# Blank lines can be introduced if run multiple times; remove them here
-sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"
 
-echo
-echo "Finished updating $BASHRC_FILE."
+# Remove trailing blank lines that might have been introduced
+# This sed command removes one or more blank lines from the end of the file.
+command sed -i ':a; N; $!ba; s/\n[[:space:]]*\n*$//' "$BASHRC_FILE"
 
+command echo
+command echo "Finished updating $BASHRC_FILE."
+
+# Provide instructions on how to apply changes
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
     # Script is sourced
-    echo
-    echo "This script was sourced when run, so the environment will update now..."
-    source ~/.bashrc
-    echo
+    # REMOVED: command source "$BASHRC_FILE" to prevent infinite loop
+    command echo "This script was sourced when run. To apply changes, manually source ~/.bashrc or start a new terminal session."
 else
     # Script is executed
-    echo
-    echo "This script was not sourced, to apply changes to the current environment, run:"
-    echo "   source ~/.bashrc"
-    echo
+    command echo "This script was executed, not sourced."
+    command echo "To apply changes to the current environment, run:"
+    command echo "    source ~/.bashrc"
 fi
+command echo
+

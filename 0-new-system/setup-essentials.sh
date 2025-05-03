@@ -14,6 +14,7 @@ fi
 
 # Define associative arrays for each group of tools
 declare -A system_tools=(
+    [busybox]="Collected console tools."
     [htop]="Interactive process viewer."
     [ncdu]="Disk usage analyzer."
     [tmux]="Terminal multiplexer."
