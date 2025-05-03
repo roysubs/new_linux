@@ -1,29 +1,33 @@
 #!/bin/bash
 
 # dk-completion-setup.sh
-# Sets up bash completion for the 'dk' script if bash-completion is enabled.
+# Sets up bash completion for the 'dk' script in system completions directory:
+#    /usr/share/bash-completion/completions/ (requires sudo
 
 # --- Configuration ---
-# The target directory for user-specific bash completion files
-COMPLETION_DIR="$HOME/.bash_completion.d"
-# The target file for the dk completion script
-COMPLETION_FILE="$COMPLETION_DIR/dk"
+SYSTEM_COMPLETION_DIR="/usr/share/bash-completion/completions"
+SYSTEM_COMPLETION_FILE="$SYSTEM_COMPLETION_DIR/dk"
 
 # --- Bash Completion Script Content ---
 # This is the content that will be written to the completion file.
 # It defines the completion function and associates it with the 'dk' command.
+# This content will be placed in the system completions directory and sourced
+# by the main bash_completion script.
 read -r -d '' DK_COMPLETION_SCRIPT << 'EOF'
 # Bash completion for the 'dk' script
+
 _dk_completion() {
-    local cur prev commands_needing_container
+    local cur prev commands_needing_container commands_needing_image
     # Get the current word being completed
     cur="${COMP_WORDS[COMP_CWORD]}"
     # Get the previous word (the dk subcommand)
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # List of dk subcommands that expect a container name next
-    # Added 'run' and 'ex' assuming they might take a container name first
-    commands_needing_container="start stop rm logs info it ex run"
+    commands_needing_container="start stop rm logs look it ex run"
+
+    # List of dk subcommands that expect an image name next
+    commands_needing_image="rmi" # Add "im" if you want to complete image names after "dk im" (less common)
 
     # Check if the previous word is one of the commands needing a container name
     if [[ " ${commands_needing_container} " =~ " ${prev} " ]]; then
@@ -31,7 +35,22 @@ _dk_completion() {
         # Use compgen -W to generate matches from a wordlist
         # Use -W "$(command)" to use the output of a command as the wordlist
         # Redirect stderr to /dev/null to suppress errors if docker is not running
-        COMPREPLY=( $(compgen -W "$(docker ps -aq --format '{{.Names}}' 2>/dev/null)" -- "$cur") )
+        local container_names=$(docker ps -aq --format '{{.Names}}' 2>/dev/null)
+
+        # Use compgen -W to handle names with spaces correctly when quoted
+        COMPREPLY=( $(compgen -W "${container_names}" -- "$cur") )
+
+    # Check if the previous word is one of the commands needing an image name
+    elif [[ " ${commands_needing_image} " =~ " ${prev} " ]]; then
+         # If yes, generate completions from the list of image names
+         # Use docker images --format to get repository:tag or image ID
+         # Using --format '{{.Repository}}:{{.Tag}}' might give more human-readable names
+         # Use '{{.ID}}' if you prefer completing by ID
+         local image_names=$(docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep -v '<none>') # Exclude <none> images
+
+         # Use compgen -W to handle names with spaces correctly when quoted
+         COMPREPLY=( $(compgen -W "${image_names}" -- "$cur") )
+
     fi
 }
 
@@ -42,48 +61,50 @@ EOF
 
 # --- Setup Logic ---
 
-echo "Checking for bash-completion setup..."
+echo "Checking for system bash-completion directory..."
 
-# Check if system-wide bash-completion files exist as referenced in your .bashrc
-if [ -f /usr/share/bash-completion/bash_completion ] || [ -f /etc/bash_completion ]; then
-    echo "System-wide bash-completion found."
+# Check if the system completion directory exists
+if [ -d "$SYSTEM_COMPLETION_DIR" ]; then
+    echo "System bash-completion directory found at $SYSTEM_COMPLETION_DIR."
 
-    # Check if the user-specific completion file already exists
-    if [ -f "$COMPLETION_FILE" ]; then
-        echo "Bash completion file for 'dk' already exists at $COMPLETION_FILE."
-        echo "No action needed."
-    else
-        echo "Bash completion file for 'dk' not found."
+    echo "Attempting to write 'dk' completion script to $SYSTEM_COMPLETION_FILE..."
+    echo "You may be prompted for your sudo password."
 
-        # Create the completion directory if it doesn't exist
-        if [ ! -d "$COMPLETION_DIR" ]; then
-            echo "Creating directory: $COMPLETION_DIR"
-            mkdir -p "$COMPLETION_DIR"
-            # Ensure the directory is readable and executable by the user
-            chmod u+rwx "$COMPLETION_DIR"
-        fi
+    # Write the completion script content to the system file using sudo, forcing overwrite
+    echo "$DK_COMPLETION_SCRIPT" | sudo tee "$SYSTEM_COMPLETION_FILE" > /dev/null
 
-        # Write the completion script content to the file
-        echo "Writing completion script to $COMPLETION_FILE"
-        echo "$DK_COMPLETION_SCRIPT" > "$COMPLETION_FILE"
+    # Check if the sudo command was successful
+    if [ $? -eq 0 ]; then
+        echo "Successfully wrote 'dk' completion script to $SYSTEM_COMPLETION_FILE."
 
-        # Make the completion file readable by the user
-        chmod u+r "$COMPLETION_FILE"
+        # Ensure the file permissions are correct (readable by others)
+        sudo chmod a+r "$SYSTEM_COMPLETION_FILE"
+        echo "Set a+r permissions on $SYSTEM_COMPLETION_FILE."
 
         echo ""
         echo "Setup complete!"
-        echo "To activate the 'dk' bash completion, please source your .bashrc file:"
-        echo "  source ~/.bashrc"
-        echo "Or open a new terminal session."
+        echo "To activate the 'dk' bash completion, you need to reload your shell configuration."
+        echo "You can do this by:"
+        echo "1. Logging out and logging back in (most reliable), OR"
+        echo "2. Opening a new terminal session, OR"
+        echo "3. Sourcing the main bash completion script manually (may vary by system):"
+        echo "    source /usr/share/bash-completion/bash_completion"
         echo ""
-        echo "You should now be able to type 'dk start <Tab>' (or other commands like stop, rm, logs, info, it) and see container names."
+        echo "After reloading, you should be able to type:"
+        echo "   'dk start <Tab>' (for container-name completion; also for the dk commands: stop, rm, logs, info, it)"
+        echo "   'dk rmi <Tab>'   (for image name completion)"
 
+    else
+        echo "Error: Failed to write to $SYSTEM_COMPLETION_FILE using sudo." >&2
+        echo "Please check if you have sufficient permissions or if the path is correct." >&2
+        exit 1 # Indicate failure
     fi
 
 else
-    echo "System-wide bash-completion files (/usr/share/bash-completion/bash_completion or /etc/bash_completion) not found."
-    echo "Bash completion for 'dk' cannot be set up automatically."
-    echo "Please ensure bash-completion is installed and enabled in your .bashrc."
+    echo "System bash-completion directory ($SYSTEM_COMPLETION_DIR) not found." >&2
+    echo "Bash completion for 'dk' cannot be set up automatically in the system location." >&2
+    echo "Please ensure bash-completion is correctly installed on your system." >&2
+    exit 1 # Indicate failure
 fi
 
 exit 0
