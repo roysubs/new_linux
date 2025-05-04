@@ -23,14 +23,14 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help) SHOW_HELP=true ;;
         -c|--count) SHOW_COUNTS=true ;;
-        --disk-usage)
+        -d|--disk-usage)
             DU_FLAGS=(-s -B1)
             SIZE_MODE_DESC="actual disk usage (allocated disk blocks)"
             ;;
-        -basic) shopt -u dotglob ;; # Exclude hidden files and directories
-        -name) SORT_BY_NAME=true ;;
-        -sudo) SUDO="sudo" ;;
-        -top)
+        -b|--basic) shopt -u dotglob ;; # Exclude hidden files and directories
+        -n|--name) SORT_BY_NAME=true ;;
+        -s|--sudo) SUDO="sudo" ;;
+        --top)
             shift
             [[ "$1" =~ ^[0-9]+$ ]] || { echo "Invalid -top argument: $1"; exit 1; }
             TOP_N="$1"
@@ -58,12 +58,12 @@ Default calculation shows apparent size (sum of file data bytes).
 Options:
   -h, --help        Show this help message and exit.
   -c, --count       Show file and directory counts for each subdirectory.
-  --disk-usage      Use actual disk usage (allocated blocks) instead of apparent file sizes.
-  -basic            Ignore hidden files/directories (names starting with '.').
+  -d, --disk-usage  Use actual disk usage (allocated blocks) instead of apparent file sizes.
+  -b, --basic       Ignore hidden files/directories (names starting with '.').
                     By default, hidden items are included.
-  -name             Sort output by name instead of size (default is size descending).
-  -sudo             Use sudo for 'du' and 'find' commands (needed for restricted directories).
-  -top N            Show only the top N largest directories (plus loose files).
+  -n, --name        Sort output by name instead of size (default is size descending).
+  -s, --sudo        Use sudo for 'du' and 'find' commands (needed for restricted directories).
+  --top N           Show only the top N largest directories (plus loose files).
 
 Default directory is the current directory ('.').
 EOF
@@ -87,7 +87,7 @@ for d in "$DIR"/*/; do
 
     name=$(basename "$d")
     # Run du with the selected flags (-s summarize, -B1 bytes, --apparent-size if -datasize)
-    # stderr is redirected to avoid permission denied messages (use -sudo if needed)
+    # stderr is redirected to avoid permission denied messages (use -s|--sudo if needed)
     # cut -f1 extracts the size number
     size=$($SUDO du "${DU_FLAGS[@]}" "$d" 2>/dev/null | cut -f1)
 
