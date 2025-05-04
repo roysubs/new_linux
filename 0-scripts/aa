@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# aa: Script to install a package and verify its executable
+# aa: Identify the package manager, and us it to install a package, then verify the install
 
 # Function to install a package and verify its executable
 # Args:
-#    $1: pkg_name (Name of the package to install, e.g., "neovim")
-#    $2: exec_name (Name of the command executable provided by the package, e.g., "nvim")
+#    $1: pkg_name - Name of the package to install, e.g., "neovim"
+#    $2: exec_name - Name of the command executable provided by the package, e.g., "nvim"
+#    If $2 is not provided, assume that exec_name is same as pkg_name (usually the case, but not always, e.g. neovim / nvim
 install_package() {
     local pkg_name="$1"
     local exec_name="$2"

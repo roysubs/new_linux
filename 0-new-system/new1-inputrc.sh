@@ -2,7 +2,12 @@
 
 # Script: new1-inputrc.sh
 # Purpose: Update the user's ~/.inputrc file with custom key bindings for bash/readline.
-# Designed to only modify the user's current configuration.
+# Have to be very careful with making any changes here, so do not alter any default
+# bindings at all, only add additional, and only if they do not conflict with existing
+# shell functions, or tmux, or Windows Terminal (as a remote connection) etc.
+# This only modifies the user's current configuration.
+# Very tricky to get this right, due to different codes from keyboards and XOFF issue with
+# some terminal emulators (so invoking 'stty -ixon' might affect tmux etc).
 
 echo "Starting ~/.inputrc configuration update..."
 
@@ -19,17 +24,14 @@ read -r -d '' INPUTRC_BLOCK << 'EOF'
 # Alt- key combinations are often represented as \eX (Escape followed by X) or \M-X (Meta-X)
 # Escape sequences (\e[...): These are common for function keys, arrow keys with modifiers.
 #
-# Very tricky to get this right, due to different codes from keyboards and XOFF issue with
-# some terminal emulators (so invoking 'stty -ixon' might affect tmux etc).
-#
 # !!! IMPORTANT CAVEATS !!!
 # 1. Terminal Emulators: The exact key sequences sent by Ctrl-Home, Ctrl-End, Ctrl-Backspace,
 #    and some Alt combinations can vary significantly between different terminal emulators
 #    (e.g., GNOME Terminal, Konsole, Alacritty, Kitty, Windows Terminal, etc.).
 #    If a binding doesn't work, you may need to identify the specific escape sequence
 #    your terminal sends for that key combination. You can often do this by running
-#    'showkey -a' or 'cat -v' in your terminal, pressing the key combination, and
-#    seeing what is output. Then update the key sequence in this file accordingly.
+#    'showkey -a' or 'cat -v' in your terminal, then press the key combination, and
+#    see what is output. Then update the key sequence in this file accordingly.
 #
 # 2. Terminal Multiplexers (tmux, screen): Tools like tmux or screen can intercept
 #    key presses before they reach the shell. This can sometimes prevent complex key
@@ -61,29 +63,15 @@ read -r -d '' INPUTRC_BLOCK << 'EOF'
 # If you prefer the standard 'kill-line' for Ctrl-k, remove or comment out the line below.
 "\C-k": backward-i-search
 
-# Ctrl-j: Incremental search forward through history
-# This maps Ctrl-j to start a forward incremental search (after a backward search has begun).
-# In Vim/vi terms, similar to navigating command history downwards.
-# Standard Emacs mode binding for \C-j is 'newline' (execute line and move down).
-# This binding OVERRIDES the standard newline action for Ctrl-j.
-# If you prefer the standard 'newline' for Ctrl-j, remove or comment out the line below.
-"\C-j": forward-i-search
-
-# Ctrl-k: Incremental search backward through history (same as up in vim and roguelikes)
-# This maps Ctrl-k to start a reverse incremental search. In Vim/vi terms, similar to
-# navigating command history, but interactive searching is more powerful.
-# Standard Emacs mode binding for \C-k is 'kill-line' (delete from cursor to end).
-# This binding OVERRIDES the standard kill-line action for Ctrl-k.
-# If you prefer the standard 'kill-line' for Ctrl-k, remove or comment out the line below.
-"\C-k": backward-i-search
-
 # Alt-r: Incremental search backward through history (Alternative binding)
 # Provides an alternative keybinding for reverse history search.
-"\er": backward-i-search
+### "\er": backward-i-searcr
+"\M-r": backward-i-searcr
 
 # Alt-s: Incremental search forward through history (Alternative binding)
 # Provides an alternative keybinding for forward history search.
-"\es": forward-i-search
+### "\es": forward-i-search
+"\M-s": forward-i-search
 
 # Ctrl-Backspace: Kill the word before the cursor
 # This maps Ctrl-Backspace to the 'backward-kill-word' action.
@@ -101,7 +89,7 @@ read -r -d '' INPUTRC_BLOCK << 'EOF'
 # "\C-w": backward-kill-word
 
 # Ctrl-Home: Kill from cursor to the beginning of the line
-# This maps Ctrl-Home to the 'backward-kill-line' action.
+# This binding maps Ctrl-Home to the 'backward-kill-line' action.
 # The escape sequence "\e[1;5H" is a common representation for Ctrl-Home, but is terminal-dependent.
 # The standard readline binding for 'backward-kill-line' is \C-u (Ctrl-u).
 # This binding OVERRIDES the standard Ctrl-u action if used simultaneously.
@@ -109,13 +97,12 @@ read -r -d '' INPUTRC_BLOCK << 'EOF'
 "\e[1;5H": backward-kill-line
 
 # Ctrl-End: Kill from cursor to the end of the line
-# This maps Ctrl-End to the 'kill-line' action (from cursor to the end).
-# The escape sequence "\e[4;5H" is a common representation for Ctrl-End, but is terminal-dependent.
+# This binding for Ctrl-End provides an alternative way to perform 'kill-line'.
+# "\e[4;5H" or "\e[1;5F are common representations for Ctrl-End, but it is terminal-dependent.
+# Test the below binding, and if it doesn't work, use 'showkey -a' or 'cat -v' then press the key
+# combination to see and update the code below if needed.
 # The standard readline binding for 'kill-line' (from cursor to end) is \C-k (Ctrl-k).
-# Note the clash: We have already bound \C-k to backward-i-search above.
-# This binding for Ctrl-End provides an alternative way to perform kill-line.
-# Test this binding in your terminal and update "\e[4;5H" if needed using 'showkey -a'.
-"\e[4;5H": kill-line
+"\e[1;5F": kill-line
 
 # --- End Custom Bindings ---
 EOF

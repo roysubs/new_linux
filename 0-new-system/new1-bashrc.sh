@@ -51,7 +51,7 @@ export LESS='-RFX'    # -R (ANSI colour), -F (exit if fit on one screen), X (dis
 export MANPAGER=less    # Set pager for 'man'
 export CHEAT_PATHS=\"~/.cheat\"
 export CHEAT_COLORS=true
-git config --global core.pager less    # Set pager for 'git'
+if command -v git; then git config --global core.pager less; fi    # Set pager for 'git'
 # glob expansion for vi, e.g. 'vi *myf*' then tab should expand *myf* to a matching file
 complete -o filenames -o nospace -o bashdefault -o default vi
 shopt -s checkwinsize    # At every prompt check if the window size has changed
@@ -68,7 +68,8 @@ shopt -s extglob
 # History settings and 'h' History helper function
 shopt -s histappend      # Append commands to the bash history (~/.bash_history) instead of overwriting it
 export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000    # make history very big and show date-time
-# h function will not operate as a shell script as must be in .bashrc
+
+# h: History Tool. Must be in .bashrc (if it is in a script, then it will be in a subshell, and so cannot view full history)
 h() {
     case \"\$1\" in
         \"\" ) # Default case when no arguments are given (show main help)
@@ -95,8 +96,50 @@ h() {
     esac;
     echo -e \"\\nHistory tips: !N (run cmd N), !! (run last cmd), !-N (run Nth last cmd),\"
     echo -e \"  !str (run last cmd starting w/str), !?str? (run last cmd containing str).\"
-    echo -e \"Ctrl-r/s (reverse/forward incr type). Note: may need 'stty -ixon' to enable Ctrl-s.\"
+    echo -e \"Ctrl-r/s (reverse/forward history search). Note: Ctrl-s may require 'stty -ixon' to enable.\"
 }
+
+# Def: Show function/alias/built-ins/scripts definitions. This  must be in .bashrc to have visibility of all loaded shell functions and aliases
+def() {
+    if [ -z \"\$1\" ]; then
+        declare -F; printf \"\\nAll defined functions ('declare -F').\\n\"
+        printf \"'def <name>' to show definitions of functions, aliases, built-ins, and scripts.\\n\\n\"
+        return
+    fi
+    if [[ \"$1\" == \"-h\" || \"$1\" == \"--help\" ]]; then
+        echo \"Usage: def [name] — show function/alias/builtin/script definitions for 'name'\"
+        return
+    fi
+    local OVERLAPS=()    # Track overlaps in an array, i.e. where the item is in more than one category
+    local PAGER=\"cat\"    # Use 'cat' if 'batcat' is not available
+    if command -v batcat >/dev/null 2>&1; then    # Only use 'batcat' if available
+        PAGER=\"batcat -pp -l bash\"
+    fi
+    if declare -F \"\$1\" >/dev/null 2>&1; then    # check for a 'Function'
+        declare -f \"\$1\" | \$PAGER; OVERLAPS+=(\"Function\"); echo; echo \"'\$1' is a function.\";
+    fi
+    if alias \"\$1\" >/dev/null 2>&1; then    # check for an 'Alias'
+        alias \"\$1\" | \$PAGER; OVERLAPS+=(\"Alias\"); echo; echo \"'\$1' is an alias.\"
+    fi
+    if type -t \"\$1\" | grep -q \"builtin\"; then    # check for a 'built-in command'
+        help \"\$1\" | \$PAGER; OVERLAPS+=(\"Built-in\"); echo; echo \"'\$1' is a built-in command.\"
+    fi
+    if command -v \"\$1\" >/dev/null 2>&1; then    # check for an 'external script'
+        local SCRIPT_PATH=\$(command -v \"\$1\")
+        if [[ -f \"\$SCRIPT_PATH\" ]]; then
+            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH'.\"
+        fi
+    fi
+    # Display overlaps
+    if [ \${#OVERLAPS[@]} -gt 1 ]; then
+        joined=\$(printf \", %s\" \"\${OVERLAPS[@]}\")
+        joined=\${joined:2}
+        echo -e \"\\033[0;31mWarning: '\$1' has multiple types: \${joined}.\\033[0m\"    # \${OVERLAPS[*]}
+    fi
+    # If no matches were found
+    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
+}
+
 # aliases to quickly get to various configuration scripts:
 alias bashrc='vi ~/.bashrc'           # Edit .bashrc (user)
 alias inputrc='vi ~/.inputrc'         # Edit .inputrc (user)
@@ -139,47 +182,6 @@ alias ls.='ls -d .*'          # -d shows only the directory, not the contents (o
 alias ll.='ls -ald .*'
 alias ifconfig='sudo ifconfig'    # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'    # Windows typo
-
-# This function must be in .bashrc to have visibility of all loaded shell functions and aliases
-def() {
-    if [ -z \"\$1\" ]; then
-        declare -F; printf \"\\nAll defined functions ('declare -F').\\n\"
-        printf \"'def <name>' to show definitions of functions, aliases, built-ins, and scripts.\\n\\n\"
-        return
-    fi
-    if [[ \"$1\" == \"-h\" || \"$1\" == \"--help\" ]]; then
-        echo \"Usage: def [name] — show function/alias/builtin/script definitions for 'name'\"
-        return
-    fi
-    local OVERLAPS=()    # Track overlaps in an array, i.e. where the item is in more than one category
-    local PAGER=\"cat\"    # Use 'cat' if 'batcat' is not available
-    if command -v batcat >/dev/null 2>&1; then    # Only use 'batcat' if available
-        PAGER=\"batcat -pp -l bash\"
-    fi
-    if declare -F \"\$1\" >/dev/null 2>&1; then    # check for a 'Function'
-        declare -f \"\$1\" | \$PAGER; OVERLAPS+=(\"Function\"); echo; echo \"'\$1' is a function.\";
-    fi
-    if alias \"\$1\" >/dev/null 2>&1; then    # check for an 'Alias'
-        alias \"\$1\" | \$PAGER; OVERLAPS+=(\"Alias\"); echo; echo \"'\$1' is an alias.\"
-    fi
-    if type -t \"\$1\" | grep -q \"builtin\"; then    # check for a 'built-in command'
-        help \"\$1\" | \$PAGER; OVERLAPS+=(\"Built-in\"); echo; echo \"'\$1' is a built-in command.\"
-    fi
-    if command -v \"\$1\" >/dev/null 2>&1; then    # check for an 'external script'
-        local SCRIPT_PATH=\$(command -v \"\$1\")
-        if [[ -f \"\$SCRIPT_PATH\" ]]; then
-            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH'.\"
-        fi
-    fi
-    # Display overlaps
-    if [ \${#OVERLAPS[@]} -gt 1 ]; then
-        joined=\$(printf \", %s\" \"\${OVERLAPS[@]}\")
-        joined=\${joined:2}
-        echo -e \"\\033[0;31mWarning: '\$1' has multiple types: \${joined}.\\033[0m\"    # \${OVERLAPS[*]}
-    fi
-    # If no matches were found
-    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
-}
 
 # Jump functions for new_linux and standard locations
 n()  { cd ~/new_linux || return; ls; }            # Jump to new_linux

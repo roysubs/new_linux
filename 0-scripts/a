@@ -92,7 +92,7 @@ exit 0
 
 ####################
 
-# - APT (Advanced Package Tool): This is one of the most widely used package management systems. It's known for its robust dependency resolution and ease of use.
+# APT (Advanced Package Tool): This is one of the most widely used package management systems. It's known for its robust dependency resolution and ease of use.
 # Associated Distributions: Debian, Ubuntu, Linux Mint, Kali Linux, and many other Debian-based distributions.   
 # Package Format: .deb
 
@@ -100,11 +100,11 @@ exit 0
 # Associated Distributions: Alpine Linux.
 # Package Format: .apk
 
-# - DNF (Dandified YUM): DNF is the next-generation version of YUM (Yellowdog Updater, Modified) and is the default package manager for newer Red Hat-based distributions.
+# DNF (Dandified YUM): DNF is the next-generation version of YUM (Yellowdog Updater, Modified) and is the default package manager for newer Red Hat-based distributions.
 # Associated Distributions: Fedora, CentOS Stream, Rocky Linux, AlmaLinux, Red Hat Enterprise Linux (RHEL) 8 and later.   
 # Package Format: .rpm
 
-# - YUM (Yellowdog Updater, Modified): While largely replaced by DNF in newer releases, YUM is still found in older versions of Red Hat-based distributions.
+# YUM (Yellowdog Updater, Modified): While largely replaced by DNF in newer releases, YUM is still found in older versions of Red Hat-based distributions.
 # Associated Distributions: CentOS 7 and earlier, RHEL 7 and earlier, Fedora 21 and earlier, Amazon Linux (older versions).
 # Package Format: .rpm
 
@@ -112,7 +112,7 @@ exit 0
 # Associated Distributions: openSUSE Leap, openSUSE Tumbleweed.
 # Package Format: .rpm
 
-# - Pacman: Known for its speed and simplicity, Pacman is the package manager for Arch Linux and its derivatives.   
+# Pacman: Known for its speed and simplicity, Pacman is the package manager for Arch Linux and its derivatives.   
 # Associated Distributions: Arch Linux, Manjaro, EndeavourOS.   
 # Package Format: .tar.xz (often compressed)   
 
