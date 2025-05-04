@@ -5,7 +5,7 @@ function usage
     echo "
 Usage:
 
-    To search for something simply use 'search for':
+    To search for some text inside files, simply use 'search for':
 
         search for [keyword]
 
