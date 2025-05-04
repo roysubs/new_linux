@@ -1,0 +1,106 @@
+refactor g tool, it should show commands being run, and also be more descriptive about what they do.
+possibly integrate the other git scripts as case options into g !!!
+
+It should really do this output for you 
+
+boss@hp2:~/new_linux/0-scripts$ git-rm-file-or-dir-from-history.sh
+
+Usage: git-rm-file-or-dir-from-history.sh <path-to-remove-from-history>
+
+This will remove large objects (files or dirs) from git history as these will
+bloat the size of the .git dir in the project root.
+
+To view largest objects in history:
+
+git rev-list --objects --all | \
+  git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' | \
+  grep '^blob' | \
+  sort -k3 -n -r | \
+  head -n 20 | \
+  awk '{printf "%.2f MB\t%s\t%s\n", $3/1048576, $2, $4}'
+
+why are all config's being held in the project folder instead of in .config!!!
+boss@hp2:~/new_linux/0-docker$ cd 0-media-stack/
+boss@hp2:~/new_linux/0-docker/0-media-stack$ cd config/
+boss@hp2:~/new_linux/0-docker/0-media-stack/config$ ls
+filebrowser  gluetun  jackett  qbittorrent  radarr  sonarr
+boss@hp2:~/new_linux/0-docker/0-media-stack/config$
+
+
+
+
+
+this is wrong, need to sort
+boss@hp2:~/new_linux/0-scripts$ git-projects-info
+📊 Git Summary for all repos in ~/projects
+
+also this:
+
+boss@hp2:~/new_linux/0-scripts$ git-list-myprojects.sh
+Fetching your repositories...
+Unknown JSON field: "visibility"
+Available fields:
+  assignableUsers
+  codeOfConduct
+  contactLinks
+  createdAt
+  defaultBranchRef
+  deleteBranchOnMerge
+  description
+  diskUsage
+  forkCount
+  fundingLinks
+  hasDiscussionsEnabled
+  hasIssuesEnabled
+  hasProjectsEnabled
+  hasWikiEnabled
+  homepageUrl
+  id
+  isArchived
+  isBlankIssuesEnabled
+  isEmpty
+  isFork
+  isInOrganization
+  isMirror
+  isPrivate
+  isSecurityPolicyEnabled
+  isTemplate
+  isUserConfigurationRepository
+  issueTemplates
+  issues
+  labels
+  languages
+  latestRelease
+  licenseInfo
+  mentionableUsers
+  mergeCommitAllowed
+  milestones
+  mirrorUrl
+  name
+  nameWithOwner
+  openGraphImageUrl
+  owner
+  parent
+  primaryLanguage
+  projects
+  pullRequestTemplates
+  pullRequests
+  pushedAt
+  rebaseMergeAllowed
+  repositoryTopics
+  securityPolicyUrl
+  squashMergeAllowed
+  sshUrl
+  stargazerCount
+  templateRepository
+  updatedAt
+  url
+  usesCustomOpenGraphImage
+  viewerCanAdminister
+  viewerDefaultCommitEmail
+  viewerDefaultMergeMethod
+  viewerHasStarred
+  viewerPermission
+  viewerPossibleCommitEmails
+  viewerSubscription
+  watchers

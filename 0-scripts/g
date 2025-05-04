@@ -21,8 +21,8 @@ if [ $# -eq 0 ]; then
     echo "  rpo              git remote prune origin (prune branches that no longer exist)"
     echo "  f                Fetch: Update remote refs without merging"
     echo "  m <branch>       Merge: Merge the specified branch into the current one"
-    echo "  r <commit>       Reset: Soft reset to the given commit (keep changes)"
-    echo "  rh <commit>      Hard Reset: Reset to the given commit, discard changes"
+    echo "  rs <commit>      Reset Soft: Reset to the given commit but keep changes"
+    echo "  rh <commit>      Reset Hard: Reset to the given commit and discard changes"
     echo "  st               Stash: Save uncommitted changes"
     echo "  stm <message>    Stash with a message"
     echo "  stp              Pop last stash"
@@ -100,7 +100,7 @@ case "$option" in
     m)
         git merge "$1"
         ;;
-    r)
+    rs)
         git reset --soft "$1"
         ;;
     rh)
