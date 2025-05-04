@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# aa: Identify the package manager, and us it to install a package, then verify the install
+# acheck: Identify the package manager, and use it to install a package, then verify the install
 
 # Function to install a package and verify its executable
 # Args:
 #    $1: pkg_name - Name of the package to install, e.g., "neovim"
 #    $2: exec_name - Name of the command executable provided by the package, e.g., "nvim"
 #    If $2 is not provided, assume that exec_name is same as pkg_name (usually the case, but not always, e.g. neovim / nvim
+# exec_name="${2:-$1}" => if $2 is provided, use it as exec_name; otherwise, use $1.
+
 install_package() {
     local pkg_name="$1"
     local exec_name="$2"
@@ -81,23 +83,27 @@ install_package() {
         echo "Error: Failed to find '$exec_name' command after installing '$pkg_name'."
         echo "Manual intervention may be required to install package '$pkg_name'."
         return 1 # Indicate failure
-    C fi
+    fi
 }
 
 # --- Main script execution ---
 
 # Check if at least one argument is provided
 if [ $# -eq 0 ]; then
-    echo "Usage: aa <package_name> [executable_name]"
-    echo "  Installs a package using the system's package manager and verifies the executable."
-    echo "  If executable_name is not provided, it defaults to package_name."
+    echo "Application install and check"
+    echo "Usage: $(basename $0) <package_name> [executable_name]"
+    echo "  <package_name> - The name of the package to install."
+    echo "  [executable_name] - The command name provided by the package (optional)."
+    echo "Detects the package manager on this system and installs package_name."
+    echo "It then verifies if the package was installed by checking the expected binary."
+    echo "The binary will be assumed to have the same name as package_name, unless executable_name is provided."
+    echo "The script will return the status of the operation."
     exit 1
 fi
 
 # Assign arguments
 pkg_name="$1"
-# Use $2 if provided (and not empty), otherwise use $1
-exec_name="${2:-$1}"
+exec_name="${2:-$1}"  # Use $2 if provided (and not empty), otherwise use $1
 
 # Call the installation function
 install_package "$pkg_name" "$exec_name"

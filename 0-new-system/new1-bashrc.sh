@@ -51,7 +51,7 @@ export LESS='-RFX'    # -R (ANSI colour), -F (exit if fit on one screen), X (dis
 export MANPAGER=less    # Set pager for 'man'
 export CHEAT_PATHS=\"~/.cheat\"
 export CHEAT_COLORS=true
-if command -v git; then git config --global core.pager less; fi    # Set pager for 'git'
+if command -v git &> /dev/null; then git config --global core.pager less; fi    # Set pager for 'git'
 # glob expansion for vi, e.g. 'vi *myf*' then tab should expand *myf* to a matching file
 complete -o filenames -o nospace -o bashdefault -o default vi
 shopt -s checkwinsize    # At every prompt check if the window size has changed
@@ -147,58 +147,55 @@ alias vimrc='vi ~/.vimrc'             # Edit .vimrc (user)
 alias vimrcroot='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
 alias vimrcsudo='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
 config() { cd ~/.config || return; ls; }    # Jump to ~/.config
+mnt() { cd /mnt || return; ls; }            # Jump to /mnt
 alias initvim='vi ~/.config/nvim/init.vim'  # Edit neovim configuration
 alias nvimrc='vi ~/.config/nvim/init.vim'   # Edit neovim configuration
 alias smb='sudo vi /etc/samba/smb.conf'     # Edit Samba configuration
 alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
 alias smbconf='sudo vi /etc/samba/smb.conf' # Edit Samba configuration
-alias fstab='sudo vi /etc/fstab'          # Edit Filesystem Table
+alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
 alias exports='sudo vi /etc/exports'        # Edit NFS exports
 alias sudoers='sudo visudo'                 # Edit /etc/sudoers
 alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
-# fs: useful filesystem output (filtered lsblk + /etc/fstab)
-# 1 RAM disks (/dev/ram*), 7 Loop devices (/dev/loop*), 11 CD-ROM (/dev/sr0)
-# 179 MMC/SD cards (optional), 252 Device mapper (optional, LVM, crypt), 253 Zram (swap compression)
-# NR==1  : keep the first line (the header)
-# NF > 1 : keep rows with more than 1 field (so, real partitions with data, e.g. /dev/sda2 was Extended partition, so just holds other partitions)
-# Optional | grep -v -E \"^/dev/sd[a-z]\\s*$\"'    # | grep -E \"/dev/.+[0-9]+\\b\" | awk \"NF > 1\"'
-# alias fs='awk '/^# <file/ {print; next} /^#/ {next} {print | \"sort\"}' /etc/fstab; echo; lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk \"NR==1 || NF > 1\"'
-alias fs=\"awk '/^# <file/ {print; next} /^#/ {next} {print | \\\"sort\\\"}' /etc/fstab; echo; lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk 'NR==1 || NF > 1'\"
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
-alias cd..='cd ..'            # Common typo for Windows users (cd.. is normally an error in Linux)
-alias cd...='cd..;cd..'              # cd up 2 directories
-alias cd....='cd..;cd..;cd..'            # cd up 3 directories
-alias cd.....='cd..;cd..;cd..;cd..'      # cd up 4 directories
+alias cd..='cd ..'  # Common typo for Windows users (cd.. is normally an error in Linux)
+alias cd...='cd..;cd..'                   # cd up 2 directories
+alias cd....='cd..;cd..;cd..'             # cd up 3 directories
+alias cd.....='cd..;cd..;cd..;cd..'       # cd up 4 directories
 alias cd......='cd..;cd..;cd..;cd..;cd..' # cd up 5 directories
-alias u1='cd..'              # cd up 1 directory
-alias u2='cd..;cd..'         # cd up 2 directories
-alias u3='cd..;cd..;cd..'    # cd up 3 directories
-alias u4='cd..;cd..;cd..;cd..' # cd up 4 directories
-alias u5='cd..;cd..;cd..;cd..;cd..' # cd up 4 directories
+alias u1='cd..'                           # cd up 1 directory
+alias u2='cd..;cd..'                      # cd up 2 directories
+alias u3='cd..;cd..;cd..'                 # cd up 3 directories
+alias u4='cd..;cd..;cd..;cd..'            # cd up 4 directories
+alias u5='cd..;cd..;cd..;cd..;cd..'       # cd up 4 directories
 alias cx='chmod +x'            # chmod add the execute permission
 cxx() { chmod +x \$1; ./\$1; }     # add execute to \$1 and also run it immediately
 alias ls.='ls -d .*'          # -d shows only the directory, not the contents (of .config etc)
 alias ll.='ls -ald .*'
 alias ifconfig='sudo ifconfig'    # 'ifconfig' has 'command not found' if run without sudo (apt install net-tools)
 alias ipconfig='sudo ifconfig'    # Windows typo
+# If the 'bat' (Bluetooth Audio Tool) is installed, this alias will not create
+if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
+
 
 # Jump functions for new_linux and standard locations
-n()  { cd ~/new_linux || return; ls; }            # Jump to new_linux
+n()  { cd ~/new_linux || return; ls; }             # Jump to new_linux
 0d() { cd ~/new_linux/0-docker || return; ls; }    # Jump to new_linux/0-docker
 0g() { cd ~/new_linux/0-games || return; ls; }     # Jump to new_linux/0-games
 0h() { cd ~/new_linux/0-help || return; ls; }      # Jump to new_linux/0-help
-0i() { cd ~/new_linux/0-install || return; ls; }  # Jump to new_linux/0-install
+0i() { cd ~/new_linux/0-install || return; ls; }   # Jump to new_linux/0-install
 0n() { cd ~/new_linux/0-notes || return; ls; }     # Jump to new_linux/0-notes
 0ns() { cd ~/new_linux/0-new-system || return; ls; }  # Jump to new_linux/0-new-system
-0s() { cd ~/new_linux/0-scripts || return; ls; }  # Jump to new_linux/0-scripts
+0s() { cd ~/new_linux/0-scripts || return; ls; }   # Jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                  # Jump to ~/.vnc
 # Personal functions, just as example of what can be useful (though can go to a separate .bashrc-personal)
-D()  { cd /mnt/sdc1/Downloads || return; ls; }    # Jump to my personal Downloads folder
-DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to 0 Films
-DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }      # Jump to 0 TV
-DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to 0 Music
+D()  { cd /mnt/sdc1/Downloads || return; ls; }     # Jump to my personal Downloads folder
+DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to '0 Films'
+DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # Jump to '0 TV'
+DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to '0 Music'
 white() { cd ~/192.168.1.29-d || return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
+
 "
 
 # Capture the first non-empty line of $bashrc_block, this is the header line

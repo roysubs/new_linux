@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# fs: Display useful filesystem information
+# This script combines the output of /etc/fstab and lsblk, with additional information on how to interpret it.
+
+# Check if lsblk is available
+if ! command -v lsblk &> /dev/null; then
+    echo "Error: lsblk command not found. Please install it."
+    exit 1
+fi
+
+# Check if awk is available
+if ! command -v awk &> /dev/null; then
+    echo "Error: awk command not found. Please install it."
+    exit 1
+fi
+
+# Check if /etc/fstab exists
+if [ ! -f /etc/fstab ]; then
+    echo "Error: /etc/fstab file not found."
+    exit 1
+fi
+
+# Display /etc/fstab content with filtering and sorting
+echo -e "/etc/fstab\n=========="
+awk '/^# <file/ {print; next} /^#/ {next} {print | "sort"}' /etc/fstab
+
+# Provide an explanation of /etc/fstab columns
+echo -e "\nInterpreting /etc/fstab entries:"
+echo "Each line in /etc/fstab describes a filesystem or swap device. The typical format is:"
+echo "  DEVICE  MOUNT_POINT  FILESYSTEM_TYPE  OPTIONS  DUMP  PASS"
+echo "Where:"
+echo "  DEVICE          - The device, partition, or swap file (e.g., /dev/sda1, UUID=xxxxxx)"
+echo "  MOUNT_POINT     - The directory where the device is mounted (e.g., /, /home)"
+echo "  FILESYSTEM_TYPE - The type of filesystem (e.g., ext4, xfs, ntfs, swap)"
+echo "  OPTIONS         - Mount options (e.g., defaults, noatime, ro)"
+echo "  DUMP            - Used by the dump utility; usually 0 or 1 (0 means no dump)"
+echo "  PASS            - Determines the order in which fsck checks filesystems at boot (0 means no check)"
+
+# Display lsblk output with specific filters
+echo
+echo -e "lsblk with filters (-e 1,7,11,253)"
+echo -e "====="
+lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk 'NR==1 || NF > 1'
+
+# Display additional disk usage and filesystem stats
+echo
+echo -e "Disk Usage"
+echo -e "==========="
+df -hT --total | grep -v -E '^tmpfs|^/dev/loop|squashfs'  # Show disk usage with human-readable sizes and file system types
+
+# # Display inode usage
+# echo
+# echo -e "Inode Usage\n============"
+# df -ih --total | grep -v '^tmpfs'  # Inode usage (useful for filesystems that may run out of inodes)
+# 
+# # Display mounted filesystems and their stats
+# echo
+# echo -e "Mounted Filesystems\n==================="
+# mount | column -t  # Show mounted filesystems in a clean columnar format
+# 
+# # Optional: Show swap usage if applicable
+# if [ "$(swapon --show)" ]; then
+#     echo
+#     echo -e "Swap Information\n================"
+#     swapon --show
+# else
+#     echo
+#     echo -e "No swap devices found."
+# fi
+# 
+# # Optional: Check for active LVM (Logical Volume Management) volumes
+# if command -v lvs &> /dev/null; then
+#     echo
+#     echo -e "LVM Volumes\n============"
+#     lvs
+# else
+#     echo
+#     echo -e "LVM command not found, skipping LVM volume display."
+# fi
+# 
+# # Optional: Show ZFS status (if ZFS is installed)
+# if command -v zfs &> /dev/null; then
+#     echo
+#     echo -e "ZFS Filesystems\n================"
+#     zfs list
+# else
+#     echo
+#     echo -e "ZFS command not found, skipping ZFS filesystem display."
+# fi
+
+# Exit script with success
+exit 0
+
