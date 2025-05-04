@@ -155,8 +155,13 @@ if [ ! -d "$mount_point" ]; then
 fi
 run_command mount "$new_partition" "$mount_point"
 run_command systemctl daemon-reload
-echo "$new_partition $mount_point ext4 defaults 0 2" >> /etc/fstab
-echo "Partition mounted at $mount_point and added to /etc/fstab."
+if ! grep -q "$new_partition" /etc/fstab; then    # Prevent duplicates by checking first
+    echo "$new_partition $mount_point ext4 defaults 0 2" >> /etc/fstab
+    echo "$new_partititon was added to /etc/fstab."
+else
+    echo "$new_partititon was not added to /etc/fstab as possible duplicate exists."
+fi
+echo "Partition mounted at $mount_point."
 
 # Step 5: Create NFS share
 if command -v exportfs &>/dev/null; then
@@ -189,7 +194,7 @@ if command -v smbclient &>/dev/null; then
 
         # Restart Samba services
         run_command systemctl restart smbd
-        run_Command systemctl restart nmbd
+        run_command systemctl restart nmbd
 
         echo "Samba share $share_name created."
     fi

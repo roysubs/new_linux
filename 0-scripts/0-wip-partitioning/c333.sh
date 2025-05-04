@@ -132,6 +132,9 @@ fi
 
 # Step 3: Format the partition
 echo "Step 3: Formatting $new_partition as ext4"
+echo "Note! If the drive has not been scrubbed securely, and the start sector"
+echo "coincides with a previous partition, then there may be a warning about"
+echo "that. If you are sure there is no data on there, it is safe to continue."
 run_command mkfs.ext4 "$new_partition"
 
 # Step 4: Mount the partition and add to /etc/fstab
