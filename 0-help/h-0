@@ -82,3 +82,4 @@ file <path/to/file>
 command -V <some command binary> (tells you whether <some binary> is a built-in, binary or alias)
 ```
 EOF
+) | less -R

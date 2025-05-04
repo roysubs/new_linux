@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+  gluetun:
+    image: ghcr.io/qdm12/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - 8080:8080     # qBittorrent Web UI
+      - 8081:8081     # Filebrowser
+      - 9117:9117     # Jackett
+      - 8989:8989     # Sonarr
+      - 7878:7878     # Radarr
+    volumes:
+      - ./config/gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=surfshark
+      - OPENVPN_USER=${VPNUSER}
+      - OPENVPN_PASSWORD=${VPNPASS}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/London
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/London
+      - WEBUI_PORT=8080
+    volumes:
+      - ./config/qbittorrent:/config
+      - /mnt/media/downloads:/downloads
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    container_name: sonarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/London
+    volumes:
+      - ./config/sonarr:/config
+      - /mnt/media:/mnt/media
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr
+    container_name: radarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/London
+    volumes:
+      - ./config/radarr:/config
+      - /mnt/media:/mnt/media
+    restart: unless-stopped
+
+  jackett:
+    image: lscr.io/linuxserver/jackett
+    container_name: jackett
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/London
+    volumes:
+      - ./config/jackett:/config
+      - /mnt/media/downloads:/downloads
+    restart: unless-stopped
+
+  filebrowser:
+    image: filebrowser/filebrowser
+    container_name: filebrowser
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    user: "${PUID}:${PGID}"
+    volumes:
+      - ./config/filebrowser:/config
+      - /mnt/media:/srv
+    restart: unless-stopped
+

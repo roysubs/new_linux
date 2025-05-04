@@ -1,10 +1,8 @@
 #!/bin/bash
-# Display Bash readline keybindings in markdown using mdcat
-
-if ! command -v mdcat >/dev/null 2>&1; then echo "Please install mdcat to render markdown."; fi
-WIDTH=$(if [ "$(tput cols)" -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
-
+if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
 mdcat --columns="$WIDTH" <(cat <<'EOF'
+
 # Bash Readline Keybindings
 
 Bash uses GNU Readline to manage command-line editing. There are two main editing modes:
