@@ -9,8 +9,10 @@ if [[ -z "$TARGET_PATH" ]]; then
     echo "
 Usage: $(basename $0) <path-to-remove-from-history>
 
-This will remove large objects (files or dirs) from git history as these will
-bloat the size of the .git dir in the project root.
+Sometimes, junk or personal files will get trapped in the git history. These will
+bloat the size of .git in the project root. This script will prune any unwanted
+large files from the repository history and so help to manage the size of the .git
+dir in the project root.
 
 To view largest objects in history:
 
