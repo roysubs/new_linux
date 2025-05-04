@@ -3,6 +3,13 @@ possibly integrate the other git scripts as case options into g !!!
 
 It should really do this output for you 
 
+ALSO, git-rm should support -string which searches all history for personal things related to you
+git-rm -string roy
+show me all files that have Roy in the name!!!
+git-rm -string 192.168.1.*
+show all scripts containing my personal servers!!!
+
+
 boss@hp2:~/new_linux/0-scripts$ git-rm-file-or-dir-from-history.sh
 
 Usage: git-rm-file-or-dir-from-history.sh <path-to-remove-from-history>
