@@ -5,7 +5,8 @@
 if [ $# -eq 0 ]; then
     echo "Git Tool. Usage: g [option] <args>"
     echo "Options:"
-    echo "  a                Add All: git add -A, add all files to repo (from root of repo)"
+    echo "  a                Add All: git add .    Stage all changes in current folder"
+    echo "  A                Add All: git add -A   Stage all changes from root of repo"
     echo "  c <message>      Commit:  git commit -m <message>"
     echo "  s                Status:  Show the current repository status"
     echo "  acp <message>    Add-Commit-Push: git status / git add -A / git commit -m <message> / git push"
@@ -23,9 +24,9 @@ if [ $# -eq 0 ]; then
     echo "  m <branch>       Merge: Merge the specified branch into the current one"
     echo "  rs <commit>      Reset Soft: Reset to the given commit but keep changes"
     echo "  rh <commit>      Reset Hard: Reset to the given commit and discard changes"
-    echo "  st               Stash: Save uncommitted changes"
-    echo "  stm <message>    Stash with a message"
-    echo "  stp              Pop last stash"
+    echo "  stash            Stash: Save uncommitted changes"
+    echo "  stpush <message> Stash with a message"
+    echo "  stpop            Pop last stash"
     echo "  cl!              Clean untracked files (DANGEROUS: Run with caution!)"
     echo "  t                Troubleshooting Help: Show common Git fixes"
     echo
@@ -42,6 +43,17 @@ shift  # Shift to access arguments
 case "$option" in
     a)
         git add .
+        ;;
+    A)
+        git add -A
+        ;;
+    cl)
+        git clone "$@"
+        # get size and number of files/folders
+        ;;
+    cl1)
+        git clone "$@" --depth=1
+        # get size and number of files/folders
         ;;
     c)
         git commit -m "$@"
@@ -106,16 +118,16 @@ case "$option" in
     rh)
         git reset --hard "$1"
         ;;
-    st)
+    stash)
         git stash
         ;;
-    stm)
+    stpush)
         git stash push -m "$1"
         ;;
-    stp)
+    stpop)
         git stash pop
         ;;
-    cl!)
+    clear)
         echo "WARNING: This will delete untracked files! Use with caution."
         read -p "Are you sure? (y/N) " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then

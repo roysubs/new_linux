@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Example of a complete stack
+
 set -e
 
 CONFIG_DIR="$(pwd)/config"
