@@ -1,5 +1,7 @@
 #!/bin/bash
 
+softclear() { printf '\033[H\033[2J'; }  # May not work in GNOME terminal
+
 # Define colors
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -8,10 +10,7 @@ MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 echo
-echo
-echo
-echo
-echo
+softclear
 
 # Function to wait for user input
 press_any_key() {
@@ -33,6 +32,7 @@ display_section() {
     # Use echo -e to interpret the newlines and colors in the content variable
     echo -e "${content}"
     press_any_key
+    softclear
 }
 
 # --- Section 1: Basics and Windows Terminal Tabs and Splits ---
@@ -201,8 +201,9 @@ A few more things that can enhance your experience:
 5.  ${GREEN}Clear terminal (but retain scrollback history):${NC}
     -   Clear screen: ${YELLOW}Ctrl + L${NC}
     -   Not a Windows Terminal specifically, applies in most shells (bash and PowerShell etc).
-    -   It does not wipe out history like ${YELLOW}clear${NC}, but unclutters the terminal window."
-
+    -   It does not wipe out history like ${YELLOW}clear${NC}, but unclutters the terminal window.
+    -   To do this in a script:   softclear() { printf '\\033[H\\033[2J'; }"   # softclear() { printf '\033[H\033[2J'; }
+:
 display_section \
 "Other Useful Windows Terminal Features" \
 "$section5_content"
