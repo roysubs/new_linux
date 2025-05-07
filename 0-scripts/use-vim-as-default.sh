@@ -1,6 +1,6 @@
 #!/bin/bash
 
-(return 0 2>/dev/null) || { echo "This script should be run sourced (e.g., '. ./$(basemane $0)' to change the default vi alias)"; exit 1; }
+(return 0 2>/dev/null) || { echo "This script should be run sourced (e.g., '. ./$(basename $0)' to change the default vi alias)"; exit 1; }
 # Check if Vim is installed
 if ! command -v vim &>/dev/null; then
     echo "Vim is not installed. Attempting to install Vim..."

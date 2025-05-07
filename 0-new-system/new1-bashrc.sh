@@ -30,6 +30,8 @@ fi
 bashrc_block="
 # new_linux definitions
 ####################
+# Note: Try to put any manually added .bashrc definitionas *above* this section, as 'new1-bashrc.sh -clean'
+#       will delete everything from the '# new_linux definitions' to the end of the file(!)
 
 # Prompt before overwrite (-i interactive) for rm,cp,mv
 # All scripts will ignore the -i scripts unless a script is sourced at runtime to include .bashrc
@@ -160,10 +162,10 @@ alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
 alias u1='cd ..';          alias cd..='u1'     # cd.. is a common typo in Linux for Windows users
-alias u2='u1;U1';          alias cd...='u2'    # cd up 2 directories
-alias u3='u1;u1;u1';       alias cd....='u3'   # cd up 3 directories
-alias u4='u1;u1;u1;u1';    alias cd.....='u4'  # cd up 4 directories
-alias u5='u1;u1;u1;u1;u1'; alias cd......='u5' # cd up 5 directories
+alias u2='u1;U1';          alias cd..2='u2'    # cd up 2 directories
+alias u3='u1;u1;u1';       alias cd..3='u3'   # cd up 3 directories
+alias u4='u1;u1;u1;u1';    alias cd..4='u4'  # cd up 4 directories
+alias u5='u1;u1;u1;u1;u1'; alias cd..5='u5' # cd up 5 directories
 alias cx='chmod +x'               # chmod add the execute permission
 cxx() { chmod +x \$1; ./\$1; }    # chmod +x and then run \$1 immediately
 alias ls.='ls -d .*'              # -d shows only the directory name, not the contents of subdirs
@@ -174,7 +176,7 @@ alias ipconfig='sudo ifconfig'    # Windows typo
 if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
 
 
-# Jump functions for new_linux and standard locations
+# Jump functions, cannot be in scripts as have to be dotsourced. Various for new_linux and standard locations
 n()  { cd ~/new_linux || return; ls; }             # Jump to new_linux
 0d() { cd ~/new_linux/0-docker || return; ls; }    # Jump to new_linux/0-docker
 0g() { cd ~/new_linux/0-games || return; ls; }     # Jump to new_linux/0-games
@@ -185,12 +187,16 @@ n()  { cd ~/new_linux || return; ls; }             # Jump to new_linux
 0s() { cd ~/new_linux/0-scripts || return; ls; }   # Jump to new_linux/0-scripts
 v()  { cd ~/.vnc || return; ls; }                  # Jump to ~/.vnc
 # Personal functions, just as example of what can be useful (though can go to a separate .bashrc-personal)
+0m() { cd ~/new_linux/0-docker/0-media-stack || return; ls; }    # Jump to new_linux/0-docker/0-media-stack
+0q() { cd ~/.config/media-stack/qbittorrent/qBittorrent/logs || return; ls; }    # Jump to new_linux/0-docker/0-media-stack
 D()  { cd /mnt/sdc1/Downloads || return; ls; }     # Jump to my personal Downloads folder
 DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to '0 Films'
 DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # Jump to '0 TV'
 DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to '0 Music'
 white() { cd ~/192.168.1.29-d || return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
 
+####################
+# End of new_linux definitions
 "
 
 # Capture the first non-empty line of $bashrc_block, this is the header line

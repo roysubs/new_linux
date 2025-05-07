@@ -36,7 +36,7 @@ Options:
   run [name] [image]  ${BLUE}sudo docker run -it --name [name] [image]${NC}  Create and start container
   it [name] <process> ${BLUE}docker exec -it [name] [process]${NC}  Interactive TTY
       Interactively enter container and start a process (could be bash, sh, top, etc)
-  exbash       ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
+  exec         ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
   start <name> ${BLUE}docker start <name>${NC}   Start a stopped container
   stop <name>  ${BLUE}docker stop <name>${NC}    Stop a running container
   rm  <name>   ${BLUE}docker rm <name>${NC}      Remove a container
@@ -63,7 +63,7 @@ case "$cmd" in
 
     ps)
         color_echo "docker ps $@"
-        docker ps -a $@
+        docker ps $@
         ;;
 
     a)
@@ -193,7 +193,7 @@ case "$cmd" in
         done
         ;;
 
-    ex)
+    exec)
         color_echo "docker exec -it $1 $2"
         docker exec -it $1 $2
         ;;

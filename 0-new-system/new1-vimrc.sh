@@ -117,7 +117,7 @@ fi
 
 
 # --- Vim settings and key mappings to apply ---
-vimrc_block="\" --- Enhanced Vim settings (vim and neovim) ---
+vimrc_block="
 \" Set tab behavior to use spaces instead of tabs
 set expandtab          \" Use spaces instead of tab characters
 set tabstop=4          \" Set tab width to 4 spaces
@@ -128,10 +128,6 @@ colorscheme desert     \" Syntax highlighting scheme
 \" Available themes: blue, darkblue, default, delek, desert, elflord, evening, habamax, industry, koehler
 \" lunapeche lunaperche, morning, murphy, pablo, peachpuff, quiet, ron, shine, slate, torte, zellner
 \" Disable tabs (to get a tab, Ctrl-V<Tab>), tab stops are 4 chars, indents are 4 chars
-set nonumber                   \" No line numbers (toggle on/off with Ctrl-L or F2 as below)
-nnoremap <C-L> :set invnumber<CR>     \" Toggle line numbers on/off
-nnoremap <F2> :set invnumber<CR>      \" Toggle line numbers on/off
-nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>  \" F4 shows hidden characters
 inoremap <C-s> <Esc>:w<CR>            \" Save file while in insert mode
 \" Perform :w write on a protected file even when not as sudo
 cnoremap w!! execute 'silent! write !sudo tee % >/dev/null' <bar> edit
@@ -285,6 +281,48 @@ vmap <Tab> >gv
 \" Applies to Visual Character, Visual Line, and Visual Block modes.
 \" Uses the '<' command for dedent, then 'gv' to re-select the block.
 vmap <S-Tab> <gv
+
+\" Toggle line numbers with F2 or Ctrl+L
+set nonumber    \" Start with no line numbers when starting Vim
+nnoremap <C-L> :set invnumber<CR>
+inoremap <C-L> <Esc>:set invnumber<CR>a
+nnoremap <F2> :set invnumber<CR>
+inoremap <F2> <Esc>:set invnumber<CR>a
+\" Toggle line wrap with F3
+nnoremap <F3> :set wrap!<CR>
+inoremap <F3> <Esc>:set wrap!<CR>a
+\" Toggle hidden characters AND statusline with F4; toggle 'list' (invisible character display) and 'laststatus' (statusline
+set laststatus=0        \" Start with statusline hidden
+set statusline=         \" Set up a custom statusline (used only when laststatus is non-zero)
+set statusline+=%F      \" Full file path
+set statusline+=%m      \" Modified flag [+]
+set statusline+=%r      \" Readonly flag
+set statusline+=%h      \" Help file flag
+set statusline+=%w      \" Preview window flag
+set statusline+=\\ [FORMAT=%{&ff}]   \" File format: unix/dos/mac
+set statusline+=\\ [ENC=%{&enc}]     \" Encoding (e.g., utf-8)
+set statusline+=\\ [TYPE=%Y]         \" File type (e.g., sh, conf)
+set statusline+=\\ %l/%L             \" Current line / total lines
+set statusline+=\\ %P                \" Percentage through file
+nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>
+        \\ :let &laststatus = (&laststatus == 0 ? 2 : 0)<CR>
+        \\ :echo \"Hidden chars \" . (&list ? \"ON\" : \"OFF\") . \", Statusline \" . (&laststatus == 2 ? \"ON\" : \"OFF\")<CR>
+inoremap <F4> <Esc>:set list! listchars=tab:→\ ,trail:·,eol:¶<CR> \
+        \\ :let &laststatus = (&laststatus == 0 ? 2 : 0)<CR> \
+        \\ :echo \"Hidden chars \" . (&list ? \"ON\" : \"OFF\") . \", Statusline \" . (&laststatus == 2 ? \"ON\" : \"OFF\")<CR>a
+\" Old version 'list' only:   nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>
+
+\" Enable persistent undo, so that undo will operate between different edit sessions of files
+set undofile
+
+\" Set the directory where undo files will be stored
+\" Create this directory if it doesn't exist
+\" Use a path within your home directory
+set undodir=\$HOME/.vim/undodir,\$HOME/.config/nvim/undodir,/tmp/undodir
+\" Optional: Set undolevels to -1 for potentially unlimited undo history (disk space permitting)
+\" set undolevels=-1
+\" There is no way to cycle old undos, so be cautious with very large files and histories, as this can consume disk space.
+\" Periodically clean, e.g. remove anything older than 90 days:   find /home/boss/.vim/undodir -type f -mtime +90 -delete
 
 "
 
