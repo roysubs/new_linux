@@ -12,27 +12,18 @@ NFS Quick Notes
 ===============
 
 - **NFS Overview**:
-    - NFS (Network File System) is a protocol that allows a system to share directories and files with others over a network. It is commonly used in Linux/Unix environments to mount remote directories on local systems.
+    - NFS (Network File System) is a protocol to share directories and files with others over a network.
 
 - **Installing NFS**:
-    - Install NFS server on the server machine:
+    - nfs-kernel-server is for server for sharing, and nfs-common is client to connect to shares
       ```bash
-      sudo apt update
       sudo apt install nfs-kernel-server
-      ```
-
-    - Install NFS client on the client machine:
-      ```bash
-      sudo apt update
       sudo apt install nfs-common
       ```
 
 - **Configuring the NFS Server**:
-    - Configure shared directories in `/etc/exports`:
-      ```bash
-      sudo nano /etc/exports
-      ```
-      Example entry for exporting `/srv/nfs` to all clients:
+    - Configure shared directories in `/etc/exports`:  `sudo vi /etc/exports`
+    - Example entry for exporting `/srv/nfs` to all clients:
       ```
       /srv/nfs *(rw,sync,no_subtree_check)
       ```
@@ -40,21 +31,12 @@ NFS Quick Notes
       - `sync`: Ensure data is written to disk before the server responds.
       - `no_subtree_check`: Disable subtree checking, improving performance.
     
-    - Apply the new exports configuration:
-      ```bash
-      sudo exportfs -ra
-      ```
+    - Apply the new exports configuration: `sudo exportfs -ra`
 
-    - Restart NFS server to apply changes:
-      ```bash
-      sudo systemctl restart nfs-kernel-server
-      ```
+    - Restart NFS server to apply changes: `sudo systemctl restart nfs-kernel-server`
 
 - **Configuring the NFS Client**:
-    - Mount a remote NFS share on the client machine:
-      ```bash
-      sudo mount -t nfs server_ip:/srv/nfs /mnt
-      ```
+    - Mount a remote NFS share on the client machine: `sudo mount -t nfs server_ip:/srv/nfs /mnt`
       - Replace `server_ip` with the IP address of the NFS server.
       - Replace `/srv/nfs` with the NFS directory exported by the server.
       - Replace `/mnt` with the local mount point.
@@ -65,10 +47,7 @@ NFS Quick Notes
       ```
 
 - **Checking NFS Exports**:
-    - List current NFS exports on the server:
-      ```bash
-      showmount -e
-      ```
+    - List current NFS exports on the server: `sudo showmount -e`
 
 - **NFS Server Configuration Options**:
     - **Access Control**: Define who can access the shared directories in `/etc/exports`:
