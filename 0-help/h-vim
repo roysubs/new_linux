@@ -101,110 +101,66 @@ So, the default keys you'll find in any standard Vim installation are `v`, `V`, 
 - **Advanced Deleting**:
     - `d/^fi/+1`: Delete lines matching a pattern, so if cursor is at start of a if-fi block, then this will delete from current position to the end of the block, but only do it once. Note that this is not a Command Mode operation, do not press `:` before starting the command, press `d` to start then type `/^fi/+1` which will appear at bottom of screen, then Enter to execute.
 
-Additional Features:
-Registers:
+- **Registers:**
+    - Vim uses registers to store yanked (copied) or deleted text, which you can paste using `"register_name` followed by `p`.
+    - Example:
+        - `"ayy` to yank into register `a`.
+        - `"ap` to paste from register `a`.
 
-Vim uses registers to store yanked (copied) or deleted text, which you can paste using "register_name followed by p.
+- **Search and Replace:**
+    - Searching is a core Vim feature. You can search for text using /pattern, and to replace:
+    - `:%s/old/new/g` for replacing all occurrences in the file.
+    - `:%s/old/new/gc` to ask for confirmation before each replacement.
 
-Example:
+- **Macros:**
+    - You can record a sequence of commands into a register and replay it: `q<register>` to start recording.
+    - Perform the actions you want to record, then `q` to stop recording.
+    - `@<register>` to execute the recorded macro.
 
-"ayy to yank into register a.
+- **Autocompletion:**
+    - For code or word completion, use `Ctrl+n` and `Ctrl+p` to cycle through suggestions.
+    - :set completeopt=menu for a menu-based autocomplete display.
 
-"ap to paste from register a.
+- **Buffers and Tabs:**
+    - Buffers: A buffer is an in-memory representation of a file.
+    - `:ls` to list open buffers.
+    - `:bnext` to switch to the next buffer, `:bprev` to go back.
+    - Tabs: Tabs are a collection of windows displaying buffers.
+    - `:tabnew` to open a new tab, `:tabnext` to switch between tabs.
 
-Search and Replace:
+- **Split Windows and Navigation:**
+    - `:split` and `:vsplit` for horizontal and vertical splits
+    - Navigate between them with `Ctrl-w + h/j/k/l`
+    - `Ctrl-w + =` to balance splits.
 
-Searching is a core Vim feature. You can search for text using /pattern, and to replace:
+- **Command Line History:**
+    - `q:` to open the command-line history.
+    - `:` followed by a keyword to search through the history.
 
-:%s/old/new/g for replacing all occurrences in the file.
+- **Plugins and Package Management:**
+    - You could mention popular plugin managers like vim-plug, Vundle, or dein.vim.
+    - Example for vim-plug:
+```bash
+        call plug#begin('~/.vim/plugged')
+        Plug 'junegunn/fzf.vim'
+        call plug#end()
+```    
 
-:%s/old/new/gc to ask for confirmation before each replacement.
+- **Session Management:**
+    - You can save the current state of your session with :mksession filename.vim, and later resume it with :source filename.vim.
 
-Undo/Redo:
+- **Filetype Specific Settings:**
+    - You can have filetype-specific settings, like for Python, JSON, etc.
+    - `:set filetype=python` to set the filetype manually.
+    - You can add settings to `~/.vimrc` to automatically set them based on file type.
 
-Undo: u to undo, Ctrl+r to redo.
+- **Folding:**
+    - Folding allows you to hide and show sections of your code for better navigation.
+    - `zc` to close a fold, `zo` to open it, and `zM`/`zR` for closing/opening all folds.
 
-Vim keeps a history of changes, and u can be used repeatedly for multiple undos.
-
-Macros:
-
-You can record a sequence of commands into a register and replay it:
-
-q<register> to start recording.
-
-Perform the actions you want to record.
-
-q to stop recording.
-
-@<register> to execute the recorded macro.
-
-Autocompletion:
-
-For code or word completion, use Ctrl+n and Ctrl+p to cycle through suggestions.
-
-:set completeopt=menu for a menu-based autocomplete display.
-
-Buffers and Tabs:
-
-Buffers: A buffer is an in-memory representation of a file.
-
-:ls to list open buffers.
-
-:bnext to switch to the next buffer, :bprev to go back.
-
-Tabs: Tabs are a collection of windows displaying buffers.
-
-:tabnew to open a new tab, :tabnext to switch between tabs.
-
-Split Windows and Navigation:
-
-You have :split and :vsplit for horizontal and vertical splits, but navigation between them could be expanded:
-
-Ctrl-w + h/j/k/l to navigate between splits.
-
-Ctrl-w + = to balance splits.
-
-Command Line History:
-
-q: to open the command-line history.
-
-: followed by a keyword to search through the history.
-
-Plugins and Package Management:
-
-You could mention popular plugin managers like vim-plug, Vundle, or dein.vim.
-
-Example for vim-plug:
-
-vim
-Copy
-Edit
-call plug#begin('~/.vim/plugged')
-Plug 'junegunn/fzf.vim'
-call plug#end()
-Session Management:
-
-You can save the current state of your session with :mksession filename.vim, and later resume it with :source filename.vim.
-
-Filetype Specific Settings:
-
-You can have filetype-specific settings, like for Python, JSON, etc.
-
-:set filetype=python to set the filetype manually.
-
-You can add settings to ~/.vimrc to automatically set them based on file type.
-
-Folding:
-
-Folding allows you to hide and show sections of your code for better navigation.
-
-zc to close a fold, zo to open it, and zM/zR for closing/opening all folds.
-
-External Commands and Integration:
-
-Vim supports running external commands via :! or :read !.
-
-Example: :!ls to list files in the current directory.
+- **External Commands and Integration:**
+    - Vim supports running external commands via `:!` or `:read !`
+    - Example: `:!ls` to list files in the current directory.
 
 EOF
 ) | less -R

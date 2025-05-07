@@ -156,9 +156,11 @@ alias smb='sudo vi /etc/samba/smb.conf'     # Edit Samba configuration
 alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
 alias smbconf='sudo vi /etc/samba/smb.conf' # Edit Samba configuration
 alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
-alias exports='sudo vi /etc/exports'        # Edit NFS exports
 alias sudoers='sudo visudo'                 # Edit /etc/sudoers
 alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
+alias exports='sudo vi /etc/exports'        # Edit NFS exports
+alias exportfs='sudo exportfs'              # Shows as non-existent command if run without sudo
+alias showmount='sudo showmount'              # Shows as non-existent command if run without sudo
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
 alias u1='cd ..';          alias cd..='u1'     # cd.. is a common typo in Linux for Windows users

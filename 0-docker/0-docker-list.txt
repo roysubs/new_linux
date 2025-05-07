@@ -1,4 +1,20 @@
-Curated List of Docker Containers (50+)
+ichiban/dwarffortress or similar. Web UI?: Often No (Usually requires VNC or X forwarding setup)
+
+Dashboards (Organizr, Dashy, Heimdall, Homepage): This is where the magic of a curated dashboard comes in! They generally don't automatically scan your network and find every active web service on every port. Instead, they work by manual configuration. You tell the dashboard:
+"I have Plex running at 192.168.1.100:32400"
+"I have Portainer running at 192.168.1.100:9443"
+"I have qBittorrent running at 192.168.1.100:8080"
+You add an entry for each service you want quick access to, providing its name, URL (IP address or hostname, plus the port), and often you can pick a nice icon. Some advanced dashboards might integrate with Docker labels to auto-discover services if you label your containers appropriately, but they are primarily organized launchpads for your known services, not live network scanners. They provide a single, visually appealing place to bookmark and access all your self-hosted apps.
+
+Speedtest Tracker: Glad that one resonates! It is indeed cool to see how your internet speed performs over time and spot trends or issues. It's a great example of a simple utility container that provides valuable information via a web UI.
+
+Nitter: You are absolutely right to be cautious about Nitter and similar alternative frontends for major services like Twitter/X or YouTube (like Invidious from the list). These projects typically work by scraping the public-facing website or using unofficial/undocumented APIs.
+Is it reliable? This is the challenge. Because they rely on the underlying service not changing its public interface or actively trying to block scrapers, they are inherently fragile. When Twitter/X makes changes to its website structure, adds new features, or implements anti-bot measures, Nitter can (and frequently does) break.
+Are they maintained? The developers of Nitter and similar projects constantly work to update them when the upstream service breaks them. However, there can be periods where the service is partially or completely non-functional until the developers figure out how to adapt.
+So, while useful for privacy and alternative access when they are working, you should expect Nitter (and others like Invidious) to experience downtime or glitches whenever the service they rely on makes significant changes. They are community-driven efforts playing a perpetual game of catch-up.
+
+
+Curated List of Docker Containers
 
 Audiobookshelf
 Image: ghcr.io/advplyr/audiobookshelf
@@ -265,62 +281,6 @@ Image: quay.io/iv-org/invidious (Requires a database container)
 Web UI?: Yes
 Description: A free and open source alternative YouTube front-end.
 Dwarf Fortress (Caveat!)
-
-Image: Search Docker Hub (e.g., ichiban/dwarffortress or similar).
-Web UI?: Often No (Usually requires VNC or X forwarding setup)
-Description: The legendary simulation game. Running in a container is highly experimental and usually involves complex setup for graphics (VNC, X11 forwarding) rather than a simple web UI. Finding a stable, easy-to-run version in Docker can be difficult.
-This list covers a wide range of applications similar to your interests. Remember that for many of these (especially those requiring databases), you'll need to set up the necessary database container(s) first and configure networking and persistent volumes correctly when you run them.
-
-Good luck with your containerization journey!
-
-
-
-
-
-22,23,24 (and maybe Homepage also?) will let me see all ports that have active web services on them so that I can just jump to one of the web services if I understand that right? oh, that sounds amazing!
-
-wow, speedtest tracker is right up my street, that sounds cool to see trends.
-
-Does Nitter actually work, I mean, with X, as it changes all the time, I would have thought these get broken all the time by changes at Twitter/X
-
-
-
-
-Show thinking
-Okay, let's break down those points:
-
-Dashboards (Organizr, Dashy, Heimdall, Homepage): This is where the magic of a curated dashboard comes in! They generally don't automatically scan your network and find every active web service on every port. Instead, they work by manual configuration. You tell the dashboard:
-
-"I have Plex running at 192.168.1.100:32400"
-"I have Portainer running at 192.168.1.100:9443"
-"I have qBittorrent running at 192.168.1.100:8080"
-You add an entry for each service you want quick access to, providing its name, URL (IP address or hostname, plus the port), and often you can pick a nice icon. Some advanced dashboards might integrate with Docker labels to auto-discover services if you label your containers appropriately, but they are primarily organized launchpads for your known services, not live network scanners. They provide a single, visually appealing place to bookmark and access all your self-hosted apps.
-
-Speedtest Tracker: Glad that one resonates! It is indeed cool to see how your internet speed performs over time and spot trends or issues. It's a great example of a simple utility container that provides valuable information via a web UI.
-
-Nitter: You are absolutely right to be cautious about Nitter and similar alternative frontends for major services like Twitter/X or YouTube (like Invidious from the list). These projects typically work by scraping the public-facing website or using unofficial/undocumented APIs.
-
-Does it work? Yes, they can and often do work.
-Is it reliable? This is the challenge. Because they rely on the underlying service not changing its public interface or actively trying to block scrapers, they are inherently fragile. When Twitter/X makes changes to its website structure, adds new features, or implements anti-bot measures, Nitter can (and frequently does) break.
-Are they maintained? The developers of Nitter and similar projects constantly work to update them when the upstream service breaks them. However, there can be periods where the service is partially or completely non-functional until the developers figure out how to adapt.
-So, while useful for privacy and alternative access when they are working, you should expect Nitter (and others like Invidious) to experience downtime or glitches whenever the service they rely on makes significant changes. They are community-driven efforts playing a perpetual game of catch-up.
-
-
-
-
-
-
-Can you give me 50 more containers in the same vein as the first 50, this is pretty fascinating...
-
-
-
-Show thinking
-Okay, you got it! It's great you're finding this interesting – there's a huge ecosystem of applications available as Docker containers.
-
-Here is another list of 50+ containers in a similar vein to the first list, focusing on applications with web interfaces and practical uses, avoiding overly technical or pure-developer tools.
-
-More Docker Containers (50+ Additional Ideas)
-
 
 Radarr
 Image: ghcr.io/linuxserver/radarr
