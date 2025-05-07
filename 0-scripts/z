@@ -63,12 +63,60 @@ case "$option" in
         ;;
     x)
         if [ $# -ne 1 ]; then
-            echo "Error: Provide a zipfile to extract."
+            echo "Usage: z x <archive>"
             exit 1
         fi
-        zipfile=$1
-        run_command mkdir -p "${zipfile%.*}"
-        run_command $COMPRESS_CMD x "$zipfile" -o"${zipfile%.*}"
+
+        archive="$1"
+        name="$(basename "$archive")"
+        base="${name%%.*}"
+        outdir="${base}_extracted"
+
+        run_command mkdir -p "$outdir"
+
+        filetype=$(file -b "$archive")
+
+        case "$filetype" in
+            *gzip\ compressed*)
+                echo "Detected gzip-compressed file"
+                run_command 7z e "$archive" -o"$outdir"
+                tarfile=$(find "$outdir" -maxdepth 1 -name '*.tar' | head -n 1)
+                if [ -n "$tarfile" ]; then
+                    run_command 7z x "$tarfile" -o"$outdir"
+                    run_command rm "$tarfile"
+                fi
+                ;;
+            *bzip2\ compressed*)
+                echo "Detected bzip2-compressed file"
+                run_command 7z e "$archive" -o"$outdir"
+                tarfile=$(find "$outdir" -maxdepth 1 -name '*.tar' | head -n 1)
+                if [ -n "$tarfile" ]; then
+                    run_command 7z x "$tarfile" -o"$outdir"
+                    run_command rm "$tarfile"
+                fi
+                ;;
+            *XZ\ compressed*)
+                echo "Detected xz-compressed file"
+                run_command 7z e "$archive" -o"$outdir"
+                tarfile=$(find "$outdir" -maxdepth 1 -name '*.tar' | head -n 1)
+                if [ -n "$tarfile" ]; then
+                    run_command 7z x "$tarfile" -o"$outdir"
+                    run_command rm "$tarfile"
+                fi
+                ;;
+            *tar\ archive*)
+                echo "Detected tar archive"
+                run_command 7z x "$archive" -o"$outdir"
+                ;;
+            *Zip\ archive*|*7-zip\ archive*|*RAR\ archive*)
+                echo "Detected common archive type"
+                run_command 7z x "$archive" -o"$outdir"
+                ;;
+            *)
+                echo "Error: Unknown or unsupported archive format: $filetype"
+                exit 1
+                ;;
+        esac
         ;;
     i)
         if [ $# -ne 1 ]; then

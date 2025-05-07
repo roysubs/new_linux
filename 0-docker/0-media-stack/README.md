@@ -1,9 +1,12 @@
 # Media Stack Setup
 
-This project sets up a self-hosted media automation suite with:
+This project sets up a self-hosted media download and management automation suite, protected by VPN:
 
-- qBittorrent + Gluetun VPN (Surfshark)
-- Sonarr, Radarr, Jackett
+- Gluetun VPN (with Surfshark)
+- qBittorrent (actually qbittorrent-nox but image name is qbittorent)
+- Sonarr
+- Radarr
+- Jackett
 - Filebrowser
 
 ## Setup

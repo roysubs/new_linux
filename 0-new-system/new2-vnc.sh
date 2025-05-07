@@ -118,9 +118,8 @@ The 'vncserver' output tells you exactly what to enter into the VNC Viewer on Wi
     myhostname:1
     192.168.1.100:1
 
-TightVNC Viewer is simply and creates a good display resolution without tweaking.
+TightVNC Viewer is very simple and creates a good display resolution without tweaking.
 UltraVNC has a good autosize option, and tons of options.
-TigerVNC is very simple
 
 Full access password: $VNC_PASSWORD
 View only password:   $VIEW_ONLY_PASSWORD
