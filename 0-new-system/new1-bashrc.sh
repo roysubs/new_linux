@@ -67,40 +67,6 @@ shopt -s extglob
 # @(pattern1|pattern2|...), matches exactly one of the specified patterns, e.g., @(jpg|png) matches jpg or png.
 # !(pattern), matches anything except the pattern, e.g., !(abc) matches any string except abc.
 
-# History settings and 'h' History helper function
-shopt -s histappend      # Append commands to the bash history (~/.bash_history) instead of overwriting it
-export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000    # make history very big and show date-time
-
-# h: History Tool. Must be in .bashrc (if it is in a script, then it will be in a subshell, and so cannot view full history)
-h() {
-    case \"\$1\" in
-        \"\" ) # Default case when no arguments are given (show main help)
-            echo -e \"History Tool. Usage: h <option> [string]\\n  a|an|ad|ab    show all history (a full, an numbers only, ad datetime only, ab bare commands)\\n  f|fn|fd|fb    find string (f full, fn numbers only, fd datetime only, fb bare commands)\\n  n <num>      Show last N history entries (full)\\n  help          Show extended help from 'h-history' script\\n  clear         Clear the history\\n  edit          Edit the history file in your editor\\n  uniq          Show unique history entries (bare)\\n  top           Show top 10 most frequent commands (bare roots)\\n  cmds          Show top 20 most frequent command roots (bare)\\n  root          Show commands run with sudo (bare)\" ;; # Removed 'r' and trailing \\n
-        a) history ;; # Show full history with numbers and dates
-        an) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' ;; # Show numbers only, remove date/time
-        ad) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' ;; # Show datetime only, remove numbers
-        ab) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} /#/' ;; # Show bare commands (no numbers or date/time), prefix each command with # as dangerous if copy and paste raw commands
-        f | s) history | grep -i --color=auto \"\$2\" ;; # Find in full history (with numbers and dates)
-        fn | sn) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' | grep -i --color=auto \"\$2\" ;; # Find in history with numbers only
-        fd | sd) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' | grep -i --color=auto \"\$2\" ;; # Find in history with datetime only
-        fb | sb) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} /#/' | grep -i --color=auto \"\$2\" ;; # Find in bare history (no numbers or date/time), prefix each command with # as dangerous if copy and paste raw commands
-        n) [[ \"\$2\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$2\" || echo \"Invalid number\" ;;
-        help) if command -v h-history >/dev/null 2>&1; then h-history; else echo \"Error: 'h-history' script not found in your PATH.\"; fi ;;
-        clear) history -c && echo \"History cleared\" ;;
-        edit) history -w && \${EDITOR:-vi} \"\$HISTFILE\" ;;
-        uniq) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | sort -u ;; # Bare unique
-        top) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{CMD[\$1]++} END {for (a in CMD) printf \"%5d %s\\n\", CMD[a], a;}' | sort -nr | head -10 ;; # Bare command roots top 10 - Use printf for alignment
-        cmds) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{print \$1}' | sort | uniq -c | sort -nr | head -20 ;; # Bare command roots top 20 - uniq -c provides alignment
-        root) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | grep -w sudo ;; # Bare sudo commands
-
-        # --- Fallback: Treat bare number as 'n' ---
-        *) [[ \"\$1\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$1\" || echo \"Invalid option or number\" ;;
-    esac;
-    echo -e \"\\nHistory tips: !N (run cmd N), !! (run last cmd), !-N (run Nth last cmd),\"
-    echo -e \"  !str (run last cmd starting w/str), !?str? (run last cmd containing str).\"
-    echo -e \"Ctrl-r/s (reverse/forward history search). Note: Ctrl-s may require 'stty -ixon' to enable.\"
-}
-
 # Def: Show function/alias/built-ins/scripts definitions. This  must be in .bashrc to have visibility of all loaded shell functions and aliases
 def() {
     if [ -z \"\$1\" ]; then
@@ -142,6 +108,40 @@ def() {
     if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
 }
 
+# History settings and 'h' History helper function
+shopt -s histappend      # Append commands to the bash history (~/.bash_history) instead of overwriting it
+export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000    # make history very big and show date-time
+
+# h: History Tool. Must be in .bashrc (if it is in a script, then it will be in a subshell, and so cannot view full history)
+h() {
+    case \"\$1\" in
+        \"\" ) # Default case when no arguments are given (show main help)
+            echo -e \"History Tool. Usage: h <option> [string]\\n  a|an|ad|ab    show all history (a full, an numbers only, ad datetime only, ab bare commands)\\n  f|fn|fd|fb    find string (f full, fn numbers only, fd datetime only, fb bare commands)\\n  n <num>      Show last N history entries (full)\\n  help          Show extended help from 'h-history' script\\n  clear         Clear the history\\n  edit          Edit the history file in your editor\\n  uniq          Show unique history entries (bare)\\n  top           Show top 10 most frequent commands (bare roots)\\n  cmds          Show top 20 most frequent command roots (bare)\\n  root          Show commands run with sudo (bare)\" ;; # Removed 'r' and trailing \\n
+        a) history ;; # Show full history with numbers and dates
+        an) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' ;; # Show numbers only, remove date/time
+        ad) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' ;; # Show datetime only, remove numbers
+        ab) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} /#/' ;; # Show bare commands (no numbers or date/time), prefix each command with # as dangerous if copy and paste raw commands
+        f | s) history | grep -i --color=auto \"\$2\" ;; # Find in full history (with numbers and dates)
+        fn | sn) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' | grep -i --color=auto \"\$2\" ;; # Find in history with numbers only
+        fd | sd) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' | grep -i --color=auto \"\$2\" ;; # Find in history with datetime only
+        fb | sb) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} /#/' | grep -i --color=auto \"\$2\" ;; # Find in bare history (no numbers or date/time), prefix each command with # as dangerous if copy and paste raw commands
+        n) [[ \"\$2\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$2\" || echo \"Invalid number\" ;;
+        help) if command -v h-history >/dev/null 2>&1; then h-history; else echo \"Error: 'h-history' script not found in your PATH.\"; fi ;;
+        clear) history -c && echo \"History cleared\" ;;
+        edit) history -w && \${EDITOR:-vi} \"\$HISTFILE\" ;;
+        uniq) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | sort -u ;; # Bare unique
+        top) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{CMD[\$1]++} END {for (a in CMD) printf \"%5d %s\\n\", CMD[a], a;}' | sort -nr | head -10 ;; # Bare command roots top 10 - Use printf for alignment
+        cmds) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{print \$1}' | sort | uniq -c | sort -nr | head -20 ;; # Bare command roots top 20 - uniq -c provides alignment
+        root) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | grep -w sudo ;; # Bare sudo commands
+
+        # --- Fallback: Treat bare number as 'n' ---
+        *) [[ \"\$1\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$1\" || echo \"Invalid option or number\" ;;
+    esac;
+    echo -e \"\\nHistory tips: !N (run cmd N), !! (run last cmd), !-N (run Nth last cmd),\"
+    echo -e \"  !str (run last cmd starting w/str), !?str? (run last cmd containing str).\"
+    echo -e \"Ctrl-r/s (reverse/forward history search). Note: Ctrl-s may require 'stty -ixon' to enable.\"
+}
+
 # aliases to quickly get to various configuration scripts:
 alias bashrc='vi ~/.bashrc'           # Edit .bashrc (user)
 alias inputrc='vi ~/.inputrc'         # Edit .inputrc (user)
@@ -150,17 +150,29 @@ alias vimrcroot='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
 alias vimrcsudo='sudo vi /etc/vim/vimrc'    # Edit vimrc (system)
 config() { cd ~/.config || return; ls; }    # Jump to ~/.config
 mnt() { cd /mnt || return; ls; }            # Jump to /mnt
+alias sudoers='sudo visudo'                 # Edit /etc/sudoers
 alias initvim='vi ~/.config/nvim/init.vim'  # Edit neovim configuration
 alias nvimrc='vi ~/.config/nvim/init.vim'   # Edit neovim configuration
+alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
+# SMB, NFS, and mount commands
+alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
 alias smb='sudo vi /etc/samba/smb.conf'     # Edit Samba configuration
 alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
 alias smbconf='sudo vi /etc/samba/smb.conf' # Edit Samba configuration
-alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
-alias sudoers='sudo visudo'                 # Edit /etc/sudoers
-alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
 alias exports='sudo vi /etc/exports'        # Edit NFS exports
-alias exportfs='sudo exportfs'              # Shows as non-existent command if run without sudo
-alias showmount='sudo showmount'              # Shows as non-existent command if run without sudo
+alias nfs-fs='sudo exportfs'                # Shows as non-existent command if run without sudo
+alias nfs-fs-a='sudo exportfs -a'
+alias nfs-fs-r='sudo exportfs -r'
+alias nfs-fs-u='sudo exportfs -u'           # Requires directy as argument
+alias nfs-fs-v='sudo exportfs -v'
+alias nfs-mount='sudo showmount'            # Shows as non-existent command if run without sudo
+nfs-server() { sudo systemctl \$1 nfs-server; }  # status, start, stop, restart, enable, disable
+alias nfs-mount-e='showmount -e'            # Requires <server_ip_or_hostname>
+alias nfs-mount-a='showmount -a'            # Requires <server_ip_or_hostname>
+alias nfs-mount-t='sudo mount -t nfs'       # Requires <server_ip_or_hostname>:/remote/path /local/mountpoint
+alias unmoun='sudo umount'                  # Requires path: /local/mountpoint
+alias rpc='rpcinfo -p'                      # Requires <server_ip_or_hostname>
+# Note also 'nfsstat'
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
 alias u1='cd ..';          alias cd..='u1'     # cd.. is a common typo in Linux for Windows users
