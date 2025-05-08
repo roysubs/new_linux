@@ -3,7 +3,7 @@
 # Sends a magnet link to remote qBittorrent Web UI on port 8080 via its API.
 # Logs output and errors to a .log file in the same directory.
 ##################################
-# NOTE!!! Check IP, username, and password if not working correctly
+# Note Check IP, username, and password if not working correctly
 ##################################
 
 param (
@@ -38,14 +38,14 @@ function Write-Log {
 # --- Main Logic ---
 
 # Pass the determined log file path to the logging function
-Write-Log "Script started." $logFilePath
-Write-Log "Magnet Link: $magnetLink" $logFilePath
-Write-Log "qBittorrent Host: $qbWebUIHost" $logFilePath
+# Write-Log "Script started." $logFilePath
+$magnetTitle = $magnetLink.Split('&') | Where-Object { $_ -like "dn=*" } | ForEach-Object { $_ -replace "dn=", "" }
+Write-Log "Send '$magnetTitle' to '$qbWebUIHost'" $logFilePath
 
 # Validate input
 if ([string]::IsNullOrWhiteSpace($magnetLink)) {
-    Write-Log "ERROR: No magnet link was provided to the script. Exiting." $logFilePath
-    exit 1 # Exit with a non-zero status to indicate failure
+    Write-Log "ERROR: No magnet link provided. Exiting." $logFilePath
+    exit 1   # Exit with a non-zero status to indicate failure
 }
 
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
@@ -58,17 +58,16 @@ try {
         username = $username
         password = $password
     } -WebSession $session -ErrorAction Stop
-
     # Write-Log "Authentication Invoke-WebRequest completed." $logFilePath
 
     # Authentication success should return "Ok." in the content for API v2 login
     if ($loginResponse.Content -ne "Ok.") {
         # Authentication failed based on content response
-        Write-Log "ERROR: Failed to authenticate; check IP:Port, username, and password" $logFilePath
+        Write-Log "ERROR: Failed to authenticate on '$qbWebUIHost'; check IP:Port, username, and password" $logFilePath
         Write-Log "Response Content: $($loginResponse.Content). Exiting." $logFilePath
         exit 1
     }
-    Write-Log "Authentication successful (content was 'Ok.')." $logFilePath
+    Write-Log "SUCCESS: Authentication returned 'Ok.'" $logFilePath
 
 } catch {
     # Catch errors during Invoke-WebRequest (e.g., connection refused, host not found, firewall blocked)
@@ -77,14 +76,14 @@ try {
 }
 
 # --- Attempt to Add Magnet Link ---
-Write-Log "Attempting to add magnet link..." $logFilePath
+# Write-Log "Attempting to add magnet link..." $logFilePath
 try {
     # Use ErrorAction Stop to catch HTTP errors like 409 (Conflict)
     $addTorrentResponse = Invoke-WebRequest -Uri "$qbWebUIHost/api/v2/torrents/add" -Method Post -Body @{
         urls = $magnetLink # 'urls' is the correct parameter name for magnet links
     } -WebSession $session -ErrorAction Stop
 
-    Write-Log "Add torrent Invoke-WebRequest completed." $logFilePath
+    # Write-Log "Add torrent Invoke-WebRequest completed." $logFilePath
 
     # API returns 200 OK on success for adding torrents
     if ($addTorrentResponse.StatusCode -ne 200) {
@@ -103,6 +102,5 @@ try {
     exit 1
 }
 
-Write-Log "Script finished." $logFilePath
+# Write-Log "Script finished." $logFilePath
 exit 0    # Explicitly exit with status 0 on success
-
