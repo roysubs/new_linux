@@ -71,7 +71,7 @@ case "$option" in
         git status
         ;;
     acp)
-        shift  # remove 'acp' from $@ (so we only handle user args now)
+        # shift   # do not shift here to remove 'acp' from $@ as it's already removed before 'case'
         DEBUG_MODE=0
         COMMIT_MSG=()
     
@@ -83,6 +83,7 @@ case "$option" in
                     ;;
                 *)
                     COMMIT_MSG+=("$1")
+                    echo $COMMIT_MSG
                     ;;
             esac
             shift
