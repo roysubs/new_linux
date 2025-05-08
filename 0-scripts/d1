@@ -1,0 +1,328 @@
+#!/usr/bin/env bash
+
+# d - Directory size summary with relative sizes and optional file/dir counts
+
+# set -euo pipefail # <-- Temporarily disable for debugging
+shopt -s nullglob dotglob
+
+# # echo "DEBUG: Script started" # Debug print
+
+# --- Configuration ---
+# Default mode: apparent size (file data bytes)
+DU_FLAGS=(--apparent-size -s -B1)
+SIZE_MODE_DESC="apparent size (file data bytes)"
+
+SHOW_COUNTS=false
+SHOW_HELP=false
+START_TIME=$(date +%s)
+SUDO=""
+SORT_BY_NAME=false
+TOP_N=0
+DIR="."
+
+# --- Option Parsing ---
+# echo "DEBUG: Parsing options..." # Debug print
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help) SHOW_HELP=true ;;
+        -c|--count) SHOW_COUNTS=true ;;
+        -d|--disk-usage)
+            DU_FLAGS=(-s -B1)
+            SIZE_MODE_DESC="actual disk usage (allocated disk blocks)"
+            ;;
+        -b|--basic) shopt -u dotglob ;; # Exclude hidden files and directories
+        -n|--name) SORT_BY_NAME=true ;;
+        -s|--sudo) SUDO="sudo" ;;
+        --top)
+            shift
+            [[ "$1" =~ ^[0-9]+$ ]] || { echo "Invalid -top argument: $1"; exit 1; }
+            TOP_N="$1"
+            ;;
+        -*)
+            echo "Unknown option: "$1""
+            # exit 1 # Keep running in debug mode
+            ;;
+        *) DIR="$1" ;;
+    esac
+    shift
+done
+# echo "DEBUG: Options parsed." # Debug print
+
+DIR=$(eval echo "$DIR") # Expand potential ~ character
+
+# --- Help Display ---
+if $SHOW_HELP; then
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS] [DIRECTORY]
+
+Calculates and displays sizes of subdirectories and loose files within a directory.
+
+Default calculation shows apparent size (sum of file data bytes).
+
+Options:
+  -h, --help        Show this help message and exit.
+  -c, --count       Show file and directory counts for each subdirectory and loose files.
+  -d, --disk-usage  Use actual disk usage (allocated blocks) instead of apparent file sizes.
+  -b, --basic       Ignore hidden files/directories (names starting with '.').
+                    By default, hidden items are included.
+  -n, --name        Sort output by name instead of size (default is size descending).
+  -s, --sudo        Use sudo for 'du' and 'find' commands (needed for restricted directories).
+  --top N           Show only the top N largest directories (plus loose files).
+
+Default directory is the current directory ('.').
+EOF
+    exit 0
+fi
+
+echo "Calculating directory sizes in: $(realpath "$DIR")"
+echo "(using ${SIZE_MODE_DESC})"
+
+declare -A SIZES        # Associative array for directory sizes
+declare -A NUM_FILES    # Associative array for file counts (if -c)
+declare -A NUM_DIRS     # Associative array for directory counts (if -c)
+TOTAL_SIZE=0            # Running total size (subdirs + loose files)
+LOOSE_TOTAL=0           # Running total size for loose files only
+LOOSE_FILE_COUNT=0      # Counter for loose files
+
+# echo "DEBUG: Collecting subdirectory sizes for $DIR" # Debug print
+# --- Collect Subdirectory Sizes ---
+# Iterate through items in the target directory ending with '/' (directories)
+for d in "$DIR"/*/; do
+    # echo "DEBUG: Processing subdir $d" # Debug print
+    # Skip if not a directory, is a symlink, or is '.' or '..' (redundant with dotglob off, safety)
+    [[ -d "$d" && ! -L "$d" ]] || { # echo "DEBUG: Skipping non-directory/symlink $d"; continue; }
+
+    name=$(basename "$d")
+    # Run du with the selected flags (-s summarize, -B1 bytes, --apparent-size if -datasize)
+    # stderr is redirected to avoid permission denied messages (use -s|--sudo if needed)
+    # cut -f1 extracts the size number
+    size=$($SUDO du "${DU_FLAGS[@]}" "$d" 2>/dev/null | cut -f1)
+    # echo "DEBUG: du|cut for $d returned size '$size', exit code $? for du, $? for cut" # Debug print
+
+    # Ensure we got a valid number
+    [[ "$size" =~ ^[0-9]+$ ]] || { # echo "DEBUG: Invalid size '$size' for $d, skipping"; continue; }
+
+    SIZES["$name"]=$size      # Store size keyed by directory name
+    (( TOTAL_SIZE += size ))    # Add to the overall total
+    # echo "DEBUG: Added $name size $size. Current TOTAL_SIZE: $TOTAL_SIZE" # Debug print
+
+    # If counts are requested, find files and directories
+    if $SHOW_COUNTS; then
+        # echo "DEBUG: Counting files/dirs in $d" # Debug print
+        # Count files (-type f) within the subdirectory
+        files=$($SUDO find "$d" -type f 2>/dev/null | wc -l)
+        # echo "DEBUG: Files count for $d: $files, exit code $? for find, $? for wc" # Debug print
+        # Count directories (-type d) within the subdirectory
+        dirs=$($SUDO find "$d" -type d 2>/dev/null | wc -l)
+        # echo "DEBUG: Dirs count for $d: $dirs, exit code $? for find, $? for wc" # Debug print
+        NUM_FILES["$name"]=$files
+        # Subtract 1 from dir count because find includes the starting directory itself
+        NUM_DIRS["$name"]=$((dirs - 1))
+        # echo "DEBUG: Stored counts for $name: files ${NUM_FILES[$name]}, dirs ${NUM_DIRS[$name]}" # Debug print
+    fi
+done
+# echo "DEBUG: Finished collecting subdirectory sizes. Found ${#SIZES[@]} directories." # Debug print
+
+# echo "DEBUG: Collecting loose file sizes..." # Debug print
+# --- Collect Loose File Sizes and Count ---
+# Find items in the target directory (-mindepth 1 -maxdepth 1) that are files (-type f)
+# -print0 uses null characters to separate filenames, safe for weird names
+# read -r -d '' reads null-separated input safely
+find_cmd="$SUDO find "$DIR" -mindepth 1 -maxdepth 1 -type f -print0"
+# echo "DEBUG: Running find command: $find_cmd" # Debug print
+while IFS= read -r -d '' file; do
+    # echo "DEBUG: Processing loose file '$file'" # Debug print
+    # Run du with the selected flags on the individual file
+    size=$($SUDO du "${DU_FLAGS[@]}" "$file" 2>/dev/null | cut -f1)
+    # echo "DEBUG: du|cut for '$file' returned size '$size', exit code $? for du, $? for cut" # Debug print
+    [[ "$size" =~ ^[0-9]+$ ]] || { # echo "DEBUG: Invalid size '$size' for '$file', skipping"; continue; }
+    (( LOOSE_TOTAL += size ))     # Add to the loose file total
+    (( LOOSE_FILE_COUNT++ ))      # Increment loose file count
+    # echo "DEBUG: Added '$file' size $size. Current LOOSE_TOTAL: $LOOSE_TOTAL, LOOSE_FILE_COUNT: $LOOSE_FILE_COUNT" # Debug print
+done < <($find_cmd) # Use process substitution with the command
+
+# echo "DEBUG: Finished collecting loose file sizes." # Debug print
+
+# Add loose file total to the grand total
+(( TOTAL_SIZE += LOOSE_TOTAL ))
+# echo "DEBUG: Updated TOTAL_SIZE: $TOTAL_SIZE" # Debug print
+
+# --- Helper Function: Format Bytes to Human Readable ---
+to_human() {
+    local size=$1 B K M G T P
+    # # echo "DEBUG: to_human called with size $size" # Debug print - too noisy? Let's put it around bc call instead
+    if (( size == 0 )); then printf "0 B"; return; fi # Handle zero separately
+    B=1 K=1024 M=$((1024*1024)) G=$((1024*1024*1024)) T=$((1024*1024*1024*1024)) P=$((1024*1024*1024*1024*1024))
+    # Compare size against thresholds and format accordingly
+    if (( size < K )); then printf "%d B" "$size"
+    elif (( size < M )); then printf "%.1f KB" "$(echo "scale=1; $size/$K" | bc)" # Using echo | bc for compatibility
+    elif (( size < G )); then printf "%.1f MB" "$(echo "scale=1; $size/$M" | bc)" # Using echo | bc
+    elif (( size < T )); then printf "%.1f GB" "$(echo "scale=1; $size/$G" | bc)" # Using echo | bc
+    elif (( size < P )); then printf "%.1f TB" "$(echo "scale=1; $size/$T" | bc)" # Using echo | bc
+    else                         printf "%.1f PB" "$(echo "scale=1; $size/$P" | bc)" # Using echo | bc
+    fi
+    # # echo "DEBUG: to_human returned" # Debug print
+}
+# echo "DEBUG: to_human function defined" # Debug print
+# NOTE: Changed `bc <<< "..."` to `echo "..." | bc` for potential compatibility, though here-strings are standard bash 4.
+
+# echo "DEBUG: Setting up output formatting..." # Debug print
+# --- Output Formatting Setup ---
+cols=$(tput cols || echo 80)  # Get terminal width, default 80
+name_pad=25           # Width for the name column
+size_pad=10           # Width for the size column
+extra_pad=0           # Extra padding if counts are shown
+$SHOW_COUNTS && extra_pad=22 # Adjust padding for file/dir counts
+# Calculate remaining space for the bar, ensure minimum width
+bar_space=$(( cols - name_pad - size_pad - extra_pad - 5 )) # Adjusted spacing
+(( bar_space < 10 )) && bar_space=10
+# echo "DEBUG: Formatting setup complete. cols=$cols, bar_space=$bar_space" # Debug print
+
+# echo "DEBUG: Printing header..." # Debug print
+# --- Print Header ---
+if $SHOW_COUNTS; then
+    # Header with Name, Size, NumFiles, NumDirs, Bar
+    printf "\n%-*s %*s  %10s %10s  %s\n" "$name_pad" "Directory/Item" "$size_pad" "Size" "NumFiles" "NumDirs" "Size Bar"
+    printf "%-*s %*s  %10s %10s  %s\n" "$name_pad" "-------------------------" "$size_pad" "----------" "----------" "----------" "--------------------"
+else
+    # Header with Name, Size, Bar
+    printf "\n%-*s %*s  %s\n" "$name_pad" "Directory/Item" "$size_pad" "Size" "Size Bar"
+    printf "%-*s %*s  %s\n" "$name_pad" "-------------------------" "$size_pad" "----------" "--------------------"
+fi
+# echo "DEBUG: Header printed." # Debug print
+
+# echo "DEBUG: Starting sorting..." # Debug print
+# --- Sorting ---
+declare -a sorted_names # Array to hold sorted directory names
+
+# If no directories found, the sorted list is just empty
+if (( ${#SIZES[@]} == 0 )); then
+    # echo "DEBUG: No directories found, sorted_names is empty." # Debug print
+    sorted_names=() # Explicitly make it an empty array
+elif $SORT_BY_NAME; then
+    # echo "DEBUG: Sorting by name..." # Debug print
+    # Sort keys (directory names) alphabetically
+    # Use printf to handle names with leading dashes safely with sort
+    mapfile -t sorted_names < <(printf "%s\n" "${!SIZES[@]}" | sort)
+    # echo "DEBUG: Name sort complete. ${#sorted_names[@]} entries." # Debug print
+else # Sort by size (descending) - This is the default
+    # echo "DEBUG: Sorting by size..." # Debug print
+    # Prepare data for sorting: size followed by name
+    # Use printf for safer handling of names potentially starting with '-'
+    # Sort numerically on the first field (size), descending (-k1 -nr)
+    # Use awk to remove the size field and any leading space, keeping the name
+    mapfile -t sorted_names < <(
+        for k in "${!SIZES[@]}"; do
+            printf "%s %s\n" "${SIZES[$k]}" "$k" # Print size first, then name
+        done | sort -k1 -nr | awk '{ $1=""; sub(/^ */, ""); print }'
+    )
+    # echo "DEBUG: Size sort complete. ${#sorted_names[@]} entries." # Debug print
+fi
+
+# echo "DEBUG: Sorting block finished." # Debug print
+
+
+# echo "DEBUG: Applying --top N filter (N=$TOP_N)..." # Debug print
+# --- Apply -top N Filter ---
+if (( TOP_N > 0 && ${#sorted_names[@]} > TOP_N )); then
+    # echo "DEBUG: Applying top $TOP_N filter." # Debug print
+    # Slice the array to keep only the top N elements
+    sorted_names=("${sorted_names[@]:0:TOP_N}")
+    # echo "DEBUG: After filter: ${#sorted_names[@]} entries." # Debug print
+fi
+# echo "DEBUG: Top N filter applied." # Debug print
+
+
+# echo "DEBUG: Starting output for directory details..." # Debug print
+# --- Output Directory Details ---
+for name in "${sorted_names[@]}"; do
+    # echo "DEBUG: Outputting details for directory '$name'" # Debug print
+    # Skip if the key somehow doesn't exist (safety)
+    [[ -v SIZES["$name"] ]] || { # echo "DEBUG: Skipping '$name', not in SIZES array?"; continue; }
+
+    size="${SIZES[$name]}"
+    # Calculate bar length proportional to total size (avoid division by zero)
+    barlen=0
+    (( TOTAL_SIZE > 0 )) && barlen=$(( size * bar_space / TOTAL_SIZE ))
+    # echo "DEBUG: Calculated barlen $barlen for size $size and TOTAL_SIZE $TOTAL_SIZE" # Debug print
+    # Create the bar string using printf and tr
+    bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
+    # echo "DEBUG: Bar string created." # Debug print
+    # Format size to human-readable
+    # echo "DEBUG: Calling to_human for size $size ('$name')..." # Debug print
+    hsize=$(to_human "$size")
+    # echo "DEBUG: to_human returned '$hsize'." # Debug print
+
+    # Print formatted line based on whether counts are shown
+    if $SHOW_COUNTS; then
+        printf "%-*s %*s  %10s %10s  [%s]\n" \
+            "$name_pad" "$name" \
+            "$size_pad" "$hsize" \
+            "${NUM_FILES[$name]:-0}" "${NUM_DIRS[$name]:-0}" \
+            "$bar"
+        # echo "DEBUG: Printed counts line for '$name'." # Debug print
+    else
+        printf "%-*s %*s  [%s]\n" \
+            "$name_pad" "$name" \
+            "$size_pad" "$hsize" \
+            "$bar"
+        # echo "DEBUG: Printed non-counts line for '$name'." # Debug print
+    fi
+done
+# echo "DEBUG: Finished output for directory details." # Debug print
+
+# echo "DEBUG: Starting Print Loose Files Summary..." # Debug print
+# --- Print Loose Files Summary ---
+# Only print if there's something to show (loose files exist or counts/sorted names are printed)
+# Adjusted condition to explicitly include loose file count > 0 or total > 0 or show counts
+if (( LOOSE_TOTAL > 0 || LOOSE_FILE_COUNT > 0 || $SHOW_COUNTS || TOTAL_SIZE > 0 )); then
+    # echo "DEBUG: Loose Files summary condition met." # Debug print
+    # echo "DEBUG: Calling to_human for loose total $LOOSE_TOTAL..." # Debug print
+    hsize=$(to_human "$LOOSE_TOTAL")
+    # echo "DEBUG: to_human returned '$hsize'." # Debug print
+    barlen=0
+    (( TOTAL_SIZE > 0 )) && barlen=$(( LOOSE_TOTAL * bar_space / TOTAL_SIZE ))
+    # echo "DEBUG: Calculated barlen $barlen for LOOSE_TOTAL $LOOSE_TOTAL and TOTAL_SIZE $TOTAL_SIZE" # Debug print
+    bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
+    # echo "DEBUG: Bar string created for loose files." # Debug print
+
+    if $SHOW_COUNTS; then
+        # echo "DEBUG: Printing loose files line with counts ($LOOSE_FILE_COUNT files)." # Debug print
+        # Use LOOSE_FILE_COUNT for the NumFiles column, keep NumDirs as "-"
+        printf "%-*s %*s  %10s %10s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "$LOOSE_FILE_COUNT" "-" "$bar"
+    else
+        # echo "DEBUG: Printing loose files line without counts." # Debug print
+        printf "%-*s %*s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "$bar"
+    fi
+else
+    # echo "DEBUG: Loose Files summary condition NOT met." # Debug print
+fi
+# echo "DEBUG: Finished Print Loose Files Summary." # Debug print
+
+# echo "DEBUG: Starting Print Total Size Summary..." # Debug print
+# --- Print Total Size Summary ---
+printf "%-*s %*s\n" "$name_pad" "-------------------------" "$size_pad" "----------"
+# echo "DEBUG: Printed separator line." # Debug print
+# echo "DEBUG: Calling to_human for total size $TOTAL_SIZE..." # Debug print
+printf "%-*s %*s\n" "$name_pad" "** Total Size:" "$size_pad" "$(to_human "$TOTAL_SIZE")"
+# echo "DEBUG: Printed total size line." # Debug print
+# echo "DEBUG: Finished Print Total Size Summary." # Debug print
+
+# echo "DEBUG: Starting Print Execution Time..." # Debug print
+# --- Print Execution Time ---
+END_TIME=$(date +%s)
+RUN_TIME=$(( END_TIME - START_TIME ))
+# echo "DEBUG: Run time calculated: $RUN_TIME seconds." # Debug print
+# Only show runtime if it's significant (e.g., > 1 seconds)
+if (( RUN_TIME > 1 )); then # Changed threshold for smaller directories
+    # echo "DEBUG: Runtime condition met ($RUN_TIME > 1)." # Debug print
+    echo "" # Add a blank line before runtime
+    echo "Script execution time: ${RUN_TIME} seconds"
+else
+    # echo "DEBUG: Runtime condition NOT met ($RUN_TIME <= 1)." # Debug print
+fi
+# echo "DEBUG: Finished Print Execution Time." # Debug print
+
+# echo "DEBUG: Script finished successfully?" # Debug print
+# Add the original set -e back here if debugging shows it completes
+# set -euo pipefail

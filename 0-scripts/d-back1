@@ -82,36 +82,31 @@ LOOSE_TOTAL=0           # Running total size for loose files only
 # --- Collect Subdirectory Sizes ---
 # Iterate through items in the target directory ending with '/' (directories)
 for d in "$DIR"/*/; do
-    # echo "Checking: $d"
+    echo "Checking: $d"
 
-    if [[ ! -d "$d" ]]; then
-        echo "  Skipped '$d' (not a directory)"
-        continue
-    fi
-    if [[ -L "$d" ]]; then
-        echo "  Skipped '$d' (symlink)"
-        continue
-    fi
-    if [[ "$(stat -c %d "$d")" != "$(stat -c %d "$DIR")" ]]; then
-        echo "  Skipped '$d' (mount point)"
-        continue
-    fi
+    # Skip if not a directory, is a symlink, or is a mount point (e.g., separate filesystem)
+    [[ -d "$d" && ! -L "$d" && "$(stat -c %d "$d")" == "$(stat -c %d "$DIR")" ]] || continue
 
     name=$(basename "$d")
+    # Run du with the selected flags (-s summarize, -B1 bytes, --apparent-size if -datasize)
+    # stderr is redirected to avoid permission denied messages (use -s|--sudo if needed)
+    # cut -f1 extracts the size number
     size=$($SUDO du "${DU_FLAGS[@]}" "$d" 2>/dev/null | cut -f1)
 
-    if [[ ! "$size" =~ ^[0-9]+$ ]]; then
-        echo "  Skipped (du failed or size invalid)"
-        continue
-    fi
+    # Ensure we got a valid number
+    [[ "$size" =~ ^[0-9]+$ ]] || continue
 
-    SIZES["$name"]=$size
-    (( TOTAL_SIZE += size ))
+    SIZES["$name"]=$size          # Store size keyed by directory name
+    (( TOTAL_SIZE += size ))      # Add to the overall total
 
+    # If counts are requested, find files and directories
     if $SHOW_COUNTS; then
+        # Count files (-type f) within the subdirectory
         files=$($SUDO find "$d" -type f 2>/dev/null | wc -l)
+        # Count directories (-type d) within the subdirectory
         dirs=$($SUDO find "$d" -type d 2>/dev/null | wc -l)
         NUM_FILES["$name"]=$files
+        # Subtract 1 from dir count because find includes the starting directory itself
         NUM_DIRS["$name"]=$((dirs - 1))
     fi
 done

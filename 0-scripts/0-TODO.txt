@@ -1,3 +1,8 @@
+If detect running on WSL, offer to copy into 
+/mnt/c/Users/XXXXX/AppData/Local/nvim/init.vim
+and to
+/mnt/c/Users/XXXXX/.vimrc
+
 refactor g tool, it should show commands being run, and also be more descriptive about what they do.
 possibly integrate the other git scripts as case options into g !!!
 
