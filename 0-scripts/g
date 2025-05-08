@@ -1,5 +1,5 @@
 #!/bin/bash
-#####
+
 # Git Tool Script
 # Provides utilities for common Git operations and troubleshooting. 
 
@@ -33,6 +33,18 @@ if [ $# -eq 0 ]; then
     echo "  t                Troubleshooting Help: Show common Git fixes"
     echo
     exit 0
+fi
+
+# We must cd back to the root of the project for gitleaks detect to prevent rebase problems
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"   # Gets directory of this script
+PROJECT_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
+# Change to the project root directory
+if [ -n "$PROJECT_ROOT" ] && [ -d "$PROJECT_ROOT" ]; then
+    cd "$PROJECT_ROOT" || { echo "Error: Could not change to project root."; exit 1; }
+    # echo "Changed directory to project root: $(pwd)"
+else
+    echo "Error: Could not determine project root. Run the script from within the repo."
+    exit 1
 fi
 
 echo_blue() {
@@ -105,48 +117,30 @@ case "$option" in
         echo "====="
         display_and_run "git add -A --verbose"
 
-        # echo "====="
-        # echo "Checking and installing GitHub CLI with secret scan if needed..."
+        echo "====="
+        echo "Scanning for secrets using Gitleaks..."
+        # Check if gitleaks command exists
+        if ! command -v gitleaks >/dev/null 2>&1; then
+            echo -e "\033[1;31m❌ Error: gitleaks command not found.\033[0m"
+            # Provide apt install instruction if not found
+            echo "Please install gitleaks (e.g., 'sudo apt install gitleaks') and try again."
+            exit 1
+        fi
+        # Scan for secrets in the current directory (workspace) without scanning git history
+        # display_and_run will show the command and output.
+        # gitleaks scan --no-git exits with non-zero if secrets are found.
+        display_and_run "gitleaks detect --no-git . --verbose"
 
-        # # --- Start GitHub CLI Setup Check ---
+        # Check the exit status of the scan command
+        if [ $? -ne 0 ]; then
+            echo -e "\033[1;31m❌ Secret scan failed! Fix detected secrets in your workspace before committing.\033[0m"
+            echo "Review the output above for details on detected secrets."
+            exit 1 # Exit the script with an error
+        fi
 
-        # # Function to check if gh secret scan is functional
-        # check_gh_secret_scan() {
-        #     # Check if gh command exists and if 'gh secret scan --help' runs without error
-        #     command -v gh >/dev/null 2>&1 && gh secret scan --help >/dev/null 2>&1
-        # }
+        echo "Secret scan passed. Proceeding with commit."
+        # --- End Secret Scan Check ---
 
-        # # Check if gh with secret scan is already functional
-        # if ! check_gh_secret_scan; then
-        #     echo "GitHub CLI with secret scan not found or not functional. To install, follow these steps:"
-        #     echo "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg"
-        #     echo "echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null"
-        #     echo "sudo apt update"
-        #     echo "sudo apt install gh"
-        #     exit 1
-        # fi
-
-        # sudo apt install -y gh
-        # if [ $? -ne 0 ]; then
-        #     echo -e "\033[1;31m❌ Failed to install/upgrade gh. Please run 'sudo apt install gh' manually to see the error details.\033[0m"
-        #     exit 1
-        # fi
-        # # Verify installation worked
-        # if ! check_gh_secret_scan; then
-        #      echo -e "\033[1;31m❌ GitHub CLI secret scan still not functional after installation attempt. Please troubleshoot your gh installation manually.\033[0m"
-        #      exit 1
-        # fi
-
-        # # Scan for secrets in the workspace
-        # echo "====="
-        # echo "Scanning for secrets..."
-        # # Use display_and_run for the gh command now that we've confirmed it's installed and functional
-        # display_and_run "gh secret scan --target-type workspace"
-        # # Check the exit status of the scan command
-        # if [ $? -ne 0 ]; then
-        #     echo -e "\033[1;31m❌ Secret scan failed! Fix detected secrets before committing.\033[0m"
-        #     exit 1 # Exit the script with an error
-        # fi
 
         echo "====="
         # Assuming display_and_run handles potential errors correctly and exits if the command fails
