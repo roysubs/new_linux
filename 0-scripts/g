@@ -73,8 +73,8 @@ case "$option" in
     acp)
         shift  # Remove 'acp' from arguments
         DEBUG_MODE=0
-        COMMIT_MSG=""
-
+        COMMIT_MSG=()
+    
         # Parse args
         while [[ $# -gt 0 ]]; do
             case "$1" in
@@ -82,44 +82,42 @@ case "$option" in
                     DEBUG_MODE=1
                     ;;
                 *)
-                    # Capture commit message (all remaining args as string)
-                    if [[ -z "$COMMIT_MSG" ]]; then
-                        COMMIT_MSG="$1"
-                    else
-                        COMMIT_MSG="$COMMIT_MSG $1"
-                    fi
+                    COMMIT_MSG+=("$1")
                     ;;
             esac
             shift
         done
-
-        if [[ -z "$COMMIT_MSG" ]]; then
-            echo_red "❌ No commit message provided."
+    
+        if [[ ${#COMMIT_MSG[@]} -eq 0 ]]; then
+            echo -e "\033[1;31m❌ No commit message provided.\033[0m"
             exit 1
         fi
-
+    
+        COMMIT_STR="${COMMIT_MSG[*]}"
+    
         echo "====="
         display_and_run "git status"
-
+    
         echo "====="
         display_and_run "git add -A"
-
+    
         echo "====="
-        display_and_run "git commit -m \"$COMMIT_MSG\"" || {
-            echo_red "❌ Commit failed. Aborting push."
+        display_and_run "git commit -m \"$COMMIT_STR\"" || {
+            echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
             exit 1
         }
-
+    
         echo "====="
         CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-
+    
         if [[ $DEBUG_MODE -eq 1 ]]; then
             display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
         else
             read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
             display_and_run "git push origin $CURRENT_BRANCH"
         fi
-        ;; 
+        ;;
+
     ps)
         git push
         ;;
