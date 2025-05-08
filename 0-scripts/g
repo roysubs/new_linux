@@ -71,10 +71,10 @@ case "$option" in
         git status
         ;;
     acp)
-        # shift   # do not shift here to remove 'acp' from $@ as it's already removed before 'case'
-        DEBUG_MODE=0
+        # shift        # Do not use 'shift' (to remove 'acp' from $@) as it's already removed before 'case'
+        DEBUG_MODE=0   # Initialize DEBUG_MODE and COMMIT_MSG array
         COMMIT_MSG=()
-    
+
         # Parse flags and gather commit message
         while [[ $# -gt 0 ]]; do
             case "$1" in
@@ -83,37 +83,41 @@ case "$option" in
                     ;;
                 *)
                     COMMIT_MSG+=("$1")
-                    echo $COMMIT_MSG
                     ;;
             esac
             shift
         done
-    
+
+        # Check if commit message was provided
         if [[ ${#COMMIT_MSG[@]} -eq 0 ]]; then
             echo -e "\033[1;31m❌ No commit message provided.\033[0m"
             exit 1
         fi
-    
+
+        # Combine commit message into a single string
         COMMIT_STR="${COMMIT_MSG[*]}"
-    
+
+        # Display and run git commands with the option for verbose output
         echo "====="
-        display_and_run "git status"
-    
+        display_and_run "git status --short"
+
         echo "====="
-        display_and_run "git add -A"
-    
+        display_and_run "git add -A --verbose"
+
         echo "====="
-        display_and_run "git commit -m \"$COMMIT_STR\"" || {
+        display_and_run "git commit --verbose -m \"$COMMIT_STR\"" || {
             echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
             exit 1
         }
-    
+
         echo "====="
         CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-    
+
         if [[ $DEBUG_MODE -eq 1 ]]; then
+            # If debug mode is on, show SSH details for push
             display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
         else
+            # Otherwise, prompt user for push confirmation
             read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
             display_and_run "git push origin $CURRENT_BRANCH"
         fi
