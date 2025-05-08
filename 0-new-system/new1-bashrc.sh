@@ -21,7 +21,7 @@ cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
 
 # If -clean is invoked, then the old block will be removed from .bashrc and replaced
 CLEAN_MODE=false
-if [[ "$1" == "-clean" ]]; then
+if [[ "$1" == "--clean" ]]; then
     CLEAN_MODE=true
 fi
 
@@ -30,7 +30,7 @@ fi
 bashrc_block="
 # new_linux definitions
 ####################
-# Note: Try to put any manually added .bashrc definitionas *above* this section, as 'new1-bashrc.sh -clean'
+# Note: Put manually added .bashrc definitionas *above* this section, as 'new1-bashrc.sh --clean'
 #       will delete everything from the '# new_linux definitions' to the end of the file(!)
 
 # Prompt before overwrite (-i interactive) for rm,cp,mv
@@ -67,47 +67,6 @@ shopt -s extglob
 # @(pattern1|pattern2|...), matches exactly one of the specified patterns, e.g., @(jpg|png) matches jpg or png.
 # !(pattern), matches anything except the pattern, e.g., !(abc) matches any string except abc.
 
-# Def: Show function/alias/built-ins/scripts definitions. This  must be in .bashrc to have visibility of all loaded shell functions and aliases
-def() {
-    if [ -z \"\$1\" ]; then
-        declare -F; printf \"\\nAll defined functions ('declare -F').\\n\"
-        printf \"'def <name>' to show definitions of functions, aliases, built-ins, and scripts.\\n\\n\"
-        return
-    fi
-    if [[ \"$1\" == \"-h\" || \"$1\" == \"--help\" ]]; then
-        echo \"Usage: def [name] — show function/alias/builtin/script definitions for 'name'\"
-        return
-    fi
-    local OVERLAPS=()    # Track overlaps in an array, i.e. where the item is in more than one category
-    local PAGER=\"cat\"    # Use 'cat' if 'batcat' is not available
-    if command -v batcat >/dev/null 2>&1; then    # Only use 'batcat' if available
-        PAGER=\"batcat -pp -l bash\"
-    fi
-    if declare -F \"\$1\" >/dev/null 2>&1; then    # check for a 'Function'
-        declare -f \"\$1\" | \$PAGER; OVERLAPS+=(\"Function\"); echo; echo \"'\$1' is a function.\";
-    fi
-    if alias \"\$1\" >/dev/null 2>&1; then    # check for an 'Alias'
-        alias \"\$1\" | \$PAGER; OVERLAPS+=(\"Alias\"); echo; echo \"'\$1' is an alias.\"
-    fi
-    if type -t \"\$1\" | grep -q \"builtin\"; then    # check for a 'built-in command'
-        help \"\$1\" | \$PAGER; OVERLAPS+=(\"Built-in\"); echo; echo \"'\$1' is a built-in command.\"
-    fi
-    if command -v \"\$1\" >/dev/null 2>&1; then    # check for an 'external script'
-        local SCRIPT_PATH=\$(command -v \"\$1\")
-        if [[ -f \"\$SCRIPT_PATH\" ]]; then
-            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH'.\"
-        fi
-    fi
-    # Display overlaps
-    if [ \${#OVERLAPS[@]} -gt 1 ]; then
-        joined=\$(printf \", %s\" \"\${OVERLAPS[@]}\")
-        joined=\${joined:2}
-        echo -e \"\\033[0;31mWarning: '\$1' has multiple types: \${joined}.\\033[0m\"    # \${OVERLAPS[*]}
-    fi
-    # If no matches were found
-    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
-}
-
 # History settings and 'h' History helper function
 shopt -s histappend      # Append commands to the bash history (~/.bash_history) instead of overwriting it
 export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups HISTSIZE=1000000 HISTFILESIZE=1000000000    # make history very big and show date-time
@@ -142,6 +101,43 @@ h() {
     echo -e \"Ctrl-r/s (reverse/forward history search). Note: Ctrl-s may require 'stty -ixon' to enable.\"
 }
 
+# def: Show function/alias/built-ins/scripts definitions. This must be in .bashrc to have visibility of all loaded shell functions and aliases
+def() {
+    if [ -z \"\$1\" ]; then
+        declare -F; printf \"\\nAll defined functions ('declare -F').\\n\"
+        printf \"Usage: def <name>'  - show definition of a function, alias, built-in, or script called 'name'.\\n\"
+        return
+    fi
+    local OVERLAPS=()    # Track overlaps in an array, i.e. where the item is in more than one category
+    local PAGER=\"cat\"    # Use 'cat' if 'batcat' is not available
+    if command -v batcat >/dev/null 2>&1; then    # Only use 'batcat' if available
+        PAGER=\"batcat -pp -l bash\"
+    fi
+    if declare -F \"\$1\" >/dev/null 2>&1; then    # check for a 'Function'
+        declare -f \"\$1\" | \$PAGER; OVERLAPS+=(\"Function\"); echo; echo \"'\$1' is a function.\";
+    fi
+    if alias \"\$1\" >/dev/null 2>&1; then    # check for an 'Alias'
+        alias \"\$1\" | \$PAGER; OVERLAPS+=(\"Alias\"); echo; echo \"'\$1' is an alias.\"
+    fi
+    if type -t \"\$1\" | grep -q \"builtin\"; then    # check for a 'built-in command'
+        help \"\$1\" | \$PAGER; OVERLAPS+=(\"Built-in\"); echo; echo \"'\$1' is a built-in command.\"
+    fi
+    if command -v \"\$1\" >/dev/null 2>&1; then    # check for an 'external script'
+        local SCRIPT_PATH=\$(command -v \"\$1\")
+        if [[ -f \"\$SCRIPT_PATH\" ]]; then
+            \$PAGER \"\$SCRIPT_PATH\"; OVERLAPS+=(\"Script\"); echo; echo \"'\$1' is a script, located at '\$SCRIPT_PATH'.\"
+        fi
+    fi
+    # Display overlaps
+    if [ \${#OVERLAPS[@]} -gt 1 ]; then
+        joined=\$(printf \", %s\" \"\${OVERLAPS[@]}\")
+        joined=\${joined:2}
+        echo -e \"\\033[0;31mWarning: '\$1' has multiple types: \${joined}.\\033[0m\"    # \${OVERLAPS[*]}
+    fi
+    # If no matches were found
+    if [ \${#OVERLAPS[@]} -eq 0 ]; then echo \"No function, alias, built-in, or script found for '\$1'.\"; fi;
+}
+
 # aliases to quickly get to various configuration scripts:
 alias bashrc='vi ~/.bashrc'           # Edit .bashrc (user)
 alias inputrc='vi ~/.inputrc'         # Edit .inputrc (user)
@@ -154,7 +150,7 @@ alias sudoers='sudo visudo'                 # Edit /etc/sudoers
 alias initvim='vi ~/.config/nvim/init.vim'  # Edit neovim configuration
 alias nvimrc='vi ~/.config/nvim/init.vim'   # Edit neovim configuration
 alias tmuxconf='vi ~/.tmux.conf'            # Edit tmux configuration
-# SMB, NFS, and mount commands
+# SMB, NFS, and mount helpers
 alias fstab='sudo vi /etc/fstab'            # Edit Filesystem Table
 alias smb='sudo vi /etc/samba/smb.conf'     # Edit Samba configuration
 alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
@@ -166,19 +162,19 @@ alias nfs-fs-r='sudo exportfs -r'
 alias nfs-fs-u='sudo exportfs -u'           # Requires directy as argument
 alias nfs-fs-v='sudo exportfs -v'
 alias nfs-mount='sudo showmount'            # Shows as non-existent command if run without sudo
-nfs-server() { sudo systemctl \$1 nfs-server; }  # status, start, stop, restart, enable, disable
+nfs-server() { local action=\${1:-status}; sudo systemctl \"\$action\" nfs-server; }  # or start, stop, restart, enable, disable
 alias nfs-mount-e='showmount -e'            # Requires <server_ip_or_hostname>
 alias nfs-mount-a='showmount -a'            # Requires <server_ip_or_hostname>
 alias nfs-mount-t='sudo mount -t nfs'       # Requires <server_ip_or_hostname>:/remote/path /local/mountpoint
-alias unmoun='sudo umount'                  # Requires path: /local/mountpoint
+alias unmount='sudo umount'                 # Requires path: /path/to/local/mountpoint
 alias rpc='rpcinfo -p'                      # Requires <server_ip_or_hostname>
 # Note also 'nfsstat'
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
-alias u1='cd ..';          alias cd..='u1'     # cd.. is a common typo in Linux for Windows users
-alias u2='u1;U1';          alias cd..2='u2'    # cd up 2 directories
-alias u3='u1;u1;u1';       alias cd..3='u3'   # cd up 3 directories
-alias u4='u1;u1;u1;u1';    alias cd..4='u4'  # cd up 4 directories
+alias u1='cd ..';          alias cd..='u1'  # cd.. is a common typo in Linux for Windows users
+alias u2='u1;U1';          alias cd..2='u2' # cd up 2 directories
+alias u3='u1;u1;u1';       alias cd..3='u3' # cd up 3 directories
+alias u4='u1;u1;u1;u1';    alias cd..4='u4' # cd up 4 directories
 alias u5='u1;u1;u1;u1;u1'; alias cd..5='u5' # cd up 5 directories
 alias cx='chmod +x'               # chmod add the execute permission
 cxx() { chmod +x \$1; ./\$1; }    # chmod +x and then run \$1 immediately
@@ -188,7 +184,6 @@ alias ifconfig='sudo ifconfig'    # 'ifconfig' (apt install net-tools) causes 'c
 alias ipconfig='sudo ifconfig'    # Windows typo
 # Create 'bat' alias for 'batcat' (apt install bacula-console-qt) unless 'bat' (Bluetooth Audio Tool) is installed
 if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
-
 
 # Jump functions, cannot be in scripts as have to be dotsourced. Various for new_linux and standard locations
 n()  { cd ~/new_linux || return; ls; }             # Jump to new_linux
@@ -208,9 +203,6 @@ DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to '0 Films'
 DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # Jump to '0 TV'
 DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to '0 Music'
 white() { cd ~/192.168.1.29-d || return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
-
-####################
-# End of new_linux definitions
 "
 
 # Capture the first non-empty line of $bashrc_block, this is the header line
@@ -278,8 +270,8 @@ add_line_if_not_exists() {
                 echo "Adding alias: $line"
                 echo "$line" >> "$BASHRC_FILE"
             else
-                # --- CHANGE THIS MESSAGE ---
-                echo "Alias $alias_name already exists. Skipping." # Original message "Alias alias..."
+                existing_line=$(grep -E "^[[:space:]]*alias[[:space:]]*$alias_name=" "$BASHRC_FILE" | head -n1)
+                echo "Alias $alias_name already exists as: $existing_line"
             fi
             ;;
         export)
@@ -290,7 +282,8 @@ add_line_if_not_exists() {
                 echo "$line" >> "$BASHRC_FILE"
             else
                 # --- CHANGE THIS MESSAGE ---
-                echo "Export $export_name already exists. Skipping." # Original message "Export export..."
+                existing_line=$(grep -E "^[[:space:]]*(export|declare -x)[[:space:]]*$export_name=" "$BASHRC_FILE" | head -n1)
+                echo "Export $export_name already exists as: $existing_line"
             fi
             ;;
         comment)

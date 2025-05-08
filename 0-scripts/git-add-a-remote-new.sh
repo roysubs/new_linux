@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 set -e
 
@@ -31,7 +31,12 @@ ls -l ~/.ssh/id_*.pub || echo "No SSH public keys found."
 # Step 3: Generate SSH key if missing
 if [ ! -f ~/.ssh/id_ed25519 ]; then
     green "\nNo ed25519 key found. Generating one..."
-    run_cmd 'ssh-keygen -t ed25519 -C "your-email@example.com"'
+    GIT_EMAIL=$(git config --global user.email)
+    if [ -z "$GIT_EMAIL" ]; then
+        echo "Git email not set. Please configure with: git config --global user.email \"your@email.com\""
+        exit 1
+    fi
+    run_cmd "ssh-keygen -t ed25519 -C \"$GIT_EMAIL\""
 else
     echo "SSH key already exists at ~/.ssh/id_ed25519"
 fi
