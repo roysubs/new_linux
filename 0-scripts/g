@@ -64,41 +64,44 @@ case "$option" in
         ;;
     acp)
         echo "====="
-    	echo_blue "git status"
+        # Check for --debug flag
+        DEBUG_MODE=0
+        COMMIT_MSG=()
+        for arg in "$@"; do
+            if [[ "$arg" == "--debug" ]]; then
+                DEBUG_MODE=1
+            else
+                COMMIT_MSG+=("$arg")
+            fi
+        done
+
+        echo_blue "git status"
         git status
         echo "====="
-    	echo_blue "git add -A   # stage all changes from root of repo"
+        echo_blue "git add -A   # stage all changes from root of repo"
         git add -A
         echo "====="
-        echo_blue "git commit -m $@"
-        git commit -m "$@"
+        echo_blue "git commit -m ${COMMIT_MSG[*]}"
+        git commit -m "${COMMIT_MSG[*]}"
         echo "====="
-        echo_blue "git push"
-        git push
-        echo "====="
-        ;;
-    acpv)
-        echo "====="
-    	echo_blue "git status"
-        git status
-        echo "====="
-    	echo_blue "git add -A   # stage all changes from root of repo"
-        git add -A
-        echo "====="
-        echo_blue "git commit -m $@"
-        git commit -m "$@"
-        echo "====="
-        echo_blue "git push"
-        GIT_SSH_COMMAND="ssh -v" git push
-        echo "====="
-        echo "GIT_SSH_COMMAND=\"ssh -v\" git push"
-        echo "- Disable any VPN's if there are connectivity problems."
-        echo "- For more information and attempts to reconnect:   vi ~/.ssh/config"
-        echo "    Host github.com"
-        echo "        ServerAliveInterval 60"
-        echo "    Host github.com"
-        echo "        ServerAliveInterval 30  # Interval between keep-alives"
-        echo "        ServerAliveCountMax 10  # Allow up to 10 unanswered keep-alives"
+
+        if [[ $DEBUG_MODE -eq 1 ]]; then
+            echo_blue "git push (with ssh -v)"
+            GIT_SSH_COMMAND="ssh -v" git push
+            echo "====="
+            echo "GIT_SSH_COMMAND=\"ssh -v\" git push"
+            echo "- Disable any VPN's if there are connectivity problems."
+            echo "- For more information and attempts to reconnect:   vi ~/.ssh/config"
+            echo "    Host github.com"
+            echo "        ServerAliveInterval 60"
+            echo "    Host github.com"
+            echo "        ServerAliveInterval 30  # Interval between keep-alives"
+            echo "        ServerAliveCountMax 10  # Allow up to 10 unanswered keep-alives"
+        else
+            echo_blue "git push"
+            git push
+        fi
+
         echo "====="
         ;;
     ps)
