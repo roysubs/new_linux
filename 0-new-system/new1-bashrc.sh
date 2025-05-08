@@ -75,7 +75,7 @@ export HISTTIMEFORMAT=\"%F %T  \" HISTCONTROL=ignorespace:ignoreboth:erasedups H
 h() {
     case \"\$1\" in
         \"\" ) # Default case when no arguments are given (show main help)
-            echo -e \"History Tool. Usage: h <option> [string]\\n  a|an|ad|ab    show all history (a full, an numbers only, ad datetime only, ab bare commands)\\n  f|fn|fd|fb    find string (f full, fn numbers only, fd datetime only, fb bare commands)\\n  n <num>      Show last N history entries (full)\\n  help          Show extended help from 'h-history' script\\n  clear         Clear the history\\n  edit          Edit the history file in your editor\\n  uniq          Show unique history entries (bare)\\n  top           Show top 10 most frequent commands (bare roots)\\n  cmds          Show top 20 most frequent command roots (bare)\\n  root          Show commands run with sudo (bare)\" ;; # Removed 'r' and trailing \\n
+            echo -e \"History Tool. Usage: h <option> [string]\\n  a|an|ad|ab    show all history (a full, an numbers only, ad datetime only, ab bare commands)\\n  f|fn|fd|fb    find string (f full, fn numbers only, fd datetime only, fb bare commands)\\n  n <num>      Show last N history entries (full)\\n  help          Show extended help from 'h-history' script\\n  clear         Clear the history\\n  edit          Edit the history file in your editor\\n  uniq          Show unique history entries (bare)\\n  top           Show top 10 most frequent commands (bare roots)\\n  topn <N>     Show top N most used commands\\n  cmds          Show top 20 most frequent command roots (bare)\\n  root          Show commands run with sudo (bare)\\n  backup <filepath>  Backup history to 'filepath'\" ;; # Removed 'r' and trailing \\n
         a) history ;; # Show full history with numbers and dates
         an) history | sed 's/\\s*[0-9-]\\{10\\}\\s*[0-9:]\\{8\\}\\s*/ /' ;; # Show numbers only, remove date/time
         ad) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*//' ;; # Show datetime only, remove numbers
@@ -90,9 +90,10 @@ h() {
         edit) history -w && \${EDITOR:-vi} \"\$HISTFILE\" ;;
         uniq) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | sort -u ;; # Bare unique
         top) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{CMD[\$1]++} END {for (a in CMD) printf \"%5d %s\\n\", CMD[a], a;}' | sort -nr | head -10 ;; # Bare command roots top 10 - Use printf for alignment
+        topn) if [[ \"\$2\" =~ ^[0-9]+$ ]]; then history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{CMD[\$1]++} END {for (a in CMD) printf \"%5d %s\\n\", CMD[a], a;}' | sort -nr | head -n \"\$2\"; else echo \"Invalid number\"; fi ;;
         cmds) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | awk '{print \$1}' | sort | uniq -c | sort -nr | head -20 ;; # Bare command roots top 20 - uniq -c provides alignment
         root) history | sed 's/^[[:space:]]*[0-9]\\+[[:space:]]*[0-9-]\\{10\\} [0-9:]\\{8\\} //' | grep -w sudo ;; # Bare sudo commands
-
+        backup) if [ -z \"\$2\" ]; then echo \"Please specify a filename for the backup.\"; else history > \"\$2\" && echo \"History backed up to \$2\"; fi ;;
         # --- Fallback: Treat bare number as 'n' ---
         *) [[ \"\$1\" =~ ^[0-9]+\$ ]] && history | tail -n \"\$1\" || echo \"Invalid option or number\" ;;
     esac;
