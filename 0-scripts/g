@@ -91,10 +91,14 @@ case "$option" in
         echo_blue "git push"
         GIT_SSH_COMMAND="ssh -v" git push
         echo "====="
-        echo "May need to do the following: vim ~/.ssh/config"
-        echo "Add this, preferably at the end or in an appropriate section if it's complex:"
+        echo "GIT_SSH_COMMAND=\"ssh -v\" git push"
+        echo "- Disable any VPN's if there are connectivity problems."
+        echo "- For more information and attempts to reconnect:   vi ~/.ssh/config"
         echo "    Host github.com"
         echo "        ServerAliveInterval 60"
+        echo "    Host github.com"
+        echo "        ServerAliveInterval 30  # Interval between keep-alives"
+        echo "        ServerAliveCountMax 10  # Allow up to 10 unanswered keep-alives"
         echo "====="
         ;;
     ps)
