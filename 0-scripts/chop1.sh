@@ -5,12 +5,14 @@ set -e
 outdir="$(dirname "$0")"
 quality="0"
 output_format="webm"
+use_title=false
 
 # ---------------[ ARGS ]-----------------
 while [[ "$1" == -* ]]; do
   case "$1" in
     --out) shift; outdir="$1" ;;
     --mp4) output_format="mp4" ;;
+    --title) use_title=true ;;
     -q[0-3]) quality="${1#-q}" ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
@@ -20,7 +22,7 @@ done
 url="$1"; start_sec="$2"; end_sec="$3"
 
 if [[ -z "$url" ]]; then
-  echo "Usage: $(basename "$0") [--out DIR] [--mp4] [-q0|1|2|3] <url|id> [start_sec end_sec]" >&2
+  echo "Usage: $(basename "$0") [--out DIR] [--mp4] [--title] [-q0|1|2|3] <url|id> [start_sec end_sec]" >&2
   exit 1
 fi
 
@@ -58,9 +60,16 @@ echo "[*] Checking dependencies..."
 command -v yt-dlp >/dev/null || { echo "Missing yt-dlp"; exit 1; }
 command -v ffmpeg >/dev/null || { echo "Missing ffmpeg"; exit 1; }
 
-# Filenames
-basefile="$outdir/${video_id}_q${quality}.webm"
+# Title-based filename
+if $use_title; then
+  echo "[*] Fetching video title..."
+  title=$(yt-dlp --get-title "$url" | tr -cd '[:alnum:] _-' | tr ' ' '_')
+  basefile="$outdir/${title}_q${quality}.webm"
+else
+  basefile="$outdir/${video_id}_q${quality}.webm"
+fi
 
+# Download base video
 echo "[*] Downloading video to: $basefile"
 if [[ ! -f "$basefile" ]]; then
   yt-dlp -f "$format" -o "$basefile" "https://www.youtube.com/watch?v=${video_id}" || {
@@ -76,10 +85,15 @@ if [[ -z "$start_sec" || -z "$end_sec" ]]; then
   exit 0
 fi
 
-# Clip trim path
+# Output filename for trimmed video
 start_label=$(to_hms "$start_sec")
 end_label=$(to_hms "$end_sec")
-clipfile="$outdir/${video_id}_${start_label}_to_${end_label}_q${quality}.${output_format}"
+
+if $use_title; then
+  clipfile="$outdir/${title}_${start_label}_to_${end_label}_q${quality}.${output_format}"
+else
+  clipfile="$outdir/${video_id}_${start_label}_to_${end_label}_q${quality}.${output_format}"
+fi
 
 echo "[*] Trimming video from $start_label to $end_label"
 echo "[*] Clip will be written to: $clipfile"
