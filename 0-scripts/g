@@ -71,11 +71,11 @@ case "$option" in
         git status
         ;;
     acp)
-        shift  # Remove 'acp' from arguments
+        shift  # remove 'acp' from $@ (so we only handle user args now)
         DEBUG_MODE=0
         COMMIT_MSG=()
     
-        # Parse args
+        # Parse flags and gather commit message
         while [[ $# -gt 0 ]]; do
             case "$1" in
                 --debug)
