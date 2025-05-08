@@ -23,12 +23,11 @@ fi
 
 # Display /etc/fstab content with filtering and sorting
 echo -e "/etc/fstab\n=========="
+echo "  DEVICE  MOUNT_POINT  FILESYSTEM_TYPE  OPTIONS  DUMP  PASS"
 awk '/^# <file/ {print; next} /^#/ {next} {print | "sort"}' /etc/fstab
 
 # Provide an explanation of /etc/fstab columns
-echo -e "\nInterpreting /etc/fstab entries:"
-echo "Each line in /etc/fstab describes a filesystem or swap device. The typical format is:"
-echo "  DEVICE  MOUNT_POINT  FILESYSTEM_TYPE  OPTIONS  DUMP  PASS"
+echo
 echo "Where:"
 echo "  DEVICE          - The device, partition, or swap file (e.g., /dev/sda1, UUID=xxxxxx)"
 echo "  MOUNT_POINT     - The directory where the device is mounted (e.g., /, /home)"
