@@ -10,6 +10,7 @@ if [ $# -eq 0 ]; then
     echo "  c <message>      Commit:  git commit -m <message>"
     echo "  s                Status:  Show the current repository status"
     echo "  acp <message>    Add-Commit-Push: git status / git add -A / git commit -m <message> / git push"
+    echo "  acpv <message>   Add-Commit-Push-VERBOSE: git status / git add -A / git commit -m <message> / git push"
     echo "  ps               Push: Update to the current branch's upstream"
     echo "  pl               Pull: Update latest changes from the remote to local"
     echo "  d                Diff: Show unstaged changes"
@@ -74,6 +75,21 @@ case "$option" in
         echo "====="
         echo_blue "git push"
         git push
+        echo "====="
+        ;;
+    acpv)
+        echo "====="
+    	echo_blue "git status"
+        git status
+        echo "====="
+    	echo_blue "git add -A   # stage all changes from root of repo"
+        git add -A
+        echo "====="
+        echo_blue "git commit -m $@"
+        git commit -m "$@"
+        echo "====="
+        echo_blue "git push"
+        GIT_SSH_COMMAND="ssh -v" git push
         echo "====="
         ;;
     ps)
