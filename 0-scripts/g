@@ -118,7 +118,7 @@ case "$option" in
         display_and_run "git add -A --verbose"
 
         echo "====="
-        echo "Scanning for secrets using Gitleaks..."
+        echo "Scanning for secrets using Gitleaks; do NOT commit without this (to avoid awkward rebase issues)..."
         # Check if gitleaks command exists
         if ! command -v gitleaks >/dev/null 2>&1; then
             echo -e "\033[1;31m❌ Error: gitleaks command not found.\033[0m"
