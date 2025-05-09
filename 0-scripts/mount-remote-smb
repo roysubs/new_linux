@@ -37,6 +37,8 @@ PASSWORD="" # Will be prompted if not removing
 
 # Check if any arguments were provided
 if [ $# -eq 0 ]; then
+  echo "Scan a hostname or IP to find all of its shares and mount them locally under /mnt"
+  
   echo "Usage:    $(basename "$0") <server_name>"
   echo "          $(basename "$0") <server_name> -remove"
   exit 1
