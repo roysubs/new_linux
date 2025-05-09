@@ -1,0 +1,282 @@
+#!/bin/bash
+# Systemd Service Control Script
+# Provides a concise way to manage systemd services using systemctl.
+
+# Define colors
+RED='\e[31m'
+GREEN='\e[32m'
+NC='\e[0m' # No Color
+
+# Define a regex pattern for valid explicit options
+# Used to distinguish options from a service name when no option is given
+# Ensure all shorthands and full names from the case statement are included here
+VALID_OPTIONS_REGEX="^(status|st|start|sp|stop|e|enable|d|disable|r|restart|rl|reload|rrr|reload-or-restart|is-a|is-active|is-e|is-enabled|l|list|lu|list-units|ls|list-services|lf|list-files|list-failed|deps|list-dependencies|cat|show|mask|unmask|daemon-reload|reload-daemon|reboot|poweroff|suspend|hibernate|common)$"
+
+# Function to show usage help
+show_help() {
+    local script_name=$(basename "${BASH_SOURCE[0]}")
+    echo "Systemd Service Control. Usage: $script_name [<service(s)> | option [<service(s)> | <target>]]"
+    echo "If no option is specified, 'status' is assumed."
+    echo "Options:"
+    echo "  status <service(s)>      Show the status of specified service(s) (Default)"
+    echo "  st|start <service(s)>    Start the specified service(s) (uses sudo)"
+    echo "  sp|stop <service(s)>     Stop the specified service(s) (uses sudo)"
+    echo "  e|enable <service(s)>    Enable the specified service(s) (start on boot) (uses sudo)"
+    echo "  d|disable <service(s)>   Disable the specified service(s) (don't start on boot) (uses sudo)"
+    echo "  r|restart <service(s)>   Restart the specified service(s) (uses sudo)"
+    echo "  rl|reload <service(s)>   Reload the configuration of the specified service(s) (uses sudo)"
+    echo "  rrr <service(s)>         Reload if possible, otherwise Restart the service(s) (uses sudo)"
+    echo "  is-a|is-active <service(s)> Check if the specified service(s) are active"
+    echo "  is-e|is-enabled <service(s)> Check if the specified service(s) are enabled"
+    echo "  l|list|lu|list-units     List all currently active units (use --all for all units)"
+    echo "  ls|list-services         List all loaded service units (use --all for all services)"
+    echo "  lf|list-files            List all installed unit files and their states"
+    echo "  list-failed              List all units that are in a failed state"
+    echo "  deps|list-dependencies <unit> List the dependencies of a specified unit"
+    echo "  cat <unit>               Display the content of a unit file"
+    echo "  show <unit>              Show properties of a unit"
+    echo "  mask <unit(s)>           Mask a unit (prevent starting manually or on boot) (uses sudo)"
+    echo "  unmask <unit(s)>         Unmask a unit (allow starting again) (uses sudo)"
+    echo "  daemon-reload|reload-daemon Reload the systemd manager configuration (uses sudo)"
+    echo "  reboot                   Reboot the system (uses sudo)"
+    echo "  poweroff                 Power off the system (uses sudo)"
+    echo "  suspend                  Suspend the system (uses sudo)"
+    echo "  hibernate                Hibernate the system (uses sudo)"
+    echo "  common                   List common Linux services with descriptions"
+    echo
+    echo "Note: Use the full service name (e.g., sshd.service), though systemctl often infers '.service'."
+    echo "      The '$script_name' script itself does not require sudo, but it will run commands via 'sudo' where needed."
+}
+
+# Declare associative array for common service descriptions
+declare -A COMMON_SERVICE_DESCRIPTIONS
+
+# Populate the associative array with common service names and descriptions
+COMMON_SERVICE_DESCRIPTIONS=(
+    [sshd.service]="OpenSSH server daemon (secure remote access)"
+    [network.service]="Manages network configuration (SysVinit style, depends on distro)"
+    [NetworkManager.service]="Manages network connections (common GUI/desktop environments)"
+    [systemd-networkd.service]="Manages network configuration (native systemd, often on servers)"
+    [firewalld.service]="Dynamic firewall daemon"
+    [ufw.service]="Uncomplicated Firewall (simpler firewall interface)"
+    [cron.service]="Daemon for scheduling command execution (standard cron)"
+    [anacron.service]="Runs commands scheduled by cron that were missed when the system was off"
+    [rsyslog.service]="System logging daemon (common syslog implementation)"
+    [syslog-ng.service]="Next-generation system logging daemon (alternative syslog)"
+    [journald.service]="Systemd journal logging daemon"
+    [systemd-journald.service]="Alias for journald.service"
+    [dbus.service]="D-Bus message bus daemon (inter-process communication)"
+    [atd.service]="Daemon for scheduling commands to be executed once at a later time"
+    [systemd-resolved.service]="Network name resolution via systemd"
+    [systemd-logind.service]="Manages user logins, seats, and sessions"
+    [systemd-udevd.service]="Device manager daemon"
+    [polkitd.service]="PolicyKit daemon for controlling system-wide privileges"
+    [postfix.service]="Mail Transfer Agent (MTA) for email routing"
+    [sendmail.service]="Mail Transfer Agent (MTA), older alternative to Postfix"
+    [apache2.service]="Apache HTTP Server"
+    [httpd.service]="Apache HTTP Server (often used on RHEL/CentOS/Fedora)"
+    [nginx.service]="Nginx HTTP and reverse proxy server"
+    [mysql.service]="MySQL database server"
+    [mariadb.service]="MariaDB database server (community fork of MySQL)"
+    [postgresql.service]="PostgreSQL database server"
+    [docker.service]="Docker container runtime"
+    [containerd.service]="Containerd container runtime"
+    [ntpd.service]="Network Time Protocol daemon (older NTP service)"
+    [chronyd.service]="Chronyd NTP client/server (more modern NTP service)"
+    [quotaon.service]="Service to enable disk quotas"
+    [fstrim.service]="Service to discard unused blocks on mounted filesystems (for SSDs)"
+    [systemd-tmpfiles-clean.timer]="Timer unit for cleaning up temporary files"
+    [systemd-timesyncd.service]="Systemd simple network time synchronization client"
+    [tuned.service]="Dynamic adaptive system tuning daemon"
+    [auditd.service]="Linux Audit Daemon"
+    [wpa_supplicant.service]="Service for WPA/WPA2/IEEE 802.1X supplicant"
+    [multi-user.target]="Target for a multi-user system with network services (CLI)"
+    [graphical.target]="Target for a multi-user system with a graphical interface"
+)
+
+# Function to print a command in green and execute it
+run_command() {
+    local full_cmd_string="$1"
+    echo -e "# ${GREEN}${full_cmd_string}${NC}"
+    bash -c "$full_cmd_string"
+    return $? # Return the exit status of the executed command
+}
+
+# Function to check if a service name is required and provided
+check_service_arg() {
+    if [ $# -eq 0 ]; then
+        local script_name=$(basename "${BASH_SOURCE[0]}")
+        echo >&2 -e "${RED}Error: This command requires a service or unit name.${NC}\n"
+        show_help # Show help on error
+        exit 1 # Indicate error
+    fi
+}
+
+# Show help if no arguments are provided
+if [ $# -eq 0 ]; then
+    show_help
+    exit 0
+fi
+
+# --- Determine the action and arguments ---
+option=""
+service_args=("$@") # Assume all args are service names initially
+
+# Check if the first argument matches a known explicit option
+# We use =~ with the regex pattern to check if $1 is exactly one of the valid options
+# Use ^ and $ anchors to ensure the whole first argument matches the pattern
+if [[ "${1}" =~ ^${VALID_OPTIONS_REGEX}$ ]]; then
+    # The first argument is a known option
+    option=$1
+    shift # Remove the option from the arguments
+    service_args=("$@") # Remaining args are service names/command options
+else
+    # The first argument is NOT a known option, assume 'status' and treat $1 as a service name
+    option="status"
+    # service_args is already set to "$@" (original arguments)
+fi
+# --- End Determine the action and arguments ---
+
+
+case "$option" in
+    status)
+        check_service_arg "${service_args[@]}" # Check if service name(s) were provided
+        run_command "systemctl status ${service_args[@]}" # Status usually doesn't require sudo
+        ;;
+    st|start)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl start ${service_args[@]}"
+        ;;
+    sp|stop)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl stop ${service_args[@]}"
+        ;;
+    e|enable)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl enable ${service_args[@]}"
+        ;;
+    d|disable)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl disable ${service_args[@]}"
+        ;;
+    r|restart)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl restart ${service_args[@]}"
+        ;;
+    rl|reload)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl reload ${service_args[@]}"
+        ;;
+    rrr|reload-or-restart)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl reload-or-restart ${service_args[@]}"
+        ;;
+    is-a|is-active)
+        check_service_arg "${service_args[@]}"
+        run_command "systemctl is-active ${service_args[@]}"
+        ;;
+    is-e|is-enabled)
+        check_service_arg "${service_args[@]}"
+        run_command "systemctl is-enabled ${service_args[@]}"
+        ;;
+    l|list|lu|list-units)
+        # list commands don't require a service argument, they can take flags like --all
+        run_command "systemctl list-units ${service_args[@]}"
+        ;;
+    ls|list-services)
+        # list-services can take --all --state=... etc, pass args
+        run_command "systemctl list-units --type=service ${service_args[@]}"
+        ;;
+    lf|list-files)
+        # list-unit-files can take --type=... --state=... etc, pass args
+        run_command "systemctl list-unit-files ${service_args[@]}"
+        ;;
+    list-failed)
+        # --failed can take other args
+        run_command "systemctl --failed ${service_args[@]}"
+        ;;
+    deps|list-dependencies)
+         check_service_arg "${service_args[@]}"
+         run_command "systemctl list-dependencies ${service_args[@]}"
+         ;;
+    cat)
+        check_service_arg "${service_args[@]}"
+        run_command "systemctl cat ${service_args[@]}"
+        ;;
+    show)
+        check_service_arg "${service_args[@]}"
+        run_command "systemctl show ${service_args[@]}"
+        ;;
+    mask)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl mask ${service_args[@]}"
+        ;;
+    unmask)
+        check_service_arg "${service_args[@]}"
+        run_command "sudo systemctl unmask ${service_args[@]}"
+        ;;
+    daemon-reload|reload-daemon)
+        # No service name needed, but check if any unexpected args were passed
+        if [ ${#service_args[@]} -gt 0 ]; then
+             echo >&2 -e "${RED}Warning: '${option}' command does not expect arguments, ignoring '${service_args[@]}'${NC}"
+        fi
+        run_command "sudo systemctl daemon-reload"
+        ;;
+    reboot)
+        # No service name needed
+         if [ ${#service_args[@]} -gt 0 ]; then
+             echo >&2 -e "${RED}Warning: '${option}' command does not expect arguments, ignoring '${service_args[@]}'${NC}"
+        fi
+        run_command "sudo systemctl reboot"
+        ;;
+    poweroff)
+        # No service name needed
+         if [ ${#service_args[@]} -gt 0 ]; then
+             echo >&2 -e "${RED}Warning: '${option}' command does not expect arguments, ignoring '${service_args[@]}'${NC}"
+        fi
+        run_command "sudo systemctl poweroff"
+        ;;
+    suspend)
+        # No service name needed
+         if [ ${#service_args[@]} -gt 0 ]; then
+             echo >&2 -e "${RED}Warning: '${option}' command does not expect arguments, ignoring '${service_args[@]}'${NC}"
+        fi
+        run_command "sudo systemctl suspend"
+        ;;
+    hibernate)
+        # No service name needed
+         if [ ${#service_args[@]} -gt 0 ]; then
+             echo >&2 -e "${RED}Warning: '${option}' command does not expect arguments, ignoring '${service_args[@]}'${NC}"
+        fi
+        run_command "sudo systemctl hibernate"
+        ;;
+    common)
+        # No service name needed
+        if [ ${#service_args[@]} -gt 0 ]; then
+             echo >&2 -e "${RED}Warning: '${option}' command does not expect arguments, ignoring '${service_args[@]}'${NC}"
+        fi
+        echo "Common Systemd Services:"
+        # Determine the maximum service name length for alignment
+        max_len=0
+        for service_name in "${!COMMON_SERVICE_DESCRIPTIONS[@]}"; do
+            if (( ${#service_name} > max_len )); then
+                max_len=${#service_name}
+            fi
+        done
+
+        # Print services and descriptions, aligned
+        for service_name in "${!COMMON_SERVICE_DESCRIPTIONS[@]}"; do
+            description="${COMMON_SERVICE_DESCRIPTIONS[$service_name]}"
+            printf "  %-*s - %s\n" "$max_len" "$service_name" "$description"
+        done
+        ;;
+    # This default case should technically not be reached due to the check before the case statement
+    *)
+        # Fallback for safety, though logic should prevent reaching here
+        echo >&2 -e "${RED}Internal Error: Unhandled option '$option'.${NC}\n"
+        show_help
+        exit 1 # Indicate error
+        ;;
+esac
+
+exit 0 # Indicate success
