@@ -249,7 +249,9 @@ case "$option" in
         echo "Scanning for secrets using Gitleaks; do NOT commit without this (to avoid awkward rebase issues)..."
         if ! command -v gitleaks >/dev/null 2>&1; then
             echo -e "\033[1;31m❌ Error: gitleaks command not found.\033[0m"
-            echo "Please install gitleaks (e.g., 'sudo apt install gitleaks') and try again."
+            echo "Please install gitleaks (e.g., 'sudo apt install gitleaks') and try again. Currently, the Ubuntu apt repo"
+            echo "does include this, but the Debian repo does not. However, it can be installed from GitHub."
+            echo "See also the gitleaks-get.sh script in the 0-install folder in this project which can install it."
             exit 1
         fi
         display_and_run "gitleaks detect --no-git . --verbose"
