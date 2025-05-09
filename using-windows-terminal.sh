@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+# Need to talk about ALT+Mouse drag and other things like that - it selects a box etc
+
+
 # This will mimic Ctrl+L to quick-clear the screen *without* removing history
 # This may not work in GNOME terminal
 softclear() { printf '\033[H\033[2J'; }
