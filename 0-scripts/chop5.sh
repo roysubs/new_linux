@@ -1,0 +1,322 @@
+#!/usr/bin/env bash
+set -e
+
+# ---------------[ CONFIG ]---------------
+# Default output directory is the current working directory
+DEFAULT_OUTDIR="."
+# Default quality profile
+DEFAULT_QUALITY_PROFILE="sd" # Options: phone_small, phone_fast, sd, hd, source_mp4
+DEFAULT_USE_TITLE=true
+
+# ---------------[ HELPER FUNCTIONS ]---------------
+show_help() {
+  cat << EOF
+Usage: $(basename "$0") [OPTIONS] <youtube_url_or_id> [start_time] [end_time]
+
+Downloads a YouTube video and encodes it to MP4, with optional trimming and resizing.
+
+OPTIONS:
+  --out DIR               Set the output directory (default: current directory).
+  --no-title              Use video ID for filename instead of title.
+  --quality PROFILE       Set the quality profile. Available profiles:
+                          - phone_small: For very small file size, 360p content, fast encode.
+                          - phone_fast:  For small file size, 480p content, veryfast encode.
+                          - sd:          Standard definition, 720p content, CRF 25 (default, good quality balance).
+                          - hd:          High definition, 1080p content, CRF 23, higher quality.
+                          - source_mp4:  Tries to get the best MP4 source from yt-dlp, minimal re-encoding if no trim.
+  -h, --help              Show this help message.
+
+TIME FORMAT:
+  start_time and end_time can be in seconds (e.g., 125) or hh:mm:ss[.xx] (e.g., 00:02:05.5).
+
+EXAMPLES:
+  $(basename "$0") "YOUR_YOUTUBE_VIDEO_URL_OR_ID"
+  $(basename "$0") --quality phone_fast --out ./my_videos "VIDEO_ID" 00:00:10 00:01:30
+  $(basename "$0") --no-title "VIDEO_ID" 30 90
+EOF
+}
+
+# Function to print messages in yellow
+print_yellow() {
+  printf "\033[1;33m%s\033[0m\n" "$1"
+}
+
+# ---------------[ ARGS ]-----------------
+outdir="$DEFAULT_OUTDIR"
+quality_profile="$DEFAULT_QUALITY_PROFILE"
+use_title="$DEFAULT_USE_TITLE"
+
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --out) shift; outdir="$1";;
+    --no-title) use_title=false;;
+    --quality) shift; quality_profile="$1";;
+    -h|--help) show_help; exit 0;;
+    -*) echo "Error: Unknown option: $1" >&2; show_help; exit 1;;
+    *) break;; # First non-option is URL
+  esac
+  shift
+done
+
+url="$1"; start_input="$2"; end_input="$3"
+
+if [[ -z "$url" ]]; then
+  echo "Error: YouTube URL or Video ID is required." >&2
+  show_help
+  exit 1
+fi
+
+# Create output directory if it doesn't exist
+mkdir -p "$outdir"
+
+# ---------------[ TIME CONVERSION ]---------------
+convert_to_seconds() {
+  local t=$1
+  if [[ -z "$t" ]]; then
+    echo ""
+    return
+  fi
+  if [[ "$t" =~ ^([0-9]+):([0-5]?[0-9]):([0-5]?[0-9])(\.[0-9]+)?$ ]]; then
+    local h=${BASH_REMATCH[1]}
+    local m=${BASH_REMATCH[2]}
+    local s=${BASH_REMATCH[3]}
+    local ms=${BASH_REMATCH[4]}
+    echo "$((10#$h * 3600 + 10#$m * 60 + 10#$s))${ms:-}"
+  elif [[ "$t" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+    echo "$t"
+  else
+    echo "Error: Invalid time format '$t'. Use seconds or hh:mm:ss[.xx]." >&2
+    exit 1
+  fi
+}
+
+start_sec=$(convert_to_seconds "$start_input")
+end_sec=$(convert_to_seconds "$end_input")
+
+if [[ -n "$start_sec" && -n "$end_sec" ]]; then
+  if (( $(echo "$end_sec <= $start_sec" | bc -l) )); then
+    echo "Error: End time must be greater than start time." >&2
+    exit 1
+  fi
+fi
+
+to_hms_label() {
+  if [[ -z "$1" ]]; then echo ""; return; fi
+  local s_total=${1%%.*}
+  local h=$((s_total / 3600))
+  local m=$(((s_total % 3600) / 60))
+  local s=$((s_total % 60))
+  printf "%02d-%02d-%02d" "$h" "$m" "$s"
+}
+
+# ---------------[ QUALITY PROFILES ]---------------
+case "$quality_profile" in
+  phone_small)
+    YTDLP_FORMAT_SELECTOR="bestvideo[height<=360]+bestaudio/best[height<=360]"
+    FFMPEG_CONTENT_MAX_H=360
+    FFMPEG_CRF=32
+    FFMPEG_PRESET="fast"
+    FFMPEG_AUDIO_KBPS="64k"
+    ;;
+  phone_fast)
+    YTDLP_FORMAT_SELECTOR="bestvideo[height<=480]+bestaudio/best[height<=480]"
+    FFMPEG_CONTENT_MAX_H=480
+    FFMPEG_CRF=25
+    FFMPEG_PRESET="veryfast"
+    FFMPEG_AUDIO_KBPS="96k"
+    ;;
+  sd) # Default profile, adjusted CRF for better quality
+    YTDLP_FORMAT_SELECTOR="bestvideo[height<=720]+bestaudio/best[height<=720]"
+    FFMPEG_CONTENT_MAX_H=720
+    FFMPEG_CRF=19 # Changed from 27 to 25 for higher quality/larger file
+    FFMPEG_PRESET="fast"
+    FFMPEG_AUDIO_KBPS="128k"
+    ;;
+  hd)
+    YTDLP_FORMAT_SELECTOR="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+    FFMPEG_CONTENT_MAX_H=1080
+    FFMPEG_CRF=13
+    FFMPEG_PRESET="medium"
+    FFMPEG_AUDIO_KBPS="160k"
+    ;;
+  source_mp4)
+    YTDLP_FORMAT_SELECTOR="bestvideo[height<=2160][ext=mp4][vcodec^=avc]+bestaudio[ext=m4a][acodec=aac]/bestvideo[height<=2160][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=2160]+bestaudio/best"
+    FFMPEG_CONTENT_MAX_H=1080
+    FFMPEG_CRF=22
+    FFMPEG_PRESET="medium"
+    FFMPEG_AUDIO_KBPS="192k"
+    ;;
+  *)
+    echo "Error: Unknown quality profile: $quality_profile" >&2
+    show_help
+    exit 1
+    ;;
+esac
+
+# ---------------[ DEPENDENCY CHECK ]---------------
+echo "[*] Checking dependencies..."
+for cmd in yt-dlp ffmpeg ffprobe bc date; do # Added 'date' for H:M:S formatting
+  command -v "$cmd" >/dev/null || { echo "Error: Missing dependency: $cmd. Please install it." >&2; exit 1; }
+done
+echo "[*] All dependencies found."
+
+# ---------------[ FILENAME SETUP ]---------------
+if $use_title; then
+  echo "[*] Fetching video title..."
+  raw_title=$(yt-dlp --get-title "$url")
+  if [[ -z "$raw_title" ]]; then
+    echo "Error: Could not fetch video title for URL: $url" >&2
+    video_id_for_filename="${url##*v=}"
+    video_id_for_filename="${video_id_for_filename##*/}"
+    video_id_for_filename="${video_id_for_filename%%&*}"
+    title_sanitized="${video_id_for_filename}_NO_TITLE"
+    echo "[!] Warning: Using Video ID for filename as title could not be fetched."
+  else
+    title_sanitized=$(echo "$raw_title" | sed 's/[\\\/:\*\?"<>\|\x00-\x1F\x7F]//g' | sed 's/ \+$//g' | sed 's/^ \+//g')
+    title_sanitized=$(echo "$title_sanitized" | tr -s '[:space:]_.' '_')
+    if [[ -z "$title_sanitized" ]]; then
+        video_id_for_filename="${url##*v=}"
+        video_id_for_filename="${video_id_for_filename##*/}"
+        video_id_for_filename="${video_id_for_filename%%&*}"
+        title_sanitized="${video_id_for_filename}_EMPTY_TITLE"
+    fi
+  fi
+  base_filename_stem="${outdir}/${title_sanitized}_${quality_profile}"
+else
+  video_id="${url##*v=}"
+  video_id="${video_id##*/}"
+  video_id="${video_id%%&*}"
+  base_filename_stem="${outdir}/${video_id}_${quality_profile}"
+fi
+
+downloaded_source_file="${base_filename_stem}_source.mp4"
+
+# ---------------[ DOWNLOAD VIDEO ]---------------
+yt_dlp_start_time=$SECONDS
+if [[ ! -f "$downloaded_source_file" ]]; then
+  echo "[*] Downloading video to: $downloaded_source_file"
+  if yt-dlp \
+    -f "$YTDLP_FORMAT_SELECTOR" \
+    --merge-output-format mp4 \
+    -o "$downloaded_source_file" \
+    "$url"; then
+    echo "[*] Download complete: $downloaded_source_file"
+  else
+    echo "Error: yt-dlp failed to download the video." >&2
+    if [[ -f "$downloaded_source_file" && ! -s "$downloaded_source_file" ]]; then
+        rm "$downloaded_source_file"
+    fi
+    exit 1
+  fi
+else
+  echo "[*] Skipping download: Found existing source file $downloaded_source_file"
+fi
+yt_dlp_end_time=$SECONDS
+yt_dlp_duration=$((yt_dlp_end_time - yt_dlp_start_time))
+
+if [[ ! -s "$downloaded_source_file" ]]; then
+    echo "Error: Downloaded file $downloaded_source_file is empty or does not exist." >&2
+    exit 1
+fi
+
+# Metrics for yt-dlp
+source_video_duration_sec_float=$(ffprobe -v error -select_streams v:0 -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$downloaded_source_file")
+source_video_duration_sec=${source_video_duration_sec_float%.*} # Integer part
+
+print_yellow "[METRIC] YT-DLP download process took ${yt_dlp_duration}s."
+if [[ -n "$source_video_duration_sec" && "$source_video_duration_sec" -ne 0 ]]; then
+  source_video_duration_hms=$(date -u -d "@${source_video_duration_sec}" +'%H:%M:%S')
+  print_yellow "[METRIC] Downloaded video duration: ${source_video_duration_hms} (${source_video_duration_sec_float}s)."
+  yt_dlp_secs_per_min_vid=$(echo "scale=2; ($yt_dlp_duration * 60) / $source_video_duration_sec" | bc)
+  print_yellow "[METRIC] YT-DLP download speed: ${yt_dlp_secs_per_min_vid}s of processing per minute of video."
+else
+  print_yellow "[METRIC] Could not determine downloaded video duration for speed calculation."
+fi
+
+# ---------------[ VIDEO PROCESSING (FFMPEG) ]---------------
+echo "[*] Getting video dimensions from: $downloaded_source_file"
+video_width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 "$downloaded_source_file")
+video_height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$downloaded_source_file")
+
+if [[ -z "$video_width" || -z "$video_height" ]]; then
+    echo "Error: Could not get video dimensions from $downloaded_source_file." >&2
+    exit 1
+fi
+echo "[*] Source dimensions: ${video_width}x${video_height}"
+
+target_pad_width=$(( video_width >= video_height ? 1280 : 720 ))
+target_pad_height=$(( video_width >= video_height ? 720 : 1280 ))
+
+echo "[*] Target canvas for padding: ${target_pad_width}x${target_pad_height}"
+echo "[*] Max content height for encoding: ${FFMPEG_CONTENT_MAX_H}p"
+
+ffmpeg_vf="scale=-2:'min(ih,${FFMPEG_CONTENT_MAX_H})',scale=w='min(iw,${target_pad_width})':h='min(ih,${target_pad_height})':force_original_aspect_ratio=decrease,pad=w=${target_pad_width}:h=${target_pad_height}:x='(ow-iw)/2':y='(oh-ih)/2'"
+
+output_final_mp4=""
+ffmpeg_cmd_base=(ffmpeg -hide_banner -loglevel error -y)
+
+ffmpeg_start_time=$SECONDS
+output_segment_duration_for_metric_sec_float=""
+
+if [[ -n "$start_sec" && -n "$end_sec" ]]; then
+  start_label=$(to_hms_label "$start_sec")
+  end_label=$(to_hms_label "$end_sec")
+  output_final_mp4="${base_filename_stem}_${start_label}_to_${end_label}.mp4"
+  # Duration for ffmpeg -to option needs to be relative to -ss
+  ffmpeg_to_duration=$(echo "$end_sec - $start_sec" | bc)
+  output_segment_duration_for_metric_sec_float="$ffmpeg_to_duration"
+
+
+  echo "[*] Trimming video from $start_input ($start_sec s) to $end_input ($end_sec s), duration: $ffmpeg_to_duration s"
+  echo "[*] Output clip will be: $output_final_mp4"
+
+  "${ffmpeg_cmd_base[@]}" \
+    -ss "$start_sec" -i "$downloaded_source_file" \
+    -to "$ffmpeg_to_duration" \
+    -vf "$ffmpeg_vf" \
+    -c:v libx264 -crf "$FFMPEG_CRF" -preset "$FFMPEG_PRESET" \
+    -c:a aac -b:a "$FFMPEG_AUDIO_KBPS" \
+    "$output_final_mp4"
+else
+  output_final_mp4="${base_filename_stem}_full.mp4"
+  echo "[*] No trim requested. Re-encoding full video with resizing/padding."
+  echo "[*] Output video will be: $output_final_mp4"
+  output_segment_duration_for_metric_sec_float="$source_video_duration_sec_float"
+
+  "${ffmpeg_cmd_base[@]}" \
+    -i "$downloaded_source_file" \
+    -vf "$ffmpeg_vf" \
+    -c:v libx264 -crf "$FFMPEG_CRF" -preset "$FFMPEG_PRESET" \
+    -c:a aac -b:a "$FFMPEG_AUDIO_KBPS" \
+    "$output_final_mp4"
+fi
+ffmpeg_end_time=$SECONDS
+ffmpeg_duration=$((ffmpeg_end_time - ffmpeg_start_time))
+
+# Metrics for ffmpeg
+print_yellow "[METRIC] FFMPEG processing took ${ffmpeg_duration}s."
+if [[ -n "$output_segment_duration_for_metric_sec_float" ]]; then
+    output_segment_duration_for_metric_sec=${output_segment_duration_for_metric_sec_float%.*}
+    if [[ "$output_segment_duration_for_metric_sec" -ne 0 ]]; then
+        ffmpeg_secs_per_min_vid=$(echo "scale=2; ($ffmpeg_duration * 60) / $output_segment_duration_for_metric_sec" | bc)
+        processed_duration_hms=$(date -u -d "@${output_segment_duration_for_metric_sec}" +'%H:%M:%S')
+        print_yellow "[METRIC] FFMPEG processed segment duration: ${processed_duration_hms} (${output_segment_duration_for_metric_sec_float}s)."
+        print_yellow "[METRIC] FFMPEG encoding speed: ${ffmpeg_secs_per_min_vid}s of processing per minute of video."
+    else
+        print_yellow "[METRIC] Processed segment duration is zero, cannot calculate FFMPEG speed per minute."
+    fi
+else
+    print_yellow "[METRIC] Could not determine processed segment duration for FFMPEG speed calculation."
+fi
+
+
+if [[ $? -eq 0 && -s "$output_final_mp4" ]]; then
+  echo "[*] Successfully processed video saved as: $output_final_mp4"
+else
+  echo "Error: ffmpeg processing failed or output file is empty for $output_final_mp4" >&2
+  exit 1
+fi
+
+echo "[*] Script finished."
+

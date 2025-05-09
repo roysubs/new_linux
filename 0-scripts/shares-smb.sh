@@ -17,7 +17,7 @@ else
     USER_HOME="$HOME"
 fi
 
-OUTPUT_FILE="$USER_HOME/samba-shares-report.txt"
+OUTPUT_FILE="$USER_HOME/shares-samba-report.txt"
 
 # Add date/time to the output file and display headers
 echo -e "${YELLOW}=== Samba Shares Quick Reference & Report ===${RESET}" | tee "$OUTPUT_FILE"
@@ -167,18 +167,18 @@ echo "   # -o custom format, -l list style, -p full path, -e exclude device type
 lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 2>/dev/null | awk 'NR==1 || NF > 1' | tee -a "$OUTPUT_FILE"
 
 # Disk Usage (Filtered)
-echo -e "\n${CYAN}--- Disk Usage Summary (Total, excluding tmpfs/loop/squashfs/docker/run) ---${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "\n${CYAN}--- Disk Usage Summary (Total, excluding tmpfs/loop/squashfs/docker/run/wsl) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Shows overall disk usage excluding transient/snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}df -hT --total | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run'${RESET}" | tee -a "$OUTPUT_FILE" # Added docker/run filter here too
+echo -e "${GREEN}df -hT --total | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE" # Added docker/run filter here too
 echo "   # -h human-readable, -T filesystem type, --total includes a total line, grep excludes specified types" | tee -a "$OUTPUT_FILE"
-df -hT --total 2>/dev/null | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run' | tee -a "$OUTPUT_FILE"
+df -hT --total 2>/dev/null | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run|/wsl|WSL' | tee -a "$OUTPUT_FILE"
 
 # Mounted non-zero size filesystems (Filtered)
-echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/loop/squashfs/docker/run) ---${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/loop/squashfs/docker/run/wsl) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Shows active mounts, filtered to exclude zero-size, transient, snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run'${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -o custom format. Filters zero size and common non-persistent/container mounts." | tee -a "$OUTPUT_FILE"
-findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run' | tee -a "$OUTPUT_FILE"
+findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | tee -a "$OUTPUT_FILE"
 
 # Detailed Samba Shares (Configured via testparm -s)
 echo -e "\n${CYAN}--- Samba Shares (Configured - via testparm -s) ---${RESET}" | tee -a "$OUTPUT_FILE"

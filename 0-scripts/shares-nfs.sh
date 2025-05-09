@@ -17,7 +17,7 @@ else
     USER_HOME="$HOME"
 fi
 
-OUTPUT_FILE="$USER_HOME/nfs-shares-report.txt"
+OUTPUT_FILE="$USER_HOME/shares-nfs-report.txt"
 
 # Add date/time to the output file and display headers
 echo -e "${YELLOW}=== NFS Exports Quick Reference & Report ===${RESET}" | tee "$OUTPUT_FILE"
@@ -178,16 +178,16 @@ lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,
 # Disk Usage (Filtered)
 echo -e "\n${CYAN}--- Disk Usage Summary (Total, excluding tmpfs/loop/squashfs/docker/run) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Shows overall disk usage excluding transient/snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}df -hT --total | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run'${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "${GREEN}df -hT --total | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -h human-readable, -T filesystem type, --total includes a total line, grep excludes specified types" | tee -a "$OUTPUT_FILE"
-df -hT --total 2>/dev/null | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run' | tee -a "$OUTPUT_FILE"
+df -hT --total 2>/dev/null | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run|/wsl|WSL' | tee -a "$OUTPUT_FILE"
 
 # Mounted non-zero size filesystems (Filtered)
 echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/loop/squashfs/docker/run) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Shows active mounts, filtered to exclude zero-size, transient, snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run'${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -o custom format. Filters zero size and common non-persistent/container mounts." | tee -a "$OUTPUT_FILE"
-findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run' | tee -a "$OUTPUT_FILE"
+findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | tee -a "$OUTPUT_FILE"
 
 # NFS Exports (Configured via /etc/exports)
 echo -e "\n${CYAN}--- NFS Exports (Configured - via /etc/exports) ---${RESET}" | tee -a "$OUTPUT_FILE"
