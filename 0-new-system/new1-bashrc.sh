@@ -21,8 +21,29 @@ cp "$BASHRC_FILE" "$BASHRC_FILE.$(date +'%Y-%m-%d_%H-%M-%S').bak"
 
 # If -clean is invoked, then the old block will be removed from .bashrc and replaced
 CLEAN_MODE=false
-if [[ "$1" == "--clean" ]]; then
+
+# Check the number of arguments
+if [[ "$#" -eq 0 ]]; then
+    # No arguments, proceed with default behavior (CLEAN_MODE is already false)
+    : # No operation
+elif [[ "$#" -eq 1 && "$1" == "--clean" ]]; then
+    # Exactly one argument and it is "--clean"
     CLEAN_MODE=true
+else
+    # Any other number of arguments or a different argument
+    echo >&2 "Error: Invalid arguments."
+    echo >&2 "Usage: $(basename "${BASH_SOURCE[0]}") [--clean]"
+
+    # Decide whether to exit or return based on how the script was invoked
+    # Check if the script was executed directly (BASH_SOURCE[0] and $0 refer to the same file)
+    if [[ "${BASH_SOURCE[0]}" -ef "$0" ]]; then
+        # Script was executed directly, use 'exit'
+        exit 1
+    else
+        # Script was sourced, use 'return'
+        return 1
+    fi
+    # No code should be placed immediately after the if/else that contains exit/return
 fi
 
 # Block of text to check and add to .bashrc
@@ -38,13 +59,6 @@ bashrc_block="
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
-
-alias ls='ls --color=auto'  # Add color output by default
-alias ls.='ls -d .*'        # -d shows only the directory, not the contents (of .config etc)
-alias la='ls -A'            #
-alias ll.='ls -ald .*'
-alias ll='ls -l'
-alias l='ls -CF'
 
 # Alias/Function/Export definitions
 export EDITOR=vi
@@ -157,11 +171,11 @@ alias smb='sudo vi /etc/samba/smb.conf'     # Edit Samba configuration
 alias samba='sudo vi /etc/samba/smb.conf'   # Edit Samba configuration
 alias smbconf='sudo vi /etc/samba/smb.conf' # Edit Samba configuration
 alias exports='sudo vi /etc/exports'        # Edit NFS exports
-alias nfs-fs='sudo exportfs'                # Shows as non-existent command if run without sudo
-alias nfs-fs-a='sudo exportfs -a'
-alias nfs-fs-r='sudo exportfs -r'
-alias nfs-fs-u='sudo exportfs -u'           # Requires directy as argument
-alias nfs-fs-v='sudo exportfs -v'
+alias nfs-fs='sudo exportfs'                # Shows the current list of directories exported via NFS. Requires sudo
+alias nfs-fs-a='sudo exportfs -a'           # Exports all directories listed in the /etc/exports file
+alias nfs-fs-r='sudo exportfs -r'           # Re-exports all directories listed in /etc/exports, applying any changes
+alias nfs-fs-u='sudo exportfs -u'           # Requires directory path as argument; stops exporting the specified directory
+alias nfs-fs-v='sudo exportfs -v'           # Shows the current list of exported directories with verbose details
 alias nfs-mount='sudo showmount'            # Shows as non-existent command if run without sudo
 nfs-server() { local action=\${1:-status}; sudo systemctl \"\$action\" nfs-server; }  # or start, stop, restart, enable, disable
 alias nfs-mount-e='showmount -e'            # Requires <server_ip_or_hostname>
@@ -173,37 +187,41 @@ alias rpc='rpcinfo -p'                      # Requires <server_ip_or_hostname>
 
 # Simple helpers, cd.., cx, cxx, ls., ll., ifconfig, ipconfig
 alias u1='cd ..';          alias cd..='u1'  # cd.. is a common typo in Linux for Windows users
-alias u2='u1;U1';          alias cd..2='u2' # cd up 2 directories
-alias u3='u1;u1;u1';       alias cd..3='u3' # cd up 3 directories
-alias u4='u1;u1;u1;u1';    alias cd..4='u4' # cd up 4 directories
-alias u5='u1;u1;u1;u1;u1'; alias cd..5='u5' # cd up 5 directories
-alias cx='chmod +x'               # chmod add the execute permission
-cxx() { chmod +x \$1; ./\$1; }    # chmod +x and then run \$1 immediately
-alias ls.='ls -d .*'              # -d shows only the directory name, not the contents of subdirs
+alias u2='u1;u1';          alias cd...='u2'  # cd up 2 directories
+alias u3='u1;u1;u1';       alias cd....='u3'  # cd up 3 directories
+alias u4='u1;u1;u1;u1';    alias cd.....='u4'  # cd up 4 directories
+alias u5='u1;u1;u1;u1;u1'; alias cd......='u5'  # cd up 5 directories
+alias cx='chmod +x'           # chmod add the execute permission
+cxx() { chmod +x \$1; ./\$1; }  # chmod +x and then run \$1 immediately
+alias ls='ls --color=auto'     # Add color output by default
+alias ls.='ls -d .*'          # -d shows only the current directory, not the contents of subdirectories (of .config/ etc)
+alias ll='ls -l'
 alias ll.='ls -ald .*'
+alias l='ls -CF'
 alias ifconfig='sudo ifconfig'    # 'ifconfig' (apt install net-tools) causes 'command not found' if run without sudo
 alias ipconfig='sudo ifconfig'    # Windows typo
 # Create 'bat' alias for 'batcat' (apt install bacula-console-qt) unless 'bat' (Bluetooth Audio Tool) is installed
 if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
 
-# Jump functions, cannot be in scripts as have to be dotsourced. Various for new_linux and standard locations
-n()  { cd ~/new_linux || return; ls; }             # Jump to new_linux
-0d() { cd ~/new_linux/0-docker || return; ls; }    # Jump to new_linux/0-docker
-0g() { cd ~/new_linux/0-games || return; ls; }     # Jump to new_linux/0-games
-0h() { cd ~/new_linux/0-help || return; ls; }      # Jump to new_linux/0-help
-0i() { cd ~/new_linux/0-install || return; ls; }   # Jump to new_linux/0-install
-0n() { cd ~/new_linux/0-notes || return; ls; }     # Jump to new_linux/0-notes
-0ns() { cd ~/new_linux/0-new-system || return; ls; }  # Jump to new_linux/0-new-system
-0s() { cd ~/new_linux/0-scripts || return; ls; }   # Jump to new_linux/0-scripts
-v()  { cd ~/.vnc || return; ls; }                  # Jump to ~/.vnc
-# Personal functions, just as example of what can be useful (though can go to a separate .bashrc-personal)
-0m() { cd ~/new_linux/0-docker/0-media-stack || return; ls; }    # Jump to new_linux/0-docker/0-media-stack
-0q() { cd ~/.config/media-stack/qbittorrent/qBittorrent/logs || return; ls; }    # Jump to new_linux/0-docker/0-media-stack
-D()  { cd /mnt/sdc1/Downloads || return; ls; }     # Jump to my personal Downloads folder
-DF() { cd /mnt/sdc1/Downloads/0\\ Films || return; ls; }  # Jump to '0 Films'
-DT() { cd /mnt/sdc1/Downloads/0\\ TV || return; ls; }     # Jump to '0 TV'
-DM() { cd /mnt/sdc1/Downloads/0\\ Music || return; ls; }  # Jump to '0 Music'
-white() { cd ~/192.168.1.29-d || return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
+# Jump functions for new_linux, cannot be in scripts as have to be dotsourced.
+n()   { cd ~/new_linux || return; ls; }              # Jump to new_linux
+0d()  { cd ~/new_linux/0-docker || return; ls; }     # Jump to new_linux/0-docker
+0g()  { cd ~/new_linux/0-games || return; ls; }      # Jump to new_linux/0-games
+0h()  { cd ~/new_linux/0-help || return; ls; }       # Jump to new_linux/0-help
+0i()  { cd ~/new_linux/0-install || return; ls; }    # Jump to new_linux/0-install
+0n()  { cd ~/new_linux/0-notes || return; ls; }      # Jump to new_linux/0-notes
+0ns() { cd ~/new_linux/0-new-system || return; ls; } # Jump to new_linux/0-new-system
+0s()  { cd ~/new_linux/0-scripts || return; ls; }    # Jump to new_linux/0-scripts
+0ms() { cd ~/new_linux/0-docker/0-media-stack || return; ls; }   # Jump to docker media-stack setup folder
+0mc() { cd ~/.config/media-stack/ || return; ls; }   # Jump to ~/.config/media-stack, all config folders for media-stack
+0mq() { cd ~/.config/media-stack/qbittorrent/qBittorrent/logs || return; ls; }  # Jump to media-stack qBittorrent logs
+0v()  { cd ~/.vnc || return; ls; }                   # Jump to ~/.vnc
+# Jump functions for personal folder (to be completely generic should be in a separate .bashrc-personal, but fine to leave here)
+D()  { cd /mnt/sdc1/Downloads || echo \"Directory not present\"; return; ls; }  # Jump to my personal Downloads folder
+DF() { cd /mnt/sdc1/Downloads/0\\ Films || echo \"directory not present\"; return; ls; }  # Jump to '0 Films'
+DT() { cd /mnt/sdc1/Downloads/0\\ TV || echo \"Directory not present\"; return; ls; }     # Jump to '0 TV'
+DM() { cd /mnt/sdc1/Downloads/0\\ Music || echo \"Directory not present\"; return; ls; }  # Jump to '0 Music'
+white() { cd ~/192.168.1.29-d || echo \"Directory not present\"; return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
 "
 
 # Capture the first non-empty line of $bashrc_block, this is the header line
