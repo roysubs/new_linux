@@ -6,21 +6,23 @@
 if [ $# -eq 0 ]; then
     echo "Git Tool. Usage: g [option] <args>"
     echo "Options:"
-    echo "  a                Add All: git add .    Stage all changes in current folder"
+    echo "  acp <message>    Add-Commit-Push: status, add -A, gitleaks detect, commit -m <message>, push"
+    echo "                   Also accepts --debug to show ssh -v output during the push operation"
+    echo "  a                Add All: git add .    Stage all changes in current folder only"
     echo "  A                Add All: git add -A   Stage all changes from root of repo"
     echo "  c <message>      Commit:  git commit -m <message>"
     echo "  s                Status:  Show the current repository status"
-    echo "  acp <message>    Add-Commit-Push: git status / git add -A / git commit -m <message> / git push"
-    echo "  acpv <message>   Add-Commit-Push-VERBOSE: git status / git add -A / git commit -m <message> / git push"
-    echo "  ps               Push: Update to the current branch's upstream"
-    echo "  pl               Pull: Update latest changes from the remote to local"
-    echo "  d                Diff: Show unstaged changes"
+    echo "  ps|push          Push: Update to the current branch's upstream"
+    echo "  pl|pull          Pull: Update latest changes from the remote to local"
+    echo "  cl|clone         Clone a full project from a git repository"
+    echo "  cl1              Clone, but with max depth 1 only"
+    echo "  d|diff           Diff: Show unstaged changes"
     echo "  ds               Diff Staged: Show staged changes"
-    echo "  l                Log: Show commit history (short format)"
+    echo "  l|log            Log: Show commit history (short format)"
     echo "  ll               Log Detailed: Show full commit history with diffs"
     echo "  b                Branch: List branches, highlight current branch"
+    echo "  ch|co|checkout <branch>   Checkout: Switch to a different branch"
     echo "  nb <name>        New Branch: Create and switch to a new branch"
-    echo "  ch <branch>      Checkout: Switch to a different branch"
     echo "  rpo              git remote prune origin (prune branches that no longer exist)"
     echo "  f                Fetch: Update remote refs without merging"
     echo "  m <branch>       Merge: Merge the specified branch into the current one"
@@ -69,7 +71,7 @@ case "$option" in
     A)
         git add -A
         ;;
-    cl)
+    cl|clone)
         git clone "$@"
         # get size and number of files/folders
         ;;
@@ -159,32 +161,32 @@ case "$option" in
             display_and_run "git push origin $CURRENT_BRANCH"
         fi
         ;;
-    ps)
+    ps|push)
         git push
         ;;
-    pl)
+    pl|pull)
         git pull
         ;;
-    d)
+    d|diff)
         git diff
         ;;
     ds)
         git diff --staged
         ;;
-    l)
+    l|log)
         git log --oneline --graph --decorate --all
         ;;
     ll)
         git log --stat --patch
         ;;
-    b)
+    b|branch)
         git branch --sort=-committerdate --color | sed -e '/^\*/!s/^/  /'
         ;;
-    nb)
-        git checkout -b "$1"
-        ;;
-    ch)
+    ch|co|checkout)
         git checkout "$1"
+        ;;
+    cb)
+        git checkout -b "$1"
         ;;
     rpo)
         git remote prune origin
