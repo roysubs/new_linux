@@ -15,6 +15,8 @@ if [ $# -eq 0 ]; then
     echo "  A                 Add All: git add -A    Stage all changes from root of repo"
     echo "  c <message>       Commit:  git commit -m <message>"
     echo "  s                 Status:  Show the current repository status"
+    echo "  set-ssh           If you cloned a repo as HTTPS, change it to SSH so that you can push"
+    echo "                    git remote set-url origin git@github.com:roysubs/new_linux.git"
     echo "  ps|push           Push: Update to the current branch's upstream"
     echo "  pl|pull           Pull: Update latest changes from the remote to local"
     echo "  cl|clone          Clone a full project from a git repository and report stats"
@@ -376,6 +378,58 @@ case "$option" in
             git clean -fd
         else
             echo "Aborted."
+        fi
+        ;;
+
+    set-git)
+        # Check if a URL argument was provided ($2)
+        if [ -z "$2" ]; then
+            # No URL provided, show explanation
+            echo "Understanding Git Remote URLs: HTTPS vs SSH"
+            echo "--------------------------------------------"
+            echo "Git uses a 'remote' URL to know where to fetch from and push to."
+            echo "There are two main types for services like GitHub, GitLab, etc:"
+            echo ""
+            echo "1. HTTPS (e.g., https://github.com/user/repo.git)"
+            echo "   - Authentication requires username/password or Personal Access Token (PAT)."
+            echo "   - Can be simpler for cloning initially, but requires re-authentication"
+            echo "     or a credential helper (which might store credentials)."
+            echo "   - Password authentication is deprecated/banned on GitHub if you use 2FA."
+            echo ""
+            echo "2. SSH (e.g., git@github.com:user/repo.git)"
+            echo "   - Authentication uses SSH keys (public key on server, private key on your machine)."
+            echo "   - Recommended method for scripting and frequent use, especially with 2FA."
+            echo "   - Requires generating an SSH key pair and adding the public key to your Git hosting service."
+            echo "   - No username/password prompt during operations (unless your SSH key has a passphrase)."
+            echo ""
+            echo "You likely want to switch to SSH if you have set up SSH keys on GitHub/GitLab/etc."
+            echo "Check that with 'git remote -v' (if it shows https:// then you should switch)."
+            echo ""
+            echo "To change the 'origin' remote URL of the current repository, use:"
+            echo "g set-ssh <your_ssh_url>"
+            echo ""
+            echo "Example (replace with your actual username and repo name):"
+            echo "g set-ssh git@github.com:roysubs/new_linux.git"
+            echo ""
+            echo "Which will run:"
+            echo "git remote set-url origin git@github.com:roysubs/new_linux.git"
+            echo ""
+        else
+            # URL provided, attempt to set the remote URL
+            NEW_REMOTE_URL="$2"
+            echo "===== Setting 'origin' remote URL to: $NEW_REMOTE_URL ====="
+            git remote set-url origin "$NEW_REMOTE_URL"
+
+            # Check the exit status of the git command
+            if [ $? -eq 0 ]; then
+                echo "✅ Successfully updated 'origin' remote URL."
+                echo "Verify with:"
+                echo "git remote -v"
+            else
+                echo_red "❌ Error: Failed to set 'origin' remote URL."
+                echo "Check the URL format and try again."
+            fi
+            echo "========================================================="
         fi
         ;;
 
