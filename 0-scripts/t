@@ -16,16 +16,20 @@ color_echo() {
     echo -e "${GREEN}$1${NC}"
 }
 
+# Removed:
+#  b             ${BLUE}byobu${NC} | Start tmux with byobu
+
 help_text() {
     printf "Tmux Wrapper.   Usage: t [option]
 Options:
   list          List buffers, clients, panes, sessions, windows
-  s             ${BLUE}tmux${NC} | Start tmux
-  b             ${BLUE}byobu${NC} | Start tmux with byobu
+  t|s|start     Start tmux, 't t', 't s', 't start'; ${BLUE}tmux${NC}
+  a <name>      Attach to session <name> (or to last session if no name); ${BLUE}tmux attach-session -t <name>${NC}
+  d             Detach from current session; ${BLUE}tmux detach${NC}A
+  f|b           Switch panes (f for forwards, b for backwards); ${BLUE}tmux select-pane -t :.+${NC} (:.- for backwards)
   sh            Split Horizontal (create pane, split line is top to bottom)
   sv            Split Vertical (create pane, split line is left to right)
   sg            Split Grid (create panes to form a 2x2 grid)
-  ff||bb        Jump/Switch panes (forward/back)
   rl|rr|ru|rd   Resize current pane (L/R/U/D)
   copy          Enter copy mode
   mouse         Toggle mouse mode (if 'off', copy mode will span multiple panes)
@@ -36,8 +40,6 @@ Options:
   panes         Flash up the pane numbers, and show details in console
   ren <name>    Rename session
   swi <name>    Switch to session
-  at <name>     ${BLUE}tmux attach${NC} | Attach to session (or last if no name)
-  dt            ${BLUE}tmux detach${NC} | Detach from current session
   k             ${BLUE}tmux kill${NC} | Kill current tmux pane
   hk            Help summary of common key binding defaults and some commands
   hb            Help summary of common byobu features
@@ -72,10 +74,10 @@ case "$1" in
         tmux
         ;;
 
-    b)
-        color_echo "Starting byobu..."
-        byobu
-        ;;
+#     b)
+#         color_echo "Starting byobu..."
+#         byobu
+#         ;;
 
     k)
         color_echo "Killing current tmux pane..."
@@ -120,11 +122,11 @@ case "$1" in
         tmux split-window -v -c "#{pane_current_path}"     # split bottom of right
         ;;
 
-    ff)
+    f)
         tmux select-pane -t :.+
         ;;
 
-    bb)
+    b)
         tmux select-pane -t :.-
         ;;
 
@@ -143,7 +145,7 @@ case "$1" in
         tmux switch-client -t "$1"
         ;;
 
-    at)
+    a|at|att|attach)
         if [ -n "$2" ]; then
             tmux attach-session -t "$2"
         else
@@ -151,7 +153,7 @@ case "$1" in
         fi
         ;;
 
-    dt)
+    d|de|det|detach)
         tmux detach
         ;;
 
