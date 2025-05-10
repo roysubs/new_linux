@@ -40,14 +40,14 @@ services:
     volumes:
       - ${CONFIG_ROOT}/gluetun:/gluetun
     environment:
-      - VPN_TYPE=openvpn                               # Or wireguard, depending on your desired protocol
+      - VPN_TYPE=wireguard                               # Wireguard is considerably less CPU intensive, so use that if possible
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}   # From .env
       - ${VPN_COUNTRY_OR_REGION}                       # This is a full KEY=VALUE string, e.g. 'SURFSHARK_COUNTRY=Norway'
       - OPENVPN_USER=${VPNUSER}
       - OPENVPN_PASSWORD=${VPNPASS}
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Amsterdam
+      - TZ=${TZ}
       # Critical: Allow traffic from your local network range to bypass the VPN.
       # This is necessary for other laptops or Windows PC's to deliver magnet
       # links to containers running on Gluetun's network.
@@ -82,7 +82,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       # Timezone setting
-      - TZ=Europe/Amsterdam
+      - TZ=${TZ}
       # Specify the internal port for the Web UI (matching the port mapped on Gluetun)
       - WEBUI_PORT=8080
       # Optional: Ensure Web UI listens on all interfaces inside the container (usually default)
@@ -109,7 +109,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Amsterdam
+      - TZ=${TZ}
     volumes:
       # Mount the Radarr config directory. Path from CONFIG_ROOT environment variable.
       - ${CONFIG_ROOT}/radarr:/config
@@ -132,7 +132,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Amsterdam
+      - TZ=${TZ}
     volumes:
       # Mount the Sonarr config directory. Path from CONFIG_ROOT environment variable.
       - ${CONFIG_ROOT}/sonarr:/config
@@ -155,7 +155,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Amsterdam
+      - TZ=${TZ}
       # Optional: Jackett's internal port (usually 9117, matched in gluetun ports)
       # - JACKETT_PORT=9117
     volumes:
@@ -192,7 +192,7 @@ services:
 #    environment: # <-- Make sure this is the environment section for filebrowser
 #      - PUID=${PUID} # Assuming you have these in your .env for filebrowser user
 #      - PGID=${PGID} # Assuming you have these in your .env for filebrowser user
-#      - TZ=Europe/Amsterdam # Optional, but good practice
+#      - TZ=${TZ}
 #      - FB_DATABASE=/config/database.db
 #    # Required to prevent 'open /database.db: permission denied' as Filebrowser tries to create database.db
 #    # inside the container at root /, but PUID and PGID user inside the container don't have write permissions.

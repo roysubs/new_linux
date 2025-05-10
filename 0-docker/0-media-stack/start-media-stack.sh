@@ -103,13 +103,13 @@ done
 
 if [ "${#FILTERED_IMAGES[@]}" -gt 0 ]; then
     for img in "${FILTERED_IMAGES[@]}"; do
-      # Using grep -F for fixed string matching, -w for whole words (image name can be a whole word)
-      if echo "$EXISTING_RUNNING_CONTAINERS" | grep -Fw -- "$img" > /dev/null; then
-        # Find which running container(s) use this image
-        CONTAINERS_USING_IMAGE=$(echo "$EXISTING_RUNNING_CONTAINERS" | grep -Fw -- "$img" | awk '{print $1}')
-        echo "⚠️  WARNING: Image \"$img\" is already used by running container(s): $CONTAINERS_USING_IMAGE"
-        CONFLICTING_IMAGES+=("$img") # Still add to this list if we want a final summary
-      fi
+        # Using grep -F for fixed string matching, -w for whole words (image name can be a whole word)
+        if echo "$EXISTING_RUNNING_CONTAINERS" | grep -Fw -- "$img" > /dev/null; then
+            # Find which running container(s) use this image
+            CONTAINERS_USING_IMAGE=$(echo "$EXISTING_RUNNING_CONTAINERS" | grep -Fw -- "$img" | awk '{print $1}')
+            echo "⚠️  WARNING: Image \"$img\" is already used by running container(s): $CONTAINERS_USING_IMAGE"
+            CONFLICTING_IMAGES+=("$img") # Still add to this list if we want a final summary
+        fi
     done
 fi
 
@@ -183,6 +183,9 @@ if ! docker compose version &>/dev/null; then
       exit 1
     fi
 fi
+
+# Detect TimeZone
+TZ=$(timedatectl show --value -p Timezone)
 
 # Detect UID and GID
 PUID=$(id -u)
@@ -354,6 +357,7 @@ echo "Creating .env file..."
 env_content=""
 env_content+="VPNUSER=$VPNUSER"$'\n'
 env_content+="VPNPASS=$VPNPASS"$'\n'
+env_content+="TZ=$TZ"$'\n'
 env_content+="PUID=$PUID"$'\n'
 env_content+="PGID=$PGID"$'\n'
 env_content+="CONFIG_ROOT=${CONFIG_ROOT}"$'\n'
