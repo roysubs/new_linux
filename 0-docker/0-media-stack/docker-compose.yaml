@@ -40,7 +40,7 @@ services:
     volumes:
       - ${CONFIG_ROOT}/gluetun:/gluetun
     environment:
-      - VPN_TYPE=wireguard                               # Wireguard is considerably less CPU intensive, so use that if possible
+      - VPN_TYPE=openvpn                               # Wireguard is considerably less CPU intensive, so use that if possible
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}   # From .env
       - ${VPN_COUNTRY_OR_REGION}                       # This is a full KEY=VALUE string, e.g. 'SURFSHARK_COUNTRY=Norway'
       - OPENVPN_USER=${VPNUSER}

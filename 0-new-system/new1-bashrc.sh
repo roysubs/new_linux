@@ -195,9 +195,13 @@ alias cx='chmod +x'           # chmod add the execute permission
 cxx() { chmod +x \$1; ./\$1; }  # chmod +x and then run \$1 immediately
 alias ls='ls --color=auto'     # Add color output by default
 alias ls.='ls -d .*'          # -d shows only the current directory, not the contents of subdirectories (of .config/ etc)
-alias ll='ls -l'
+alias ll='ls -lh'
 alias ll.='ls -ald .*'
 alias l='ls -CF'
+alias tt='tmux'; alias td='tmux detach'
+ta() { if [ -n \"\$2\" ]; then tmux attach-session -t \"\$2\"; else tmux attach; fi; }
+alias tf='tmux select-pane -t :.+'; alias tb='tmux select-pane -t :.-'
+alias tl+='tmux resize-pane -L 5'; alias tr+='tmux resize-pane -R 5'; alias tu+='tmux resize-pane -U 5'; alias td+='tmux resize-pane -D 5'
 alias ifconfig='sudo ifconfig'    # 'ifconfig' (apt install net-tools) causes 'command not found' if run without sudo
 alias ipconfig='sudo ifconfig'    # Windows typo
 # Create 'bat' alias for 'batcat' (apt install bacula-console-qt) unless 'bat' (Bluetooth Audio Tool) is installed

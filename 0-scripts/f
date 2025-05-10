@@ -14,24 +14,24 @@ usage() {
     echo "Enhanced find utility with common operations"
     echo
     echo "Options:"
-    echo "  -h, --help              Show this help message"
-    echo "  -ex, --examples         Show various find syntax examples"
-    echo "  -b, --biggest [N]       Find N biggest files (default: 10)"
-    echo "  -n, --newest [N]        Find N newest files (default: 10)"
-    echo "  -o, --oldest [N]        Find N oldest files (default: 10)"
-    echo "  -e, --empty             Find empty files"
-    echo "  -ed, --empty-dirs       Find empty directories"
-    echo "  -d, --duplicates        Find duplicate files (by content)"
-    echo "  -p, --permissions MODE  Find files with specific permissions (e.g., 777)"
-    echo "  -s, --size SIZE         Find files by size (e.g., +10M, -1G)"
-    echo "  -t, --type TYPE         Find by type (f:file, d:directory, l:symlink)"
-    echo "  -m, --modified DAYS     Find files modified in last N days"
-    echo "  -a, --accessed DAYS     Find files accessed in last N days"
-    echo "  -x, --exec COMMAND      Execute command on each file (use {} as placeholder)"
-    echo "  -r, --regex PATTERN     Find files matching regex pattern"
-    echo "  -g, --grep PATTERN      Find files containing text pattern"
-    echo "  -l, --symlinks          Find broken symlinks"
-    echo "  -f, --fast              Use -xdev to skip other filesystems (faster)"
+    echo "  h, help              Show this help message"
+    echo "  ex, examples         Show various find syntax examples"
+    echo "  b, biggest [N]       Find N biggest files (default: 10)"
+    echo "  n, newest [N]        Find N newest files (default: 10)"
+    echo "  o, oldest [N]        Find N oldest files (default: 10)"
+    echo "  e, empty             Find empty files"
+    echo "  ed, empty-dirs       Find empty directories"
+    echo "  d, duplicates        Find duplicate files (by content)"
+    echo "  p, permissions MODE  Find files with specific permissions (e.g., 777)"
+    echo "  s, size SIZE         Find files by size (e.g., +10M, -1G)"
+    echo "  t, type TYPE         Find by type (f:file, d:directory, l:symlink)"
+    echo "  m, modified DAYS     Find files modified in last N days"
+    echo "  a, accessed DAYS     Find files accessed in last N days"
+    echo "  x, exec COMMAND      Execute command on each file (use {} as placeholder)"
+    echo "  r, regex PATTERN     Find files matching regex pattern"
+    echo "  g, grep PATTERN      Find files containing text pattern"
+    echo "  l, symlinks          Find broken symlinks"
+    echo "  f, fast              Use -xdev to skip other filesystems (faster)"
     echo
     echo "Global options:"
     echo "  --cmd                   Show the command to be executed before running"
@@ -62,7 +62,7 @@ while [[ $# -gt 0 ]]; do
             SHOW_CMD=true
             shift
             ;;
-        -b|--biggest)
+        b|biggest)
             ACTION="biggest"
             if [[ $2 =~ ^[0-9]+$ ]]; then
                 N="$2"
@@ -70,7 +70,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -n|--newest)
+        n|newest)
             ACTION="newest"
             if [[ $2 =~ ^[0-9]+$ ]]; then
                 N="$2"
@@ -78,7 +78,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -o|--oldest)
+        o|oldest)
             ACTION="oldest"
             if [[ $2 =~ ^[0-9]+$ ]]; then
                 N="$2"
@@ -86,19 +86,19 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -e|--empty)
+        e|empty)
             ACTION="empty"
             shift
             ;;
-        -ed|--empty-dirs)
+        ed|empty-dirs)
             ACTION="empty-dirs"
             shift
             ;;
-        -d|--duplicates)
+        d|duplicates)
             ACTION="duplicates"
             shift
             ;;
-        -p|--permissions)
+        p|permissions)
             ACTION="permissions"
             if [[ -n "$2" ]]; then
                 MODE="$2"
@@ -109,7 +109,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -s|--size)
+        s|size)
             ACTION="size"
             if [[ -n "$2" ]]; then
                 SIZE="$2"
@@ -120,7 +120,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -t|--type)
+        t|type)
             ACTION="type"
             if [[ -n "$2" ]]; then
                 TYPE="$2"
@@ -131,7 +131,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -m|--modified)
+        m|modified)
             ACTION="modified"
             if [[ $2 =~ ^[0-9]+$ ]]; then
                 DAYS="$2"
@@ -142,7 +142,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -a|--accessed)
+        a|accessed)
             ACTION="accessed"
             if [[ $2 =~ ^[0-9]+$ ]]; then
                 DAYS="$2"
@@ -153,7 +153,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -x|--exec)
+        x|exec)
             ACTION="exec"
             if [[ -n "$2" ]]; then
                 COMMAND="$2"
@@ -164,7 +164,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -r|--regex)
+        r|regex)
             ACTION="regex"
             if [[ -n "$2" ]]; then
                 PATTERN="$2"
@@ -175,7 +175,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -g|--grep)
+        g|grep)
             ACTION="grep"
             if [[ -n "$2" ]]; then
                 PATTERN="$2"
@@ -186,15 +186,15 @@ while [[ $# -gt 0 ]]; do
             fi
             shift
             ;;
-        -l|--symlinks)
+        l|symlinks)
             ACTION="symlinks"
             shift
             ;;
-        -f|--fast)
+        f|fast)
             FAST="-xdev"
             shift
             ;;
-        -ex|--examples)
+        ex|examples)
             ACTION="examples"
             shift
             ;;
@@ -227,6 +227,7 @@ fi
         echo -e "${WHITE}#${NC} ${GREEN}$display_cmd${NC}"
         echo -e "${WHITE}Press any key to execute...${NC}"
         read -n 1 -s
+        echo -e "${WHITE}Command is executing...${NC}"
     fi
     
     eval "$cmd"
