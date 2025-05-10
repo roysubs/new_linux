@@ -1,8 +1,0 @@
-
-The below works fine, but is more appropriate in a separate script, so have moved it there
-
-# fs: useful filesystem output (filtered lsblk + /etc/fstab)                                   # 1 RAM disks (/dev/ram*), 7 Loop devices (/dev/loop*), 11 CD-ROM (/dev/sr0)                   # 179 MMC/SD cards (optional), 252 Device mapper (optional, LVM, crypt), 253 Zram (swap compression)                                                                                          # NR==1  : keep the first line (the header)
-# NF > 1 : keep rows with more than 1 field (so, real partitions with data, e.g. /dev/sda2 was Extended partition, so just holds other partitions)
-# Optional | grep -v -E "^/dev/sd[a-z]\s*$"'    # | grep -E "/dev/.+[0-9]+\b" | awk "NF > 1"'
-# alias fs='awk '/^# <file/ {print; next} /^#/ {next} {print | "sort"}' /etc/fstab; echo; lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk "NR==1 || NF > 1"'
-alias fs="echo -e \"/etc/fstab\n==========\"; awk '/^# <file/ {print; next} /^#/ {next} {print | \"sort\"}' /etc/fstab; echo; echo -e \"lsblk\n=====\"; lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,253 | awk 'NR==1 || NF > 1'"

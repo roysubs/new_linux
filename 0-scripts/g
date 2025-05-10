@@ -286,7 +286,49 @@ case "$option" in
         ;;
 
     pl|pull)
-        git pull
+        echo "📡 Fetching latest changes from remote..."
+        display_and_run "git fetch"
+
+        LOCAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        REMOTE_BRANCH="origin/$LOCAL_BRANCH"
+
+        echo "📌 Checking status between local and $REMOTE_BRANCH..."
+
+        echo "==== LOCAL vs REMOTE diff summary ===="
+        display_and_run "git diff --name-status $LOCAL_BRANCH $REMOTE_BRANCH"
+
+        echo
+        echo "🔍 Would you like to review diffs of changed files? (y/N)"
+        read -r confirm_diff
+        if [[ "$confirm_diff" =~ ^[Yy]$ ]]; then
+            CHANGED_FILES=$(git diff --name-only $LOCAL_BRANCH $REMOTE_BRANCH)
+            for file in $CHANGED_FILES; do
+                echo -e "\n==== Diff: $file ===="
+                git diff "$LOCAL_BRANCH" "$REMOTE_BRANCH" -- "$file" | less
+            done
+        fi
+
+        echo
+        echo "⚠️  Checking for potential merge conflicts..."
+        CONFLICTS=$(git diff --check $LOCAL_BRANCH $REMOTE_BRANCH | grep -E '^\S+:\d+' || true)
+        if [[ -n "$CONFLICTS" ]]; then
+            echo -e "\033[1;31m🚨 Potential conflicts detected:\033[0m"
+            echo "$CONFLICTS"
+            echo -e "\nResolve these before proceeding, or pull manually."
+            exit 1
+        else
+            echo -e "\033[1;32m✅ No obvious conflicts detected.\033[0m"
+        fi
+
+        echo
+        echo "❓ Proceed with pull from $REMOTE_BRANCH into $LOCAL_BRANCH? (y/N)"
+        read -r confirm_pull
+        if [[ "$confirm_pull" =~ ^[Yy]$ ]]; then
+            echo "===="
+            display_and_run "git pull --ff-only"
+        else
+            echo -e "\033[1;33mℹ️ Pull cancelled by user.\033[0m"
+        fi
         ;;
 
     d|diff)
