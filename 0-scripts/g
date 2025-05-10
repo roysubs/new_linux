@@ -218,72 +218,81 @@ case "$option" in
         echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
         ;;
 
-acp)
-    DEBUG_MODE=0
-    COMMIT_MSG=()
+    acp)
+        DEBUG_MODE=0
+        COMMIT_MSG=()
 
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --debug)
-                DEBUG_MODE=1
-                ;;
-            *)
-                COMMIT_MSG+=("$1")
-                ;;
-        esac
-        shift
-    done
-
-    if [[ ${#COMMIT_MSG[@]} -eq 0 ]]; then
-        echo -e "\033[1;31m❌ No commit message provided.\033[0m"
-        exit 1
-    fi
-
-    COMMIT_STR="${COMMIT_MSG[*]}"
-
-    echo "====="
-    display_and_run "git status --short"
-    echo -e "\033[1;34m🔍 Git status legend:\033[0m Left=staged  Right=unstaged  \033[1;33mM\033[0m=modified  \033[1;32mA\033[0m=added  \033[1;31mD\033[0m=deleted  \033[1;35mR\033[0m=renamed  \033[1;36m??\033[0m=untracked"
-    echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
-
-    echo "====="
-    display_and_run "git add -A --verbose"
-
-    # Get list of changed (tracked) files, including renamed ones
-    CHANGED_FILES=$(git status --porcelain | awk '/^[ MARC]M|^[ MARC]A|^??|^R/ {print $2}' | xargs -r realpath)
-
-    if [[ -z "$CHANGED_FILES" ]]; then
-        echo -e "\033[1;32m✅ No changed files to scan.\033[0m"
-    else
-        echo -e "\033[1;34m🔐 Running Gitleaks only on changed files...\033[0m"
-        echo "$CHANGED_FILES" | while read -r file; do
-            echo -e "\033[1;36mScanning:\033[0m $file"
-            gitleaks detect --no-git --path "$file" --verbose || {
-                echo -e "\033[1;31m❌ Secret detected in:\033[0m $file"
-                exit 1
-            }
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --debug)
+                    DEBUG_MODE=1
+                    ;;
+                *)
+                    COMMIT_MSG+=("$1")
+                    ;;
+            esac
+            shift
         done
-        echo -e "\033[1;32m✅ Gitleaks scan complete. No secrets found.\033[0m"
-    fi
 
-    echo "Secret scan passed. Proceeding with commit."
+        if [[ ${#COMMIT_MSG[@]} -eq 0 ]]; then
+            echo -e "\033[1;31m❌ No commit message provided.\033[0m"
+            exit 1
+        fi
 
-    echo "====="
-    display_and_run "git commit --verbose -m \"$COMMIT_STR\"" || {
-        echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
-        exit 1
-    }
+        COMMIT_STR="${COMMIT_MSG[*]}"
 
-    echo "====="
-    CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+        echo "====="
+        display_and_run "git status --short"
+        echo -e "\033[1;34m🔍 Git status legend:\033[0m Left=staged  Right=unstaged  \033[1;33mM\033[0m=modified  \033[1;32mA\033[0m=added  \033[1;31mD\033[0m=deleted  \033[1;35mR\033[0m=renamed  \033[1;36m??\033[0m=untracked"
+        echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
 
-    if [[ $DEBUG_MODE -eq 1 ]]; then
-        display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
-    else
-        read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
-        display_and_run "git push origin $CURRENT_BRANCH"
-    fi
-    ;;
+        echo "====="
+        display_and_run "git add -A --verbose"
+
+        echo "====="
+        echo "Scanning for secrets using Gitleaks; do NOT commit without this (to avoid awkward rebase issues)..."
+        if ! command -v gitleaks >/dev/null 2>&1; then
+            echo -e "\033[1;31m❌ Error: gitleaks command not found.\033[0m"
+            echo "Please install gitleaks (e.g., 'sudo apt install gitleaks') and try again."
+            exit 1
+        fi
+
+        # Get the list of changed files (modified, added, renamed, untracked)
+        CHANGED_FILES=$(git status --porcelain | awk '/^[ MARC]M|^[ MARC]A|^??|^R/ {print $2}' | xargs -r realpath)
+
+        if [ -n "$CHANGED_FILES" ]; then
+            echo "🔐 Running Gitleaks only on changed files..."
+            # Loop over each changed file and run gitleaks on it
+            for file in $CHANGED_FILES; do
+                display_and_run "gitleaks detect --no-git --source \"$file\" --verbose"
+                if [ $? -ne 0 ]; then
+                    echo -e "\033[1;31m❌ Secret scan failed in $file! Fix detected secrets before committing.\033[0m"
+                    exit 1
+                fi
+            done
+            echo "✅ Gitleaks scan complete. No secrets found."
+        else
+            echo "No changed files detected for scanning."
+        fi
+
+        echo "Secret scan passed. Proceeding with commit."
+
+        echo "====="
+        display_and_run "git commit --verbose -m \"$COMMIT_STR\"" || {
+            echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
+            exit 1
+        }
+
+        echo "====="
+        CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+
+        if [[ $DEBUG_MODE -eq 1 ]]; then
+            display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
+        else
+            read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
+            display_and_run "git push origin $CURRENT_BRANCH"
+        fi
+        ;;
 
     ps|push)
         git push
