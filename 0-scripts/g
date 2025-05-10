@@ -264,7 +264,7 @@ case "$option" in
             echo "🔐 Running Gitleaks only on changed files..."
             # Loop over each changed file and run gitleaks on it
             for file in $CHANGED_FILES; do
-                display_and_run "gitleaks detect --no-git --source \"$file\" --verbose"
+                display_and_run "gitleaks detect --no-git --log-level debug --source \"$file\" --verbose"
                 if [ $? -ne 0 ]; then
                     echo -e "\033[1;31m❌ Secret scan failed in $file! Fix detected secrets before committing.\033[0m"
                     exit 1
