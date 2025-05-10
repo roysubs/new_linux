@@ -21,30 +21,30 @@ print_intro() {
     echo
     echo "${BOLD}Usage:${RESET}"
     echo "──────────────────────────────────────────────────────────────────────────────"
-    echo " ${CYAN}source git-aware-prompt.sh${RESET}          # Activates the Git-aware prompt"
+    echo " ${CYAN}source git-aware-prompt.sh${RESET}         # Activates the Git-aware prompt"
     echo " ${CYAN}source git-aware-prompt.sh restore${RESET}  # Restores original PS1 and prompt behavior"
     echo " ${CYAN}source git-aware-prompt.sh --help${RESET}   # Shows this help"
     echo
     echo "${BOLD}Note:${RESET}"
     echo "──────────────────────────────────────────────────────────────────────────────"
-    echo " This script must be run with ${BOLD}source${RESET} to take effect (not run directly):"
+    echo " This script must be ${BOLD}source${RESET}d to take effect (not run directly):"
     echo "     ${CYAN}source git-aware-prompt.sh${RESET}"
     echo
     echo " These prompt changes are only visible inside a Git project folder."
     echo
     echo "${BOLD}How it works:${RESET}"
     echo "──────────────────────────────────────────────────────────────────────────────"
-    echo " • Shows the Git branch and working directory status directly in your prompt."
+    echo " • Shows Git branch and working directory status directly in your prompt."
     echo " • Uses Git's own color conventions:"
     echo "     ${GREEN}Green   ( + )${RESET}  Staged files"
     echo "     ${RED}Red     ( - )${RESET}  Unstaged changes"
     echo "     ${YELLOW}Yellow  ( ? )${RESET}  Untracked files"
-    echo "     ${CYAN}Cyan     ▲N ${RESET}  Ahead of upstream by N commits"
-    echo "     ${MAGENTA}Magenta  ▼M ${RESET}  Behind upstream by M commits"
+    echo "     ${CYAN}Cyan    (▲N)${RESET}  Ahead of upstream by N commits"
+    echo "     ${MAGENTA}Magenta (▼M)${RESET}  Behind upstream by M commits"
     echo
     echo "${BOLD}Prompt format:${RESET}"
     echo "──────────────────────────────────────────────────────────────────────────────"
-    echo " <Existing prompt, e.g. user@host:path> (${CYAN}branch${RESET} ${GREEN}2+${RESET} ${RED}1-${RESET} ${YELLOW}3?${RESET}) ${CYAN}▲1${RESET} ${MAGENTA}▼2${RESET} \$"
+    echo " user@host:path (${CYAN}branch${RESET} ${GREEN}2+${RESET} ${RED}1-${RESET} ${YELLOW}3?${RESET}) ${CYAN}▲1${RESET} ${MAGENTA}▼2${RESET}  \$"
     echo
     echo "${BOLD}Legend:${RESET}"
     echo "──────────────────────────────────────────────────────────────────────────────"
@@ -149,3 +149,4 @@ else
     print_intro
     echo "Git-aware prompt ${BOLD}activated${RESET}."
 fi
+
