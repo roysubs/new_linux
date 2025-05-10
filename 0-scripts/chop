@@ -28,6 +28,7 @@ OPTIONS:
 
 TIME FORMAT:
   start_time and end_time can be in seconds (e.g., 125) or hh:mm:ss[.xx] (e.g., 00:02:05.5).
+  Note: YouTube times have +/-2 sec offset; start/end operate on downloaded video and so are accurate on that basis. 
 
 EXAMPLES:
   $(basename "$0") "YOUR_YOUTUBE_VIDEO_URL_OR_ID"

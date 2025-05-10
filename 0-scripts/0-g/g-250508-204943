@@ -1,0 +1,237 @@
+#!/bin/bash
+
+# Git Tool Script
+# Provides utilities for common Git operations and troubleshooting. 
+
+if [ $# -eq 0 ]; then
+    echo "Git Tool. Usage: g [option] <args>"
+    echo "Options:"
+    echo "  a                Add All: git add .    Stage all changes in current folder"
+    echo "  A                Add All: git add -A   Stage all changes from root of repo"
+    echo "  c <message>      Commit:  git commit -m <message>"
+    echo "  s                Status:  Show the current repository status"
+    echo "  acp <message>    Add-Commit-Push: git status / git add -A / git commit -m <message> / git push"
+    echo "  acpv <message>   Add-Commit-Push-VERBOSE: git status / git add -A / git commit -m <message> / git push"
+    echo "  ps               Push: Update to the current branch's upstream"
+    echo "  pl               Pull: Update latest changes from the remote to local"
+    echo "  d                Diff: Show unstaged changes"
+    echo "  ds               Diff Staged: Show staged changes"
+    echo "  l                Log: Show commit history (short format)"
+    echo "  ll               Log Detailed: Show full commit history with diffs"
+    echo "  b                Branch: List branches, highlight current branch"
+    echo "  nb <name>        New Branch: Create and switch to a new branch"
+    echo "  ch <branch>      Checkout: Switch to a different branch"
+    echo "  rpo              git remote prune origin (prune branches that no longer exist)"
+    echo "  f                Fetch: Update remote refs without merging"
+    echo "  m <branch>       Merge: Merge the specified branch into the current one"
+    echo "  rs <commit>      Reset Soft: Reset to the given commit but keep changes"
+    echo "  rh <commit>      Reset Hard: Reset to the given commit and discard changes"
+    echo "  stash            Stash: Save uncommitted changes"
+    echo "  stpush <message> Stash with a message"
+    echo "  stpop            Pop last stash"
+    echo "  cl!              Clean untracked files (DANGEROUS: Run with caution!)"
+    echo "  t                Troubleshooting Help: Show common Git fixes"
+    echo
+    exit 0
+fi
+
+# We must cd back to the root of the project for gitleaks detect to prevent rebase problems
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"   # Gets directory of this script
+PROJECT_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
+# Change to the project root directory
+if [ -n "$PROJECT_ROOT" ] && [ -d "$PROJECT_ROOT" ]; then
+    cd "$PROJECT_ROOT" || { echo "Error: Could not change to project root."; exit 1; }
+    # echo "Changed directory to project root: $(pwd)"
+else
+    echo "Error: Could not determine project root. Run the script from within the repo."
+    exit 1
+fi
+
+echo_blue() {
+    echo -e "\033[1;34m$@\033[0m"
+}
+
+display_and_run() {
+    echo -e "\033[1;34m$@\033[0m"
+    eval "$@"
+}
+
+echo_red() {
+    echo -e "\033[1;31m$@\033[0m"
+}
+option=$1
+shift  # Shift to access arguments
+
+case "$option" in
+    a)
+        git add .
+        ;;
+    A)
+        git add -A
+        ;;
+    cl)
+        git clone "$@"
+        # get size and number of files/folders
+        ;;
+    cl1)
+        git clone "$@" --depth=1
+        # get size and number of files/folders
+        ;;
+    c)
+        git commit -m "$@"
+        ;;
+    s)
+        git status
+        ;;
+    acp)
+        # shift        # Do not use 'shift' (to remove 'acp' from $@) as it's already removed before 'case'
+        DEBUG_MODE=0   # Initialize DEBUG_MODE and COMMIT_MSG array
+        COMMIT_MSG=()
+        
+        # Parse flags and gather commit message
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --debug)
+                    DEBUG_MODE=1
+                    ;;
+                *)
+                    COMMIT_MSG+=("$1")
+                    ;;
+            esac
+            shift
+        done
+
+        # Check if commit message was provided
+        if [[ ${#COMMIT_MSG[@]} -eq 0 ]]; then
+            echo -e "\033[1;31m❌ No commit message provided.\033[0m"
+            exit 1
+        fi
+
+        # Combine commit message into a single string
+        COMMIT_STR="${COMMIT_MSG[*]}"
+
+        # Display and run git commands with the option for verbose output
+        echo "====="
+        display_and_run "git status --short"
+
+        echo "====="
+        display_and_run "git add -A --verbose"
+
+        echo "====="
+        echo "Scanning for secrets using Gitleaks..."
+        # Check if gitleaks command exists
+        if ! command -v gitleaks >/dev/null 2>&1; then
+            echo -e "\033[1;31m❌ Error: gitleaks command not found.\033[0m"
+            # Provide apt install instruction if not found
+            echo "Please install gitleaks (e.g., 'sudo apt install gitleaks') and try again."
+            exit 1
+        fi
+        # Scan for secrets in the current directory (workspace) without scanning git history
+        # display_and_run will show the command and output.
+        # gitleaks scan --no-git exits with non-zero if secrets are found.
+        display_and_run "gitleaks detect --no-git . --verbose"
+
+        # Check the exit status of the scan command
+        if [ $? -ne 0 ]; then
+            echo -e "\033[1;31m❌ Secret scan failed! Fix detected secrets in your workspace before committing.\033[0m"
+            echo "Review the output above for details on detected secrets."
+            exit 1 # Exit the script with an error
+        fi
+
+        echo "Secret scan passed. Proceeding with commit."
+        # --- End Secret Scan Check ---
+
+
+        echo "====="
+        # Assuming display_and_run handles potential errors correctly and exits if the command fails
+        display_and_run "git commit --verbose -m \"$COMMIT_STR\"" || {
+            echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
+            exit 1
+        }
+
+        echo "====="
+        CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+
+        if [[ $DEBUG_MODE -eq 1 ]]; then
+            display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
+        else
+            read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
+            display_and_run "git push origin $CURRENT_BRANCH"
+        fi
+        ;;
+    ps)
+        git push
+        ;;
+    pl)
+        git pull
+        ;;
+    d)
+        git diff
+        ;;
+    ds)
+        git diff --staged
+        ;;
+    l)
+        git log --oneline --graph --decorate --all
+        ;;
+    ll)
+        git log --stat --patch
+        ;;
+    b)
+        git branch --sort=-committerdate --color | sed -e '/^\*/!s/^/  /'
+        ;;
+    nb)
+        git checkout -b "$1"
+        ;;
+    ch)
+        git checkout "$1"
+        ;;
+    rpo)
+        git remote prune origin
+        ;;
+    f)
+        git fetch
+        ;;
+    m)
+        git merge "$1"
+        ;;
+    rs)
+        git reset --soft "$1"
+        ;;
+    rh)
+        git reset --hard "$1"
+        ;;
+    stash)
+        git stash
+        ;;
+    stpush)
+        git stash push -m "$1"
+        ;;
+    stpop)
+        git stash pop
+        ;;
+    clear)
+        echo "WARNING: This will delete untracked files! Use with caution."
+        read -p "Are you sure? (y/N) " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            git clean -fd
+        else
+            echo "Aborted."
+        fi
+        ;;
+    t)
+        echo "Git Troubleshooting Help:"
+        echo "  - If a merge conflict occurs: git status, then edit and resolve conflicts."
+        echo "  - To undo last commit but keep changes: g r HEAD~1"
+        echo "  - To forcefully reset to last commit: g rh HEAD"
+        echo "  - If 'detached HEAD' appears: g ch <branch>"
+        echo "  - If a push is rejected due to conflicts: g f && g ps"
+        echo "  - To delete a local branch: git branch -d <branch>"
+        echo "  - To delete a remote branch: git push origin --delete <branch>"
+        echo
+        ;;
+    *)
+        echo "Invalid option. Use 'g' without arguments to see usage."
+        ;;
+esac
+
