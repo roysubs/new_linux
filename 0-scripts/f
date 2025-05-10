@@ -15,6 +15,7 @@ usage() {
     echo
     echo "Options:"
     echo "  -h, --help              Show this help message"
+    echo "  -ex, --examples         Show various find syntax examples"
     echo "  -b, --biggest [N]       Find N biggest files (default: 10)"
     echo "  -n, --newest [N]        Find N newest files (default: 10)"
     echo "  -o, --oldest [N]        Find N oldest files (default: 10)"
@@ -193,6 +194,10 @@ while [[ $# -gt 0 ]]; do
             FAST="-xdev"
             shift
             ;;
+        -ex|--examples)
+            ACTION="examples"
+            shift
+            ;;
         *)
             # If it doesn't start with - or -- and we don't have a path yet, consider it a path
             if [[ ! "$1" =~ ^- ]] && [[ "$SEARCH_PATH" == "." ]]; then
@@ -295,6 +300,64 @@ case "$ACTION" in
         CMD="find \"$SEARCH_PATH\" -type l $FAST -exec test ! -e {} \\; -print"
         execute_command "$CMD"
         ;;
+    examples)
+        printf '%s\n' "\
+$(tput bold)$(tput setaf 3)FIND COMMAND – PAGE 1: CORE USAGE$(tput sgr0)
+==========================================================================================================
+
+$(tput setaf 3)BASICS$(tput sgr0)                                       |   $(tput setaf 3)FILTER BY NAME$(tput sgr0)
+find . -type f      # All files              |   find . -name \"*.txt\"    # Files with .txt extension
+find /dir -type d   # All dirs in /dir       |   find . -iname \"*.JPG\"   # Case-insensitive search
+                                             |
+$(tput setaf 3)BY TYPE$(tput sgr0)                                      |   $(tput setaf 3)BY SIZE$(tput sgr0)
+find . -type f      # Regular files          |   find . -size +10M       # Larger than 10MB
+find . -type l      # Symlinks               |   find . -size -1k        # Smaller than 1KB
+                                             |
+$(tput setaf 3)BY TIME$(tput sgr0)                                      |   $(tput setaf 3)EXECUTE COMMANDS$(tput sgr0)
+find . -mtime -1    # Modified < 1 day       |   find . -type f -exec echo {} \;  # Example action
+find . -atime +7    # Accessed > 7 days      |   find . -exec chmod 644 {} +      # Batch chmod
+find . -ctime -2    # Metadata / status change in last 2 days
+                                             |
+$(tput setaf 3)DEPTH / PRUNE$(tput sgr0)                                |   $(tput setaf 3)PRINTING & FORMATTING$(tput sgr0)
+find . -maxdepth 1  # Only this dir          |   find . -ls              # Detailed long list
+find / -mindepth 2  # Skip top levels        |   find . -printf \"%p\n\"   # Custom path output
+find . -path \"./.git\" -prune -o -name \"*.sh\" -print  # Prune: skip matching dirs early
+$(tput setaf 2)Note: -prune prevents descent into matched directories – great for skipping .git etc.$(tput sgr0)
+
+----------------------------------------------------------------------------------------------------------
+
+Press any key to continue to page 2..."
+            read -rsn1
+
+            printf '%s\n' "\
+$(tput bold)$(tput setaf 3)FIND COMMAND – PAGE 2: ADVANCED USAGE$(tput sgr0)
+==========================================================================================================
+
+$(tput setaf 3)LOGICAL OPERATORS$(tput sgr0)                            |   $(tput setaf 3)NEGATION & COMPOUNDING$(tput sgr0)
+find . \( -name \"*.sh\" -o -name \"*.py\" \)    # .sh or .py files    |   find . ! -name \"*.txt\"         # Not .txt
+find . -type f -a -size +1M            # Files AND >1MB                |   find . -type f \( -empty -o -size 0 \)
+                                                                      |     # Empty files or 0-byte
+                                             |
+$(tput setaf 3)PERMISSIONS / OWNERSHIP$(tput sgr0)                     |   $(tput setaf 3)SYMLINK HANDLING$(tput sgr0)
+find . -perm 644        # Exact perm 644       |   find . -type l       # Symlinks only
+find . -perm -111       # Any execute bit      |   find . -L -type f    # Follow symlinks
+find . -user bob        # Files owned by bob
+                                             |
+$(tput setaf 3)FILESYSTEM BOUNDARIES$(tput sgr0)                        |   $(tput setaf 3)EXCLUDE BY EXTENSION$(tput sgr0)
+find . -xdev            # Stay on same fs      |   find . ! -name \"*.log\"     # Exclude .log files
+find /mnt -xdev         # Skip mounted drives  |   find . ! \( -name \"*.bak\" -o -name \"*.tmp\" \)
+                                             |     # Exclude backup/tmp
+                                             |
+$(tput setaf 3)HANDLING SPECIAL CHARS$(tput sgr0)                       |   $(tput setaf 3)NULL-SAFE OUTPUT$(tput sgr0)
+find . -name \"* *\"       # Names with spaces   |   find . -print0       # Safer with xargs -0
+find . -name \"*[*]*\"     # Names with brackets |   find . -type f -print0 | xargs -0 rm -v
+$(tput setaf 2)Note: Always quote patterns with wildcards or spaces to avoid shell globbing$(tput sgr0)
+
+----------------------------------------------------------------------------------------------------------
+
+"
+        ;;
+
     *)
         echo "Unknown action: $ACTION"
         usage
