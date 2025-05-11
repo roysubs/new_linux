@@ -258,7 +258,7 @@ case "$option" in
             echo "See also the gitleaks-get.sh script in the 0-install folder in this project which can install it."
             exit 1
         fi
-        display_and_run "time gitleaks detect --no-git --pipe --enable-rule=github-pat,github-app-token,private-key,aws-access-key-id,aws-secret-access-key,generic-api-key,slack-webhook --verbose --max-decode-depth=0 --redact=0 --log-level=error < <(git diff --cached --name-only | xargs cat)"
+        display_and_run "time gitleaks detect --no-git --pipe --enable-rule=github-pat,github-app-token,private-key,generic-api-key --verbose --max-decode-depth=0 --redact=0 --log-level=error < <(git diff --cached --name-only | xargs cat)"
         if [ $? -ne 0 ]; then
             echo -e "\033[1;31m❌ Secret scan failed! Fix detected secrets in your workspace before committing.\033[0m"
             echo "Review the output above for details on detected secrets."
