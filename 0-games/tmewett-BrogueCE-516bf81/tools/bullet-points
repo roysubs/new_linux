@@ -1,7 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-
-for file in "$@"; do
-    echo '-'
-    sed -e 's/^/  /' < $file
-done
