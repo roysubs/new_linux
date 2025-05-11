@@ -185,9 +185,9 @@ df -hT --total 2>/dev/null | grep -v -E '^tmpfs|^/dev/loop|squashfs|/docker|/run
 # Mounted non-zero size filesystems (Filtered)
 echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/loop/squashfs/docker/run) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Shows active mounts, filtered to exclude zero-size, transient, snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | column -t${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -o custom format. Filters zero size and common non-persistent/container mounts." | tee -a "$OUTPUT_FILE"
-findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | tee -a "$OUTPUT_FILE"
+findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | column -t | tee -a "$OUTPUT_FILE"
 
 # NFS Exports (Configured via /etc/exports)
 echo -e "\n${CYAN}--- NFS Exports (Configured - via /etc/exports) ---${RESET}" | tee -a "$OUTPUT_FILE"
@@ -206,10 +206,10 @@ echo "" | tee -a "$OUTPUT_FILE"
 
 # Active NFS Connections (ss -tuna | grep 2049)
 echo -e "\n${CYAN}--- Active NFS Connections (ss) ---${RESET}" | tee -a "$OUTPUT_FILE"
-echo "Shows active network connections on ports 111 (rpcbind) and 2049 (NFS)." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}ss -tuna | grep -E '111|2049'${RESET}" | tee -a "$OUTPUT_FILE"
+echo "Shows active network connections on ports 111 (rpcbind) and 2049 (NFS, main nfsd daemon runs here)." | tee -a "$OUTPUT_FILE"
+echo -e "${GREEN}ss -tuna | grep -E '111|2049|Address' | column -t${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -t tcp, -u udp, -n numeric ports, -a all sockets. Filters for ports 111 and 2049." | tee -a "$OUTPUT_FILE"
-ss -tuna 2>/dev/null | grep -E '111|2049' | tee -a "$OUTPUT_FILE"
+ss -tuna 2>/dev/null | grep -E '111|2049|Address' | column -t | tee -a "$OUTPUT_FILE"
 
 # Permissions of common share locations
 echo -e "\n${CYAN}--- Potential Share Location Permissions ---${RESET}" | tee -a "$OUTPUT_FILE"

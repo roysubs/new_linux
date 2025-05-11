@@ -61,7 +61,7 @@ So, the default keys you'll find in any standard Vim installation are `v`, `V`, 
 - **Visual Mode and Select**:
     - `v`: Enter visual mode at the cursor position; move with arrow keys or `^`/`$` to select text.
     - `V`: Select the whole line in visual mode.
-    - `Ctrl+v` (or `Ctrl+q`): Block select multiple lines. Use `d` to delete, `I` to insert text across all selected lines.
+    - `Ctrl+v` (or `Ctrl+q`): Block select multiple lines. Use `d` to delete, `I` to insert text across all selected lines.  
     - **Example: Append text at the end of multiple lines**:
         - `Ctrl+v` (or `Ctrl+q`) to enter Visual Block mode at the first line.
         - Use `↓` or `j` to select the lines you want.

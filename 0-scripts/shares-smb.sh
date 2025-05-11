@@ -29,14 +29,14 @@ echo "" | tee -a "$OUTPUT_FILE"
 # --- Quick Setup Guide ---
 echo -e "${CYAN}--- Quick Setup Guide ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "1.  Install Samba:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo apt update && sudo apt install samba samba-common-bin samba-vfs-modules${RESET}   # (Debian/Ubuntu)" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo yum install samba samba-common samba-client samba-vfs${RESET}   # (RHEL/CentOS/AlmaLinux/Fedora)" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo apt update && sudo apt install samba samba-common-bin samba-vfs-modules${RESET}   # (Debian/Ubuntu)" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo yum install samba samba-common samba-client samba-vfs${RESET}   # (RHEL/CentOS/AlmaLinux/Fedora)" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "2.  Backup original config:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo cp /etc/samba/smb.conf /etc/samba/smb.conf.bak${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo cp /etc/samba/smb.conf /etc/samba/smb.conf.bak${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "3.  Edit the configuration file:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo nano /etc/samba/smb.conf${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo nano /etc/samba/smb.conf${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "4.  Add a share definition (example):" | tee -a "$OUTPUT_FILE"
 echo "    [MyShareName]             # Choose a short, descriptive name (used by clients)" | tee -a "$OUTPUT_FILE"
@@ -49,28 +49,28 @@ echo "        create mask = 0664        # Permissions for new files created via 
 echo "        directory mask = 0775     # Permissions for new directories created via share" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "5.  Set a Samba password for users listed in 'valid users' (must be existing Linux users):" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo smbpasswd -a your_linux_username${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo smbpasswd -a your_linux_username${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "6.  Test the configuration for syntax errors:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}testparm${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}testparm${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "7.  Restart Samba services to apply changes:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo systemctl restart smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo systemctl restart smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 echo "8.  Enable services to start automatically on boot:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo systemctl enable smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo systemctl enable smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # --- Samba Management (Server) ---
 echo -e "${CYAN}--- Samba Management (Server) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Restart services (apply changes):" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo systemctl restart smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo systemctl restart smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Check service status:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo systemctl status smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo systemctl status smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Stop services:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo systemctl stop smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo systemctl stop smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Start services:" | tee -a "$OUTPUT_FILE"
-echo -e "    ${RESET}sudo systemctl start smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "    ${GREEN}sudo systemctl start smbd nmbd${RESET}" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # --- Viewing Samba Shares (Server Guide) ---
@@ -178,14 +178,50 @@ echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/lo
 echo "Shows active mounts, filtered to exclude zero-size, transient, snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
 echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -o custom format. Filters zero size and common non-persistent/container mounts." | tee -a "$OUTPUT_FILE"
-findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | tee -a "$OUTPUT_FILE"
+findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | column -t | tee -a "$OUTPUT_FILE"
 
-# Detailed Samba Shares (Configured via testparm -s)
-echo -e "\n${CYAN}--- Samba Shares (Configured - via testparm -s) ---${RESET}" | tee -a "$OUTPUT_FILE"
+# # Mounted non-zero size filesystems (Filtered)
+# echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/loop/squashfs/docker/run/wsl) ---${RESET}" | tee -a "$OUTPUT_FILE"
+# echo "Shows active mounts, filtered to exclude zero-size, transient, snap, docker overlay, and run file systems." | tee -a "$OUTPUT_FILE"
+# # Use findmnt and pipe to awk for filtering zero-size and exclusion patterns.
+# # awk 'NR==1 { print; next }' prints the header and skips processing for it.
+# # '! /^[[:space:]]*0/' filters out lines where the first field (SIZE) starts with 0 or spaces then 0.
+# # '! /tmpfs|loop|squashfs|\/docker|\/run|\/wsl|WSL/' filters out lines containing the exclusion patterns anywhere.
+# # { print } prints the lines that pass the filters.
+# echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | awk 'NR==1 { print; next } ! /^[[:space:]]*0/ && ! /tmpfs|loop|squashfs|\\/docker|\\/run|\\/wsl|WSL/ { print }'${RESET}" | tee -a "$OUTPUT_FILE"
+# echo "   # -o custom format. awk filters header, zero size, and common non-persistent/container mounts." | tee -a "$OUTPUT_FILE"
+# # Execute findmnt and pipe its output through awk for filtering, then to tee
+# findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | awk 'NR==1 { print; next } ! /^[[:space:]]*0/ && ! /tmpfs|loop|squashfs|\/docker|\/run|\/wsl|WSL/ { print }' | tee -a "$OUTPUT_FILE"
+# echo "" | tee -a "$OUTPUT_FILE"
+
+# # Detailed Samba Shares (Configured via testparm -s)
+# echo -e "\n${CYAN}--- Samba Shares (Configured - via testparm -s) ---${RESET}" | tee -a "$OUTPUT_FILE"
+# echo "This shows share names [in brackets] and their corresponding paths on the server as defined in smb.conf." | tee -a "$OUTPUT_FILE"
+# echo -e "${GREEN}testparm -s${RESET}" | tee -a "$OUTPUT_FILE"
+# echo "   # -s prints configuration in a concise format" | tee -a "$OUTPUT_FILE"
+# testparm -s 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Command not found or config error - run 'testparm' alone for details)" | tee -a "$OUTPUT_FILE"
+
+# Detailed Samba Shares (Configured via testparm -s or custom script)
+echo -e "\n${CYAN}--- Samba Shares (Configured) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "This shows share names [in brackets] and their corresponding paths on the server as defined in smb.conf." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}testparm -s${RESET}" | tee -a "$OUTPUT_FILE"
-echo "   # -s prints configuration in a concise format" | tee -a "$OUTPUT_FILE"
-testparm -s 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Command not found or config error - run 'testparm' alone for details)" | tee -a "$OUTPUT_FILE"
+# Define the path to the custom table script (assumes it's in the same directory)
+# $BASH_SOURCE[0] is the path to the current script
+SCRIPT_DIR="$(dirname "$BASH_SOURCE[0]")"
+TABLE_SCRIPT_PATH="$SCRIPT_DIR/shares-smb-table.sh"
+# Check if the custom table script exists and is executable
+if [ -x "$TABLE_SCRIPT_PATH" ]; then
+    echo "Using custom script for formatted table output: $TABLE_SCRIPT_PATH" | tee -a "$OUTPUT_FILE"
+    # Execute the custom script and pipe its output to tee
+    "$TABLE_SCRIPT_PATH" 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Error executing custom script)" | tee -a "$OUTPUT_FILE"
+else
+    echo "Custom script '$TABLE_SCRIPT_PATH' not found or not executable. Falling back to testparm -s raw output." | tee -a "$OUTPUT_FILE"
+    echo -e "${GREEN}testparm -s${RESET}" | tee -a "$OUTPUT_FILE"
+    echo "   # -s prints configuration in a concise format" | tee -a "$OUTPUT_FILE"
+    # Fallback to the original testparm -s command
+    testparm -s 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Command 'testparm -s' failed - config error?)" | tee -a "$OUTPUT_FILE"
+fi
+# Add a blank line after this section for spacing
+echo "" | tee -a "$OUTPUT_FILE"
 
 # List active shares (as seen by client connecting to localhost)
 echo -e "\n${CYAN}--- Samba Shares (Active - via smbclient -L localhost) ---${RESET}" | tee -a "$OUTPUT_FILE"
@@ -205,9 +241,9 @@ sudo smbstatus -b 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Command not foun
 # Active SMB Connections via ss (Port 445)
 echo -e "\n${CYAN}--- Active SMB/CIFS Connections (ss) ---${RESET}" | tee -a "$OUTPUT_FILE"
 echo "Shows active network connections on port 445 (SMB/CIFS) on this server." | tee -a "$OUTPUT_FILE"
-echo -e "${GREEN}ss -tuna | grep :445${RESET}" | tee -a "$OUTPUT_FILE"
+echo -e "${GREEN}ss -tuna | grep -E ':445|Address' | column -t${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -t tcp, -u udp, -n numeric ports, -a all sockets. Filters for port 445." | tee -a "$OUTPUT_FILE"
-ss -tuna 2>/dev/null | grep :445 | tee -a "$OUTPUT_FILE"
+ss -tuna 2>/dev/null | grep -E ':445|Address' | column -t | tee -a "$OUTPUT_FILE"
 
 # Permissions of common share locations
 echo -e "\n${CYAN}--- Potential Share Location Permissions ---${RESET}" | tee -a "$OUTPUT_FILE"
