@@ -1,79 +1,109 @@
-#!/bin/bash
-
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 VIMRC="$HOME/.vimrc"
-PLUG_LINE="Plug 'airblade/vim-gitgutter'"
-VIM_PLUGGED_DIR="$HOME/.vim/plugged/vim-gitgutter"
-PLUG_VIM="$HOME/.vim/autoload/plug.vim"
+PLUGGED_DIR="$HOME/.vim/plugged"
+PLUG_BLOCK="call plug#begin('$PLUGGED_DIR')"
+GITGUTTER_LINE="Plug 'airblade/vim-gitgutter'"
+GITGUTTER_SETTINGS=$(cat <<'EOF'
+" GitGutter visual settings
+let g:gitgutter_sign_added = '+'
+let g:gitgutter_sign_modified = '~'
+let g:gitgutter_sign_removed = '_'
+set signcolumn=yes
+EOF
+)
 
-install_vim_plug_if_missing() {
-    if [ ! -f "$PLUG_VIM" ]; then
-        echo "vim-plug not found. Installing it..."
-        curl -fLo "$PLUG_VIM" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-        echo "✅ vim-plug installed."
-    else
-        echo "vim-plug already installed."
-    fi
+function explain_usage {
+  cat <<EOF
 
-    # Ensure plug#begin/end exists in .vimrc
-    if ! grep -q 'call plug#begin' "$VIMRC"; then
-        echo "Adding plug#begin()/end() block to .vimrc..."
-        {
-            echo ""
-            echo "call plug#begin('~/.vim/plugged')"
-            echo "call plug#end()"
-        } >> "$VIMRC"
-    fi
+📘 HOW TO USE GitGutter IN VIM:
+
+1. Open a file inside a Git repository.
+2. Make sure the file is committed at least once (e.g. with \`git commit -m "init"\`).
+3. Now edit the file — GitGutter will show:
+     +   for added lines
+     ~   for modified lines
+     _   for deleted lines
+
+📌 Commands inside Vim:
+   :GitGutter        — manually refresh signs
+   :GitGutterAll     — refresh all open files
+   :GitGutterDebug   — shows internal GitGutter state
+
+🔧 Optional (already added to .vimrc):
+   - Uses '+' / '~' / '_' signs
+   - Ensures sign column is always visible
+
+EOF
 }
 
-echo
-
-if [ -d "$VIM_PLUGGED_DIR" ]; then
-    echo "GitGutter appears to be INSTALLED (found at $VIM_PLUGGED_DIR)"
-    echo -n "Do you want to uninstall GitGutter? [y/N]: "
-    read -r ans
-    if [[ "$ans" =~ ^[Yy]$ ]]; then
-        echo "Removing GitGutter from .vimrc and cleaning up..."
-        sed -i.bak "/vim-gitgutter/d" "$VIMRC"
-        echo "Running PlugClean to remove plugin files..."
-        vim +PlugClean! +qall
-        echo "✅ GitGutter has been uninstalled."
-    else
-        echo "Aborted. GitGutter remains installed."
-    fi
-else
+function ask_toggle {
+  if grep -q "$GITGUTTER_LINE" "$VIMRC"; then
+    echo "GitGutter appears to be INSTALLED."
+    read -rp "Do you want to UNINSTALL GitGutter? [y/N]: " choice
+    [[ "$choice" == [yY]* ]] || exit 0
+    uninstall
+  else
     echo "GitGutter appears to be NOT installed."
-    echo -n "Do you want to install GitGutter? [y/N]: "
-    read -r ans
-    if [[ "$ans" =~ ^[Yy]$ ]]; then
-        install_vim_plug_if_missing
+    read -rp "Do you want to INSTALL GitGutter? [y/N]: " choice
+    [[ "$choice" == [yY]* ]] || exit 0
+    install
+  fi
+}
 
-        if grep -q "$PLUG_LINE" "$VIMRC"; then
-            echo "GitGutter already declared in .vimrc, skipping .vimrc edit."
-        else
-            echo "Adding GitGutter to .vimrc..."
-            sed -i.bak "/call plug#begin/a\\
-$PLUG_LINE" "$VIMRC"
-        fi
+function install_vim_plug {
+  if [[ ! -f "$HOME/.vim/autoload/plug.vim" ]]; then
+    echo "Installing vim-plug..."
+    curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs \
+      https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  else
+    echo "vim-plug already installed."
+  fi
+}
 
-        echo "Installing GitGutter via vim-plug..."
-        vim +PlugInstall +qall
-        echo
-        echo "✅ GitGutter installed!"
+function install {
+  install_vim_plug
+  echo "Adding plug#begin()/end() block and GitGutter to .vimrc..."
 
-        echo
-        echo "👉 To activate GitGutter in Vim:"
-        echo "   - Open any Git-tracked file"
-        echo "   - You'll see '+', '~', or '_' in the left sign column"
-        echo
-        echo "Optional: add these to your .vimrc for symbols and column:"
-        echo "   let g:gitgutter_sign_added = '+'"
-        echo "   let g:gitgutter_sign_modified = '~'"
-        echo "   let g:gitgutter_sign_removed = '_'"
-        echo "   set signcolumn=yes"
-    else
-        echo "Aborted. GitGutter not installed."
-    fi
-fi
+  if ! grep -q "$PLUG_BLOCK" "$VIMRC"; then
+    echo -e "\n$PLUG_BLOCK" >> "$VIMRC"
+    echo "$GITGUTTER_LINE" >> "$VIMRC"
+    echo "call plug#end()" >> "$VIMRC"
+  elif ! grep -q "$GITGUTTER_LINE" "$VIMRC"; then
+    # sed -i "/$PLUG_BLOCK/a $GITGUTTER_LINE" "$VIMRC"
+    sed -i "\|$PLUG_BLOCK|a\\
+$GITGUTTER_LINE" "$VIMRC"
+
+  fi
+
+  # Add GitGutter symbols + signcolumn
+  if ! grep -q "g:gitgutter_sign_added" "$VIMRC"; then
+    echo -e "\n$GITGUTTER_SETTINGS" >> "$VIMRC"
+  fi
+
+  echo "Installing GitGutter via vim-plug..."
+  vim +PlugInstall +qall
+
+  echo -e "\n✅ GitGutter installed!"
+  explain_usage
+}
+
+function uninstall {
+  echo "Removing GitGutter from .vimrc..."
+
+  # sed -i "/$GITGUTTER_LINE/d" "$VIMRC"
+  sed -i "\|Plug 'airblade/vim-gitgutter'|d" "$VIMRC"
+  sed -i '/g:gitgutter_sign_added/d' "$VIMRC"
+  sed -i '/g:gitgutter_sign_modified/d' "$VIMRC"
+  sed -i '/g:gitgutter_sign_removed/d' "$VIMRC"
+  sed -i '/signcolumn=yes/d' "$VIMRC"
+
+  echo "Cleaning plugins..."
+  vim +PlugClean! +qall
+
+  echo -e "\n🗑️ GitGutter uninstalled."
+}
+
+ask_toggle
 
