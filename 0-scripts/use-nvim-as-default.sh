@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if the script is being sourced
-(return 0 2>/dev/null) || { echo "This script should be run sourced (e.g., '. ./$(basename $0)' to change the default vi alias)"; exit 1; }
+(return 0 2>/dev/null) || { echo "This script should be run sourced (e.g., '. ${0##*/}' to change the default vi alias)"; exit 1; }
 
 # Check if Neovim (nvim) is installed
 if ! command -v nvim &> /dev/null

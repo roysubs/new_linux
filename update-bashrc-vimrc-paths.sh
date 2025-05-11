@@ -5,8 +5,8 @@
 (return 0 2>/dev/null) || {
     echo "
 This script must be sourced.
-e.g.,   . ./$(basename $0)
-or      source ./$(basename $0)
+e.g.,   . ${0##*/}
+or      source ${0##*/}
 
 This will update as follows:
 - ./0-new-system/new1-add-paths.sh  : Add path for 0-scripts to PATH

@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# echo "$(basename $0)"
 echo "Update a Git repository directory so that all files match the timestamps on the remote."
 echo "A default 'git clone' will set all files to the same current timestamp instead of the"
 echo "last modified timestamp on the remote repository."
