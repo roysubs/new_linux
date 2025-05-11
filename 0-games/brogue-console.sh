@@ -14,26 +14,63 @@ echo
 # --- Prerequisites Check ---
 echo "Checking for required tools..."
 REQUIRED_COMMANDS="curl jq make gcc tar sed tput"
-for cmd in $REQUIRED_COMMANDs; do
+MISSING_COMMANDS=""
+
+for cmd in $REQUIRED_COMMANDS; do
     if ! command -v "$cmd" &> /dev/null; then
-        echo "Error: Required command '$cmd' not found."
-        echo "Please install '$cmd' using your distribution's package manager."
-        echo "For Debian/Ubuntu: sudo apt update && sudo apt install $cmd"
-        echo "For Fedora/RHEL: sudo dnf install $cmd"
-        echo "For Arch Linux: sudo pacman -S $cmd"
-        exit 1
+        echo "  '$cmd' NOT found."
+        MISSING_COMMANDS="$MISSING_COMMANDS $cmd"
+    else
+        echo "  '$cmd' found."
     fi
-    echo "  '$cmd' found."
 done
 
+if [ -n "$MISSING_COMMANDS" ]; then
+    echo
+    echo "Error: The following required commands were not found: $MISSING_COMMANDS"
+    echo "Please install them using your distribution's package manager:"
+    echo "For Debian/Ubuntu: sudo apt update && sudo apt install build-essential curl jq"
+    echo "For Fedora/RHEL: sudo dnf install curl jq make gcc tar sed ncurses"
+    echo "For Arch Linux: sudo pacman -S base-devel curl jq"
+    exit 1
+fi
+
 echo "Checking for build dependencies (like ncurses development headers)..."
-echo "Compilation will likely fail without development libraries such as 'libncurses-dev' (Debian/Ubuntu) or 'ncurses-devel' (Fedora/RHEL/Arch)."
-echo "Please ensure they are installed before running the script if you encounter errors during compilation."
-echo "For Debian/Ubuntu: sudo apt install build-essential libncurses-dev"
-echo "For Fedora/RHEL: sudo dnf groupinstall 'Development Tools' 'C Development Tools and Libraries' && sudo dnf install ncurses-devel"
-echo "For Arch Linux: sudo pacman -S base-devel ncurses"
-echo "Attempting to continue..."
+# Try to detect ncurses development package
+if ! pkg-config --exists ncurses 2>/dev/null && ! [ -f "/usr/include/ncurses.h" ] && ! [ -f "/usr/include/ncurses/ncurses.h" ]; then
+    echo "Warning: Could not detect ncurses development headers."
+    echo "Compilation will likely fail without development libraries such as 'libncurses-dev' (Debian/Ubuntu) or 'ncurses-devel' (Fedora/RHEL/Arch)."
+    echo "Please install them before running the script if you encounter errors during compilation:"
+    echo "For Debian/Ubuntu: sudo apt install build-essential libncurses-dev"
+    echo "For Fedora/RHEL: sudo dnf groupinstall 'Development Tools' 'C Development Tools and Libraries' && sudo dnf install ncurses-devel"
+    echo "For Arch Linux: sudo pacman -S base-devel ncurses"
+    echo
+    read -p "Do you want to continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Installation aborted."
+        exit 1
+    fi
+else
+    echo "Ncurses development headers appear to be installed."
+fi
 echo
+
+# Create and use temporary directory for downloads and builds
+TEMP_DIR=$(mktemp -d)
+echo "Using temporary directory for downloads and build: $TEMP_DIR"
+cd "$TEMP_DIR" || { echo "Error: Failed to change to temporary directory"; exit 1; }
+
+trap cleanup EXIT
+cleanup() {
+    echo "Cleaning up temporary files..."
+    cd "$SCRIPT_DIR" || true
+    rm -rf "$TEMP_DIR"
+    echo "Cleanup complete."
+}
+
+# Save the directory where the script was run from
+SCRIPT_DIR="$PWD"
 
 # --- Find Latest Release ---
 echo "Finding the latest release for ${REPO}..."
@@ -265,17 +302,6 @@ EOF
 
 chmod +x "$WRAPPER_SCRIPT_PATH"
 echo "Created and made executable: '$WRAPPER_SCRIPT_PATH'."
-echo
-
-# --- Cleanup ---
-echo "Cleaning up build directory '$DIR_NAME'..."
-cd - > /dev/null # cd back to the directory where the script was run
-rm -rf "$DIR_NAME"
-echo "Removed build directory '$DIR_NAME'."
-
-echo "Cleaning up downloaded archive '$FILENAME'..."
-rm "$FILENAME"
-echo "Removed archive '$FILENAME'."
 echo
 
 # --- Final Instructions ---

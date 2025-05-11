@@ -1,0 +1,132 @@
+#!/bin/bash
+if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
+mdcat --columns="$WIDTH" <(cat <<'EOF'
+
+Bash Bootstrap Help
+=========================
+
+This help file explains how to rapidly bootstrap a new Linux machine with essential Bash/Vim config,
+idempotent Docker logic, Git integration, plugin systems, and sane interactive defaults.
+
+---
+
+▶ Purpose:
+    A reusable, modular bootstrap layer for:
+    - Setting up `.bashrc`, `.inputrc`, `.vimrc`, `.config` etc
+    - Handling Git, Docker, package managers, SSH setup, and history helpers
+    - Deploying clean, idempotent helper scripts: `g`, `dk`, `h`, `z`, `def`, `a`, etc
+
+---
+
+Bootstrap Process
+=========================
+Steps covered by the bash-bootstrap layer:
+
+1. 🏁 Initial Setup
+    - Ensures required tools are installed: `curl`, `git`, `vim`, `mdcat`, etc
+    - Creates `~/.config` and related folders
+    - Ensures Bash and Readline behave consistently across sessions
+    - Installs core helper scripts: `h`, `g`, `z`, `dk`, `def`, etc
+
+2. 🐚 .bashrc and Shell Environment
+    - Adds aliases, functions, and helper logic cleanly
+    - Idempotent: avoids duplication if `.bashrc` already contains a block
+    - Preserves any existing user logic
+
+3. 🎯 .inputrc and Navigation
+    - Adds readline keybindings:
+        - `Ctrl-k/j`: Vim-style up/down history
+        - `Ctrl-Backspace`: Delete previous word
+        - `Ctrl-Home` / `Ctrl-End`: Jump to start/end of line
+    - Detects terminal quirks (e.g. tmux) and explains how to fix issues
+
+4. 🔧 Bash Helpers
+    - `h`: Custom history manager with fuzzy search, timestamps, grep, and rerun
+    - `def`: See definitions of functions, aliases, shell commands
+    - `a`: Auto wrapper for app packaging (e.g. AppImage, pipx, Nix, brew, etc)
+    - `z`: Smart archive tool: extract/compress across formats
+    - `g`: Git wrapper for common workflows, push protection, old-version retrieval
+    - `dk`: Docker stack helper for clean deployments and YAML validation
+
+5. 🐳 Docker Environment
+    - Checks for Docker/Docker Compose, installs if missing
+    - Ensures proper permissions (adds user to docker group)
+    - Adds pre-deploy safety logic:
+        - Detects port conflicts
+        - Detects already-running containers using same image
+        - Warns if containers with the same names exist
+        - Fully idempotent: safe to re-run bootstrap anytime
+
+6. 🧠 Git Setup
+    - `g acp`: Add/commit/push with optional gitleaks scan
+    - `g pl`: Pull with inspection, backup, and diff before merge
+    - SSH setup helper: generates SSH key, prints copy-paste GitHub instructions
+    - `.gitconfig` customization with sane diff, log, and push defaults
+
+7. 💾 Vim Setup
+    - Creates a well-commented `.vimrc`
+    - Optional plugin bootstrap using `vim-plug`
+    - Adds useful mappings, language-specific tweaks
+    - `h-vim` help file explains usage, visual modes, and power tips
+
+8. 📁 Config Layout
+    - All helper files live in `~/new_linux/`, `~/bin/`, and `~/.config/`
+    - Project-local `.env` and `config.sh` conventions supported
+    - Standard layout:
+        ├── ~/bin/              ← helper scripts (`h`, `g`, `dk`, etc)
+        ├── ~/.config/surfshark ← VPN credentials (if VPN used)
+        ├── ~/.inputrc          ← readline behavior
+        ├── ~/.bashrc           ← shell startup
+        ├── ~/.vimrc            ← editor config
+        └── ~/new_linux/        ← bootstrap sources
+
+---
+
+Re-running bootstrap
+=========================
+🌀 Fully Idempotent:
+    - Script detects and skips existing entries in `.bashrc`, `.inputrc`, etc
+    - Will never break your shell or duplicate entries
+    - If rerun, will:
+        - Print summary of what it would do
+        - Ask for confirmation before overwriting anything
+        - Offer `diff` style output of any proposed changes
+
+---
+
+Optional Add-ons
+=========================
+
+✅ Plex / qBittorrent / Sonarr / Radarr stack
+    - Via `h-docker-stack` or similar wrapper
+    - Uses `gluetun` VPN container for IP privacy
+    - Media folder paths standardized under `/media/`
+    - Surfshark WireGuard or OpenVPN supported
+    - Runs independently of bootstrap but shares media paths
+
+✅ Backup integration
+    - rsync + rclone hooks available
+    - Optional encryption with gocryptfs
+    - Syncs project files, dotfiles, media, etc
+
+✅ Sync + Sharing
+    - Syncthing bootstrap option
+    - Filebrowser for web UI access to `/media/`
+
+✅ Monitoring Tools
+    - `docker-monitor2.py`: real-time stats + I/O + sampling
+    - CPU, mem, network, and container states
+
+---
+
+See also:
+    - `h-vim`           ← Vim quickstart
+    - `h-git`           ← Git workflows and SSH key setup
+    - `h-docker-stack`  ← Media + VPN stack deploy
+    - `h-ssh`           ← SSH key, agent, known_hosts explained
+    - `h-inputrc`       ← Terminal keys and .inputrc behavior
+
+EOF
+) | less -R
+
