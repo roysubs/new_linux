@@ -118,16 +118,20 @@ fi
 
 # --- Vim settings and key mappings to apply ---
 vimrc_block="
-\" Set tab behavior to use spaces instead of tabs
-set expandtab          \" Use spaces instead of tab characters
-set tabstop=4          \" Set tab width to 4 spaces
-set shiftwidth=4       \" Set indent width to 4 spaces
-set softtabstop=4      \" Set the number of spaces a tab character represents in insert mode
 syntax on              \" Syntax highlighting
 colorscheme desert     \" Syntax highlighting scheme
 \" Available themes: blue, darkblue, default, delek, desert, elflord, evening, habamax, industry, koehler
 \" lunapeche lunaperche, morning, murphy, pablo, peachpuff, quiet, ron, shine, slate, torte, zellner
 \" Disable tabs (to get a tab, Ctrl-V<Tab>), tab stops are 4 chars, indents are 4 chars
+\" Set tab behavior to use spaces instead of tabs
+
+set expandtab          \" Use spaces instead of tab characters
+set tabstop=4          \" Set tab width to 4 spaces
+set shiftwidth=4       \" Set indent width to 4 spaces
+set softtabstop=4      \" Set the number of spaces a tab character represents in insert mode
+filetype plugin indent on   \" Enable built-in filetype detection, plugins, and indent rules
+set autoindent         \" Auto and smart indent settings
+
 inoremap <C-s> <Esc>:w<CR>            \" Save file while in insert mode
 \" Perform :w write on a protected file even when not as sudo
 cnoremap w!! execute 'silent! write !sudo tee % >/dev/null' <bar> edit

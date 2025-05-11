@@ -336,12 +336,12 @@ $(tput bold)$(tput setaf 3)FIND COMMAND – PAGE 2: ADVANCED USAGE$(tput sgr0)
 
 $(tput setaf 3)LOGICAL OPERATORS$(tput sgr0)                            |   $(tput setaf 3)NEGATION & COMPOUNDING$(tput sgr0)
 find . \( -name \"*.sh\" -o -name \"*.py\" \)    # .sh or .py files    |   find . ! -name \"*.txt\"         # Not .txt
-find . -type f -a -size +1M            # Files AND >1MB                |   find . -type f \( -empty -o -size 0 \)
-                                                                      |     # Empty files or 0-byte
+find . -type f -a -size +1M            # Files AND >1MB            |   find . -type f \( -empty -o -size 0 \)
+                                                                   |     # Empty files or 0-byte
                                              |
-$(tput setaf 3)PERMISSIONS / OWNERSHIP$(tput sgr0)                     |   $(tput setaf 3)SYMLINK HANDLING$(tput sgr0)
-find . -perm 644        # Exact perm 644       |   find . -type l       # Symlinks only
-find . -perm -111       # Any execute bit      |   find . -L -type f    # Follow symlinks
+$(tput setaf 3)PERMISSIONS / OWNERSHIP$(tput sgr0)                      |   $(tput setaf 3)SYMLINK HANDLING$(tput sgr0)
+find . -perm 644        # Exact perm 644      |   find . -type l       # Symlinks only
+find . -perm -111       # Any execute bit     |   find . -L -type f    # Follow symlinks
 find . -user bob        # Files owned by bob
                                              |
 $(tput setaf 3)FILESYSTEM BOUNDARIES$(tput sgr0)                        |   $(tput setaf 3)EXCLUDE BY EXTENSION$(tput sgr0)

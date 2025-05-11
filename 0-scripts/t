@@ -80,10 +80,14 @@ case "$1" in
 #         ;;
 
     k)
-        color_echo "Killing current tmux pane..."
-        tmux kill-pane
+        read -rp "Are you sure you want to kill the current tmux pane? [y/N]: " confirm
+        if [[ $confirm == [yY] ]]; then
+            color_echo "Killing current tmux pane..."
+            tmux kill-pane
+        else
+            color_echo "Aborted. Tmux pane not killed."
+        fi
         ;;
-
     copy)
         tmux copy-mode
         ;;
