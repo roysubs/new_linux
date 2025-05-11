@@ -219,70 +219,56 @@ case "$option" in
         ;;
 
     acp)
-        DEBUG_MODE=0
-        COMMIT_MSG=()
-
-        while [[ $# -gt 0 ]]; do
-            case "$1" in
-                --debug)
-                    DEBUG_MODE=1
-                    ;;
-                *)
-                    COMMIT_MSG+=("$1")
-                    ;;
-            esac
-            shift
-        done
-
-        if [[ ${#COMMIT_MSG[@]} -eq 0 ]]; then
-            echo -e "\033[1;31m❌ No commit message provided.\033[0m"
-            exit 1
-        fi
-
-        COMMIT_STR="${COMMIT_MSG[*]}"
-
         echo "====="
-        display_and_run "git status --short"
-        echo -e "\033[1;34m🔍 Git status legend:\033[0m Left=staged  Right=unstaged  \033[1;33mM\033[0m=modified  \033[1;32mA\033[0m=added  \033[1;31mD\033[0m=deleted  \033[1;35mR\033[0m=renamed  \033[1;36m??\033[0m=untracked"
-        echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
-
+        git status --short
+        echo "🔍 Git status legend: Left=staged  Right=unstaged  M=modified  A=added  D=deleted  R=renamed  ??=untracked"
+        echo "    e.g.  M =staged mod,   M=unstaged mod,  MM=both,  ??=new file not yet added"
         echo "====="
-        display_and_run "git add -A --verbose"
+        git add -A --verbose
 
         echo "====="
         echo "Scanning for secrets using Gitleaks; do NOT commit without this (to avoid awkward rebase issues)..."
-        if ! command -v gitleaks >/dev/null 2>&1; then
-            echo -e "\033[1;31m❌ Error: gitleaks command not found.\033[0m"
-            echo "Please install gitleaks (e.g., 'sudo apt install gitleaks') and try again. Currently, the Ubuntu apt repo"
-            echo "does include this, but the Debian repo does not. However, it can be installed from GitHub."
-            echo "See also the gitleaks-get.sh script in the 0-install folder in this project which can install it."
-            exit 1
-        fi
-        display_and_run "time gitleaks detect --no-git --pipe --enable-rule=github-pat,github-app-token,private-key,generic-api-key --verbose --max-decode-depth=0 --redact=0 --log-level=error < <(git diff --cached --name-only | xargs cat)"
-        if [ $? -ne 0 ]; then
-            echo -e "\033[1;31m❌ Secret scan failed! Fix detected secrets in your workspace before committing.\033[0m"
-            echo "Review the output above for details on detected secrets."
-            exit 1
-        fi
 
-        echo "Secret scan passed. Proceeding with commit."
-
-        echo "====="
-        display_and_run "git commit --verbose -m \"$COMMIT_STR\"" || {
-            echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
-            exit 1
-        }
-
-        echo "====="
-        CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-
-        if [[ $DEBUG_MODE -eq 1 ]]; then
-            display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
+        GITLEAKS_BIN=$(which gitleaks)
+        if [[ -n "$GITLEAKS_BIN" ]]; then
+            GITLEAKS_VERSION=$("$GITLEAKS_BIN" --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' || true)
+            if [[ -z "$GITLEAKS_VERSION" || "$(echo -e "8\n$GITLEAKS_VERSION" | sort -V | head -n1)" != "8" ]]; then
+                INSTALL=true
+            else
+                return 0
+            fi
         else
-            read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
-            display_and_run "git push origin $CURRENT_BRANCH"
+            INSTALL=true
         fi
+        if [[ "$INSTALL" == true ]]; then
+            rm -f gitleaks*.tar.gz gitleaks
+            DOWNLOAD_URL=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep -o "https://.*linux_x64.tar.gz" || grep -o "https://.*linux_amd64.tar.gz")
+            if [ -z "$DOWNLOAD_URL" ]; then exit 1; fi
+            wget -q "$DOWNLOAD_URL"
+            TARBALL_NAME=$(basename "$DOWNLOAD_URL")
+            tar -xzf "$TARBALL_NAME"
+            rm -f "$TARBALL_NAME"
+            sudo mv gitleaks /usr/local/bin/
+            which gitleaks
+            gitleaks --version
+        fi
+        echo "✅ Gitleaks successfully downloaded and verified."
+
+        # Continue with the secret scanning process
+        echo "🔐 Running Gitleaks on staged files only..."
+        git diff --cached --name-only --diff-filter=ACM | while read -r file; do
+            [[ -f "$file" ]] || continue
+            echo "🔎 Scanning $file..."
+            "$GITLEAKS_BIN" detect --no-git --source "$file" --verbose || {
+                echo "❌ Secret scan failed in $file! Fix detected secrets before committing."
+                exit 1
+            }
+        done
+        echo "====="
+        git commit -m "${2:-'Update'}"
+        git push
         ;;
+
     ps|push)
         git push
         ;;

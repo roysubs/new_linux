@@ -19,7 +19,7 @@ fi
 
 if [[ -z "$TARGET_PATH" ]]; then
     echo "
-Usage: $(basename $0) <path-to-remove-from-history>
+Usage: ${0##*/} <path-to-remove-from-history>
 
 Sometimes, unwanted zip files or files containing secrets, or personal files will get trapped
 in the git history due to a commit. These will bloat the size of .git in the project root, and,

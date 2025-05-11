@@ -54,6 +54,6 @@ else
     echo "$functions"
     echo
     echo "The above are unsorted, just listed by how they appear in .bashrc"
-    echo "use '$(basename $0) -s' to sort them alphabetically."
+    echo "use '${0##*/} -s' to sort them alphabetically."
 fi
 
