@@ -201,7 +201,8 @@ alias l='ls -CF'
 alias tt='tmux'; alias td='tmux detach'
 ta() { if [ -n \"\$2\" ]; then tmux attach-session -t \"\$2\"; else tmux attach; fi; }
 alias tf='tmux select-pane -t :.+'; alias tb='tmux select-pane -t :.-'
-alias tl+='tmux resize-pane -L 5'; alias tr+='tmux resize-pane -R 5'; alias tu+='tmux resize-pane -U 5'; alias td+='tmux resize-pane -D 5'
+alias tl+='tmux resize-pane -L 5' ; alias tr+='tmux resize-pane -R 5'
+alias tu+='tmux resize-pane -U 5' ; alias td+='tmux resize-pane -D 5'
 alias ifconfig='sudo ifconfig'    # 'ifconfig' (apt install net-tools) causes 'command not found' if run without sudo
 alias ipconfig='sudo ifconfig'    # Windows typo
 # Create 'bat' alias for 'batcat' (apt install bacula-console-qt) unless 'bat' (Bluetooth Audio Tool) is installed
