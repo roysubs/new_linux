@@ -152,9 +152,9 @@ update_ps1() {
         # The regex (.*) (capture everything before) then ([\$#]\s*) (capture $ or #, then optional spaces) $ (at the end of the string)
         local regex='(.*)([\$#]\s*)$'
         if [[ "$__git_aware_prompt_original_ps1" =~ $regex ]]; then
-            PS1="${BASH_REMATCH[1]}${git_info} ${BASH_REMATCH[2]}"
+            PS1="${BASH_REMATCH[1]} ${git_info} ${BASH_REMATCH[2]}"
         else
-            echo "DEBUG: Regex DID NOT MATCH. Appending git_info." >&2
+            echo "DEBUG: Regex DID NOT MATCH. Prefixing git_info." >&2
             PS1="${git_info} ${__git_aware_prompt_original_ps1} "
         fi
     else
