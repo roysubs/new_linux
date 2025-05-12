@@ -199,4 +199,3 @@ Roll **1d6 per crit slot** in damaged location:
 
 EOF
 ) | less -R
-

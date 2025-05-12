@@ -62,6 +62,6 @@ if [ "$copied_count" -gt 0 ]; then
 fi
 
 # Clean up
-rm "$temp_file"
+rm -f "$temp_file"
 
 echo "Done!"

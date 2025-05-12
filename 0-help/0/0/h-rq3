@@ -73,5 +73,6 @@ mdcat --columns="$WIDTH" <(cat <<EOF
 
 Note: The number indicated is the percentage needed for success. A roll of 01–05 is always a success and a 96–00 is always a failure.
 
+
 EOF
 ) | less -R

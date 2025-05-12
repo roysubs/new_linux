@@ -1,26 +1,56 @@
 #!/bin/bash
 
 # Install and enable OpenSSH for remote access.
+# Supports both native Linux and WSL (Windows Subsystem for Linux)
 
-# First line checks running as root or with sudo (exit 1 if not). Second line auto-elevates the script as sudo.
-# if [ "$(id -u)" -ne 0 ]; then echo "This script must be run as root or with sudo" 1>&2; exit 1; fi
-if [ "$(id -u)" -ne 0 ]; then echo "Elevation required; rerunning with sudo..."; sudo "$0" "$@"; exit 0; fi
+# Auto-elevate with sudo if not root
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Elevation required; rerunning with sudo..."
+  sudo "$0" "$@"
+  exit 0
+fi
 
-# Only update if it's been more than 2 days since the last update (to avoid constant updates)
-if [ $(find /var/cache/apt/pkgcache.bin -mtime +2 -print) ]; then sudo apt update && sudo apt upgrade; fi
+# Detect if running in WSL
+is_wsl() {
+  grep -qiE 'microsoft|wsl' /proc/version
+}
 
-# Install tools if not already installed
-PACKAGES=("openssh-server")
-install-if-missing() { if ! dpkg-query -W "$1" > /dev/null 2>&1; then sudo apt install -y $1; fi; }
-for package in "${PACKAGES[@]}"; do install-if-missing $package; done
+# Only update if apt cache is older than 2 days
+if [ -f /var/cache/apt/pkgcache.bin ] && find /var/cache/apt/pkgcache.bin -mtime +2 | grep -q .; then
+  apt update && apt upgrade -y
+fi
 
-# Ensure that OpenSSH is enabled and started
+# Ensure ssh server package is installed
+apt install -y openssh-server openssh-client
+
 echo "Setting up OpenSSH server..."
-sudo systemctl enable ssh
-sudo systemctl start ssh
 
-# Output summary with user and IPv4 address, use command substitution to get sudo user or root
-user=$( if [ -n "$SUDO_USER" ]; then echo "$SUDO_USER"; else whoami; fi )
+if is_wsl; then
+  echo "🟡 Detected WSL — systemd is not available. Skipping systemctl-based startup."
+  echo "ℹ️  Running sshd manually (note: this is not persistent across reboots)."
+  
+  # WSL-specific fix: disable PAM if present
+  if grep -q '^UsePAM yes' /etc/ssh/sshd_config; then
+    sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+    echo "✅ Disabled PAM in sshd_config (WSL doesn't support it)."
+  fi
+
+  mkdir -p /var/run/sshd
+  /usr/sbin/sshd
+
+  echo "✅ sshd is now running manually."
+  echo "⚠️  If you restart WSL, you'll need to run: sudo /usr/sbin/sshd"
+else
+  # Native Linux — use systemctl
+  systemctl enable ssh
+  systemctl start ssh
+  echo "✅ ssh.service started via systemd."
+fi
+
+# Summary
+user=$( [ -n "$SUDO_USER" ] && echo "$SUDO_USER" || whoami )
 ip=$(hostname -I | awk '{print $1}')
-echo "OpenSSH is now set up on this server."
-echo "Access this server with 'ssh $user@$ip'."
+echo
+echo "🔐 OpenSSH is now set up."
+echo "➡️  Access this system with: ssh $user@$ip"
+
