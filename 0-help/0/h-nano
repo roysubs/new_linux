@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Display help summary for Vim
+cat <<'EOF' | mdcat | less -R
+
+# h-nano Help File
+
+## Basic Commands
+- **Save file**: `Ctrl+O`, then press `Enter`
+- **Exit nano**: `Ctrl+X`
+- **Cut text**: `Ctrl+K`
+- **Paste text**: `Ctrl+U`
+- **Copy text**: `Ctrl^` (Mark text), then `Ctrl+K` to cut or `Ctrl+U` to paste
+
+## Navigation
+- **Move cursor**: Arrow keys
+- **Go to beginning of line**: `Ctrl+A`
+- **Go to end of line**: `Ctrl+E`
+- **Go to beginning of document**: `Ctrl+Y`
+- **Go to end of document**: `Ctrl+V`
+- **Search**: `Ctrl+W`
+- **Next search result**: `Ctrl+W`, then `Enter`
+- **Next occurrence**: `Ctrl+W`, then `Ctrl+W`
+
+## Editing
+- **Insert a new line**: `Ctrl+M`
+- **Undo**: `Alt+U`
+- **Redo**: `Alt+E`
+- **Replace text**: `Ctrl+\`, then enter search and replacement
+
+## Other Operations
+- **Get help**: `Ctrl+G`
+- **Display file info**: `Ctrl+T`
+- **Spell check**: `Ctrl+T`, then choose spell checker
+
+## Key Bindings Summary
+- **Ctrl+X**: Exit
+- **Ctrl+K**: Cut text
+- **Ctrl+U**: Paste text
+- **Ctrl+O**: Save
+- **Ctrl+C**: Cancel command
+- **Ctrl+W**: Search
+- **Ctrl+G**: Help
+
+EOF
+
