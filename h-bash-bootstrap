@@ -6,16 +6,19 @@ mdcat --columns="$WIDTH" <(cat <<'EOF'
 Bash Bootstrap Help
 =========================
 
-This help file explains how to rapidly bootstrap a new Linux machine with essential Bash/Vim config,
-idempotent Docker logic, Git integration, plugin systems, and sane interactive defaults.
+- This help file explains the linux_kit repo and how to rapidly bootstrap a new Linux machine:
+
+    - Essential `.bashrc` / `.vimrc`, `.inputrc` configuration (all idempotent and non-invasive)
+    - Menu guided new system setup to get up and running fast
+    - Idempotent Docker logic, and sane interactive defaults with various projects
+    - Git integration with SSH and clean setup scripts to connect to GitHub
+    - Help system for many aspects of Linux and common applications
+    - Deploying clean, idempotent helper scripts: `a`, `b`, `def`, `dk`, `g`, `h`, `z`, etc
 
 ---
 
 ▶ Purpose:
     A reusable, modular bootstrap layer for:
-    - Setting up `.bashrc`, `.inputrc`, `.vimrc`, `.config` etc
-    - Handling Git, Docker, package managers, SSH setup, and history helpers
-    - Deploying clean, idempotent helper scripts: `g`, `dk`, `h`, `z`, `def`, `a`, etc
 
 ---
 
