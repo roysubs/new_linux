@@ -1,8 +1,8 @@
 #!/bin/bash
-
+#
 if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
 WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
-mdcat --columns="$WIDTH" <(cat <<EOF
+mdcat --columns="$WIDTH" <(cat <<'EOF'
 
 # Cheat Quick Notes
 
@@ -12,7 +12,7 @@ cheat is a console app that comes with a very set of plain text cheatseats for f
 
 ### Installation
 
-Install `cheat`:
+Installation:
 ```bash
 cd /tmp
 wget https://github.com/cheat/cheat/releases/download/4.4.0/cheat-linux-amd64.gz
