@@ -46,12 +46,36 @@ case "$option" in
         run_command "sudo apt install $@";
         ;;
     h)
-        # History command is complex pipeline, no simple command to print via run_command
-        zgrep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' /var/log/apt/history.log.1.gz |
-            sed -n '/^Start-Date/{h;n;s/^Commandline: //;H;x;s/\n/ /;p}' |
-            sed -E 's|Start-Date: ||;s|/usr/bin/apt ||' |
-            grep --color=auto -v 'Start-Date:'
+        # Path to the apt history log files
+        HISTORY_LOG="/var/log/apt/history.log"
+        HISTORY_LOG_OLD="/var/log/apt/history.log.1.gz"
+
+        # Function to process log files
+        process_log() {
+            local log_file=$1
+            local description=$2
+            if [[ -f "$log_file" ]]; then
+                echo "$description"
+                # Print entries from the log file
+                grep -E '^(Start-Date|Commandline:.*(install|remove|upgrade))' "$log_file"
+                echo ""
+            fi
+        }
+
+        # Process the current history log (most recent actions)
+        if [[ -f "$HISTORY_LOG" ]]; then
+            process_log "$HISTORY_LOG" "Reading from $HISTORY_LOG"
+        fi
+
+        # Process the old history log (gzipped) first
+        if [[ -f "$HISTORY_LOG_OLD" ]]; then
+            process_log "$HISTORY_LOG_OLD" "Reading from $HISTORY_LOG_OLD"
+        fi
+
+        if command -v cowsay &>/dev/null; then cowsay "All done processing apt history logs. Moo."; fi
+
         ;;
+
     r)
         run_command "sudo apt remove $@";
         ;;

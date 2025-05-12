@@ -23,8 +23,9 @@ if [ $# -eq 0 ]; then
     echo "  cl1               Clone, but with max depth 1 only, and report stats"
     echo "  d|diff            Diff: Show unstaged changes"
     echo "  ds                Diff Staged: Show staged changes"
-    echo "  l|log             Log: Show commit history (short format)"
-    echo "  ll                Log Detailed: Show full commit history with diffs"
+    echo "  lshort            Log with commit history in short format"
+    echo "  ldiffs            Log with full commit history and diffs"
+    echo "  lfiles            Log show status of files changed in each commit"
     echo "  b                 Branch: List branches, highlight current branch"
     echo "  ch|co|checkout <branch>   Checkout: Switch to a different branch"
     echo "  nb <name>         New Branch: Create and switch to a new branch"
@@ -341,12 +342,21 @@ case "$option" in
         git diff --staged
         ;;
 
-    l|log)
+    lshort)
         git log --oneline --graph --decorate --all
+        echo "Command run was:"
+        echo "git log --oneline --graph --decorate --all"
         ;;
 
-    ll)
+    ldiffs)
         git log --stat --patch
+        echo "Command run was:"
+        echo "git log --stat --patch"
+        ;;
+    lfiles)
+        git log --since="1 day ago" --name-status --pretty=format:"%h %ad %an | %s" --date=iso
+        echo "Command run was:"
+        echo "git log --since=\"1 day ago\" --name-status --pretty=format:\"%h %ad %an | %s\" --date=iso"
         ;;
 
     b|branch)

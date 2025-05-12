@@ -1,8 +1,9 @@
 #!/bin/bash
-# Application Package Manager Universal Wrapper
-# Checks which package manager is in use on this system, and runs the the corresponding helper script.
-# apt, apk, dnf, yum, zypper, pacman
-# See end of this script for list of package managers covered.
+
+# Universal Application Package Manager Wrapper
+#
+# Check which package manager is present on this system, then use the the corresponding wrapper script.
+# apt, apk, dnf, yum, zypper, pacman (see end of script for more details).
 
 # Define colors
 RED='\e[31m'
