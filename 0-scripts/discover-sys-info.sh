@@ -6,6 +6,27 @@ if [[ $EUID -ne 0 ]]; then
     exec sudo bash "$0" "$@"
 fi
 
+command -v dmidecode >/dev/null || {
+    read -p "'dmidecode' is not available. Install it? [y/N] " yn
+    [[ $yn =~ ^[Yy]$ ]] && sudo apt-get update && sudo apt-get install -y dmidecode || exit 1
+}
+command -v lspci >/dev/null || {
+    read -p "'lspci' (pciutils) is not available. Install it? [y/N] " yn
+    [[ $yn =~ ^[Yy]$ ]] && sudo apt-get update && sudo apt-get install -y pciutils || exit 1
+}
+
+# Check for dmidecode
+if ! command -v dmidecode &>/dev/null; then
+  echo "Installing dmidecode..."
+  sudo apt-get update && sudo apt-get install -y dmidecode
+fi
+
+# Check for lspci (from pciutils)
+if ! command -v lspci &>/dev/null; then
+  echo "Installing pciutils for lspci..."
+  sudo apt-get update && sudo apt-get install -y pciutils
+fi
+
 # Capture timestamp
 COLLECTED_AT=$(date "+%Y-%m-%d %H:%M:%S")
 
