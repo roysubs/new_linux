@@ -62,17 +62,19 @@ So, the default keys you'll find in any standard Vim installation are `v`, `V`, 
     - `v`: Enter visual mode at the cursor position; move with arrow keys or `^`/`$` to select text.
     - `V`: Select the whole line in visual mode.
     - `Ctrl+v` (or `Ctrl+q`): Block select multiple lines. Use `d` to delete, `I` to insert text across all selected lines.  
+    
     - **Example: Append text at the end of multiple lines**:
         - `Ctrl+v` (or `Ctrl+q`) to enter Visual Block mode at the first line.
         - Use `↓` or `j` to select the lines you want.
         - `$` to go to the end of the lines.
         - `A` (i.e. `Shift+a`) to append, type the text, then press `Esc` to apply.
     - **Example: Delete a " character at the end of multiple lines**:
-        - `Shift+v` to enter Visual Line mode at the first line
-        - Use `↓` or `j` to select the lines you want
-        - Now run a visual selection command: `:'<,'>s/"$//`
-        - `'<,'>` apply to all visual selected text
-    - **Alternatively, to globally remove " at the end of *every* line in the file: `:%s/"$//`**
+        - `Shift+v` to enter Visual Line mode at the first line.
+        - Use `↓` or `j` to select lines downwards that you want to modify.
+        - Now press `:` to enter command mode: `:'<,'>` will appear automatically.
+        - Add the substitution required, so: `:'<,'>s/"$//`.
+            - `'<,'>` is "apply to all visual selected text", and `/"$//` is "replace `"` at end of line with nothing".
+    - **Example: Globally remove " at the end of *every* line in the file: `:%s/"$//`**
         - `%` apply to all lines, `s/` substitution, `"$` matches a double quote at the end of the line
         - `//` replace with nothing (i.e., delete).
 
@@ -108,7 +110,7 @@ So, the default keys you'll find in any standard Vim installation are `v`, `V`, 
         - `"ap` to paste from register `a`.
 
 - **Search and Replace:**
-    - Searching is a core Vim feature. You can search for text using /pattern, and to replace:
+    - You can search for text using /pattern, and to replace:
     - `:%s/old/new/g` for replacing all occurrences in the file.
     - `:%s/old/new/gc` to ask for confirmation before each replacement.
 
@@ -138,16 +140,17 @@ So, the default keys you'll find in any standard Vim installation are `v`, `V`, 
     - `:` followed by a keyword to search through the history.
 
 - **Plugins and Package Management:**
-    - You could mention popular plugin managers like vim-plug, Vundle, or dein.vim.
+    - Popular plugin managers like vim-plug, Vundle, or dein.vim.
     - Example for vim-plug:
 ```bash
-        call plug#begin('~/.vim/plugged')
-        Plug 'junegunn/fzf.vim'
-        call plug#end()
+call plug#begin('~/.vim/plugged')
+Plug 'junegunn/fzf.vim'
+call plug#end()
 ```    
 
 - **Session Management:**
-    - You can save the current state of your session with :mksession filename.vim, and later resume it with :source filename.vim.
+    - `:mksession filename.vim` to save the current state of your session.
+    - `:source filename.vim` to later resume saved session state from `mksession`.
 
 - **Filetype Specific Settings:**
     - You can have filetype-specific settings, like for Python, JSON, etc.
