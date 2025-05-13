@@ -72,33 +72,33 @@ lsblk -o NAME,FSTYPE,FSSIZE,FSAVAIL,FSUSED,FSUSE%,UUID,MOUNTPOINT -lp -e 1,7,11,
 
 # Display inode usage
 echo
-echo -e "${YELLOW}Inode Usage${NC}"
+echo -e "${YELLOW}--- Inode Usage ---${NC}"
 echo
 df -ih --total | grep -v '^tmpfs|loop'  # Inode usage (useful for filesystems that may run out of inodes)
 
 # Display mounted filesystems and their stats
 echo
-echo -e "${YELLOW}Mounted Filesystems${NC}"
+echo -e "${YELLOW}--- Mounted Filesystems ---${NC}"
 echo
 
 echo "SOURCE ON TARGET TYPE FSTYPE OPTIONS"
 echo "====== == ====== ==== ====== ======="
 
-echo "Column	Description
-echo "SOURCE	The device or source of the mount (e.g., /dev/sda1)
-echo "ON	Literal word "on" (part of the format)
-echo "TARGET	The mount point (e.g., /mnt/sda1)
-echo "TYPE	Literal word "type" (part of the format)
-echo "FSTYPE	Filesystem type (e.g., ext4, hugetlbfs)
-echo "OPTIONS	Mount options in parentheses
-echo "mount | grep -vE '/sys|/proc|^udev|^devpts|^tmpfs|^mqueue|/run|/docker|/snap' |column -t
+echo "Column	Description"
+echo "SOURCE	The device or source of the mount (e.g., /dev/sda1)"
+echo "ON	Literal word "on" (part of the format)"
+echo "TARGET	The mount point (e.g., /mnt/sda1)"
+echo "TYPE	Literal word "type" (part of the format)"
+echo "FSTYPE	Filesystem type (e.g., ext4, hugetlbfs)"
+echo "OPTIONS	Mount options in parentheses"
+echo "mount | grep -vE '/sys|/proc|^udev|^devpts|^tmpfs|^mqueue|/run|/docker|/snap' |column -t"
 # mount | grep -v '/snap|/docker' | column -t  # Show mounted filesystems in a clean columnar format
 
 # Optional: Show swap usage if applicable
-if [ "$(swapon --show)" ]; then
+if [ "$(sudo swapon --show)" ]; then
     echo
-    echo -e "Swap Information\n================"
-    swapon --show
+    echo -e "${YELLOW}--- Swap Information ---\n================${NC}"
+    sudo swapon --show
 else
     echo
     echo -e "No swap devices found."
@@ -107,7 +107,7 @@ fi
 # Optional: Check for active LVM (Logical Volume Management) volumes
 if command -v lvs &> /dev/null; then
     echo
-    echo -e "LVM Volumes\n============"
+    echo -e "${YELLOW}--- LVM Volumes ---\n============${NC}"
     lvs
 else
     echo
@@ -117,7 +117,7 @@ fi
 # Optional: Show ZFS status (if ZFS is installed)
 if command -v zfs &> /dev/null; then
     echo
-    echo -e "ZFS Filesystems\n================"
+    echo -e "${YELLOW}--- ZFS Filesystems ---\n================${NC}"
     zfs list
 else
     echo

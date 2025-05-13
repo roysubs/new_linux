@@ -1,0 +1,11 @@
+# Cycle through completions with Tab
+TAB: menu-complete
+
+# (Optional) Cycle backward with Shift+Tab
+"\e[Z": menu-complete-backward
+
+# (Optional) Show all ambiguous completions before cycling
+set show-all-if-ambiguous on
+
+# Keep case-insensitive completion as you set previously
+set completion-ignore-case on

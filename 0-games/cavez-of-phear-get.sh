@@ -19,7 +19,7 @@ fi
 # Define the actual binary and target symlink names
 REAL_BIN="/usr/games/phear"
 LINK_DIR="/usr/local/bin"
-LINK_NAMES=("cavez" "caves" "cavezofphear" "cavesofphear")
+LINK_NAMES=("cavez" "caves" "cavezofphear" "cavesofphear" "cavez-of-phear" "caves-of-phear")
 
 echo "Creating symlinks for easier access..."
 

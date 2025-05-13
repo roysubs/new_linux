@@ -307,22 +307,23 @@ $(tput bold)$(tput setaf 3)FIND COMMAND – PAGE 1: CORE USAGE$(tput sgr0)
 ==========================================================================================================
 
 $(tput setaf 3)BASICS$(tput sgr0)                                       |   $(tput setaf 3)FILTER BY NAME$(tput sgr0)
-find . -type f      # All files              |   find . -name \"*.txt\"    # Files with .txt extension
-find /dir -type d   # All dirs in /dir       |   find . -iname \"*.JPG\"   # Case-insensitive search
-                                             |
+find . -type f     # All files              |   find . -name \"*.txt\"    # Files with .txt extension
+find /dir -type d  # All dirs in /dir       |   find . -iname \"*.JPG\"   # Case-insensitive search
+                                            |
 $(tput setaf 3)BY TYPE$(tput sgr0)                                      |   $(tput setaf 3)BY SIZE$(tput sgr0)
-find . -type f      # Regular files          |   find . -size +10M       # Larger than 10MB
-find . -type l      # Symlinks               |   find . -size -1k        # Smaller than 1KB
-                                             |
+find . -type f     # Regular files          |   find . -size +10M       # Larger than 10MB
+find . -type l     # Symlinks               |   find . -size -1k        # Smaller than 1KB
+                                            |
 $(tput setaf 3)BY TIME$(tput sgr0)                                      |   $(tput setaf 3)EXECUTE COMMANDS$(tput sgr0)
-find . -mtime -1    # Modified < 1 day       |   find . -type f -exec echo {} \;  # Example action
-find . -atime +7    # Accessed > 7 days      |   find . -exec chmod 644 {} +      # Batch chmod
-find . -ctime -2    # Metadata / status change in last 2 days
-                                             |
+find . -mtime -1   # Modified < 1 day       |   find . -type f -exec echo {} \;  # {} are the found files \
+find . -atime +7   # Accessed > 7 days      |   find . -exec chmod 644 {} +      # Batch chmod
+find . -ctime -2   # Perm, ownership, contents | $(tput setaf 2) {} are the found files, \; to end the line
+                                            |
 $(tput setaf 3)DEPTH / PRUNE$(tput sgr0)                                |   $(tput setaf 3)PRINTING & FORMATTING$(tput sgr0)
-find . -maxdepth 1  # Only this dir          |   find . -ls              # Detailed long list
-find / -mindepth 2  # Skip top levels        |   find . -printf \"%p\n\"   # Custom path output
-find . -path \"./.git\" -prune -o -name \"*.sh\" -print  # Prune: skip matching dirs early
+find . -maxdepth 1  # Only this dir         |   find . -ls              # Detailed long list
+find / -mindepth 2  # Skip top levels       |   find . -printf \"%p\n\"   # Custom path output
+find . -path \"./.git\" -prune -o -name \"*.sh\" -print   # Prune: skip matching dirs early
+find . -type f -name \"*.sh\" -prune -o -print   # Prune: skip matching dirs early
 $(tput setaf 2)Note: -prune prevents descent into matched directories – great for skipping .git etc.$(tput sgr0)
 
 ----------------------------------------------------------------------------------------------------------
