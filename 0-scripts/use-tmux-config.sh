@@ -2,7 +2,11 @@
 
 # Source video: https://www.youtube.com/shorts/PL1EoKjy4iM
 
-#!/bin/bash
+# Check if TPM is already cloned. If not, it will clone it.
+# Check if the core run '~/.tmux/plugins/tpm/tpm' line exists in your ~/.tmux.conf.
+# If the file doesn't exist or the line is missing, it will append the basic plugin
+# setup (TPM, sensible, dracula) and the run line. Inform you about the status at each step.
+# Remind you of the final step to trigger plugin download within tmux.
 
 TMUX_CONF="$HOME/.tmux.conf"
 TPM_DIR="$HOME/.tmux/plugins/tpm"

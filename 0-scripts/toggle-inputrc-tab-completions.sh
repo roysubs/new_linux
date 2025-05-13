@@ -1,21 +1,13 @@
 #!/bin/bash
 #
-# Script: toggle-settings.sh
 # Purpose: Generic script to toggle between two sets of configuration settings
 #
-# This implementation toggles between Bash default tab completion behavior and PowerShell-style tab completion
-# but can be easily adapted for other toggle settings by changing the configuration blocks.
-#
-# Usage:
-# chmod +x toggle-settings.sh
-# ./toggle-settings.sh
+# Toggles between Bash default tab completion and PowerShell-style tab completion
+# Can be adapted for other toggle settings by changing the configuration blocks.
 #
 # Note: If you want changes to apply immediately to your current session,
 # either run this script with "source" or manually run "bind -f ~/.inputrc"
 # afterwards.
-#
-# Example for immediate effect:
-# source ./toggle-settings.sh
 
 # ===== CONFIGURATION - MODIFY THIS SECTION FOR DIFFERENT TOGGLE SETTINGS =====
 
