@@ -18,7 +18,7 @@ PREVIEW_LINES=()
 
 for file in ./h-*; do
     [[ -f "$file" ]] || continue
-    lineno=$(grep -nF '| mdcat |' "$file" | cut -d: -f1 | head -n1)
+    lineno=$(grep -nF 'mdcat --column' "$file" | cut -d: -f1 | head -n1)
 
     if [[ -n "$lineno" ]]; then
         echo -e "${RED}${file}${RESET}"
