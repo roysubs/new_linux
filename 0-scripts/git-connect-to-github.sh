@@ -27,6 +27,7 @@ pause_msg() {
     read -rp "Press Enter to continue..." </dev/tty
 }
 
+echo
 yellow "=== GitHub SSH Setup Script ==="
 echo "connect a git project to github securely with ssh."
 echo "and switch the project to ssh if it was cloned via https."
@@ -104,7 +105,7 @@ else
     # We don't exit here, maybe the user just needs the other steps.
 fi
 
-pause_msg "📋 Copy the key displayed above, then go to https://github.com → Settings → SSH and GPG keys → New SSH key, and paste it there."
+pause_msg "📋 Copy the key displayed above, then go to:\nhttps://github.com → Settings → SSH and GPG keys → New SSH key.\nPaste the key there and save it before continuing."
 
 # Step 7: Test SSH connection
 green "\nStep 7: Testing SSH connection to GitHub..."
