@@ -1,11 +1,11 @@
 #!/bin/bash
 
-HEADER='#!/bin/bash
+HEADER="#!/bin/bash
 
-if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
-WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
-mdcat --columns="$WIDTH" <(cat <<''EOF''
-'
+if ! command -v mdcat >/dev/null 2>&1; then echo \"Install mdcat to render markdown.\"; fi
+WIDTH=\$(if [ \$(tput cols) -ge 105 ]; then echo 100; else echo \$((\$(tput cols) - 5)); fi)
+mdcat --columns=\"\$WIDTH\" <(cat <<'EOF'
+"
 
 # Color codes
 RED='\033[31m'

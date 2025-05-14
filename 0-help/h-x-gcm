@@ -2,7 +2,7 @@
 
 if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
 WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
-mdcat --columns="$WIDTH" <(cat <<EOF
+mdcat --columns="$WIDTH" <(cat <<'EOF'
 
 
 
@@ -27,29 +27,21 @@ git config --global credential.helper manager-core
 2. Verify the Token Is Saved
 After entering your PAT during a git push, ensure that it was saved by GCM.
 
-Run:
-
-bash
-Copy code
-git credential-manager-core list
+Run:   `git credential-manager-core list`
 Expected Output: An entry for github.com should appear.
 If no entry exists, GCM has not saved your credentials.
+
 3. Inspect the Git Configuration
 Verify that the URL for your GitHub repository is correct.
 
-Run:
-
-bash
-Copy code
-git remote -v
+Run:   `git remote -v`
 Expected Output:
-php
-Copy code
+```php
 https://github.com/<username>/<repo>.git
+```
+
 If the remote URL looks correct and you're still having issues, consider switching to SSH for better authentication management:
-bash
-Copy code
-git remote set-url origin git@github.com:<username>/<repo>.git
+`git remote set-url origin git@github.com:<username>/<repo>.git`
 You'll need to set up an SSH key if you haven't already.
 4. Clear and Re-enter Credentials
 If your credentials are not being saved properly, you might need to clear them and re-enter them.
