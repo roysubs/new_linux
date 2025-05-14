@@ -28,9 +28,13 @@ pause_msg() {
 }
 
 yellow "=== GitHub SSH Setup Script ==="
-echo "connect a git project to github securely with ssh."
-echo "and switch the project to ssh if it was cloned via https."
-echo "(ssh is easier and more widely used than https)."
+echo "Connect a git project to github securely with SSH and"
+echo "cloned via https (SSH is generally easier and more widely used than HTTPS)."
+echo "Generate SSH keys if required:  ssh-keygen -t ed25519 -C <email>;  cat ~/.ssh/id_ed25519.pub"
+echo "Start SSH agent:  eval \"$(ssh-agent -s)\""
+echo "Test SSH connection to GitHub:  ssh -T git@github.com"
+echo "Check if the project was cloned using HTTPS and if so, wwitch to SSH with:"
+echo "  git remote set-url origin git@github.com:<user>/<repo>.git"
 
 # Step 1: Check if Git is installed
 green "\nStep 1: Checking for Git installation..."
@@ -130,7 +134,7 @@ else
         yellow "No 'origin' remote URL found in this repository."
         echo "Add a remote URL using: git remote add origin <url>"
     # Use a less strict regex to match HTTPS GitHub URLs, capturing user and repo
-    elif [[ "$REMOTE_URL" =~ ^https://github\.com/([^/]+)/([^/]+) ]]; then # <-- REVISED REGEX
+    elif [[ "$REMOTE_URL" =~ ^https://github\.com/([^/]+)/([^/]+) ]]; then
         # Extract user and repo from regex capture groups
         GIT_USER=${BASH_REMATCH[1]}
         GIT_REPO=${BASH_REMATCH[2]}
