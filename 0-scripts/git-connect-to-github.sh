@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# connect a git project to github securely with ssh.
-# and switch the project to ssh if it was cloned via https.
-# (ssh is easier and more widely used than https).
+# Connect a git project to github securely with ssh and switch the project
+# to SSH if it was cloned via HTTPS. SSH is probably easier and more widely
+# used than HTTPS.
 
 # set -e ensures that the script exits immediately if a command exits with a non-zero status.
 # Exceptions are made for specific commands where failure is expected or handled (like the ssh-add check below).
@@ -28,14 +28,15 @@ pause_msg() {
 }
 
 echo
-yellow "=== GitHub SSH Setup Script ==="
-echo "Connect a git project to github securely with SSH and"
-echo "cloned via https (SSH is generally easier and more widely used than HTTPS)."
+yellow "=== GitHub SSH Setup & connect to GitHub ==="
+echo "Connect a git project to github securely with SSH and cloned via https (SSH is generally"
+echo "easier and more widely used than HTTPS)."
 echo "Generate SSH keys if required:  ssh-keygen -t ed25519 -C <email>;  cat ~/.ssh/id_ed25519.pub"
-echo "Start SSH agent:  eval \"$(ssh-agent -s)\""
+echo "Start SSH agent:  eval \"\$(ssh-agent -s)\""
 echo "Test SSH connection to GitHub:  ssh -T git@github.com"
 echo "Check if the project was cloned using HTTPS and if so, wwitch to SSH with:"
 echo "  git remote set-url origin git@github.com:<user>/<repo>.git"
+pause_msg ""
 
 # Step 1: Check if Git is installed
 green "\nStep 1: Checking for Git installation..."

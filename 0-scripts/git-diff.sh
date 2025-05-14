@@ -1,8 +1,4 @@
 #!/bin/bash
-# echo "Usage: ${0##*/} <filename> <HEAD-ref_number>"   # Use ${0##*/} instead of $(basename $0) as basename not always present
-# git log --follow --find-renames=40% --pretty=format:"%H" -- "$filename" to get a list of all commit hashes in the history that affected the given $filename, following renames with a 40% similarity threshold.
-# The script first runs git log --follow --find-renames=... --pretty=format:"%H" -- "$filename". The --follow flag tells git log to trace the history of the specific file, following any renames or moves. This gives us a list of commit hashes where that file (under its current or previous names) was actually changed, in chronological order (most recent first).
-# By taking the Nth commit hash from this list (where N is your head_ref_num), we get the precise commit hash where the file was in its HEAD~N state relative to its own history.
 
 #!/bin/bash
 
@@ -24,8 +20,20 @@ NC='\033[0m'         # No Color
 
 # Check if exactly two arguments are provided
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <filename> <HEAD-ref_number>"
-    echo "Example: $0 myscript.sh 3"
+    echo
+    echo "Compare a current file with a previous version, where HEAD~1 is the last committed"
+    echo "version, HEAD~3 is 3 commits ago, etc"
+    echo
+    echo -e "Usage: ${GREEN}${0##*/} <filename> <HEAD-ref_number>${NC}"   # Use ${0##*/} instead of $(basename $0) as basename not always present
+    echo
+    echo -e "Example: ${GREEN}${0##*/} myscript.sh 3${NC}   # Compare the latest with the 3rd most recent commit"
+    echo
+    echo "The following is used to get a list of all commit hashes in the history that"
+    echo "affected the given \$filename, following renames with a 40% similarity threshold:"
+    echo -e "${GREEN}git log --follow --find-renames=40% --pretty=format:\"%H\" -- \"\$filename\"${NC}"
+    echo "By taking the Nth commit hash from this list (where N is your head_ref_num), we get the"
+    echo "precise commit hash where the file was in its HEAD~N state relative to its own history."
+    echo
     exit 1
 fi
 
