@@ -40,6 +40,11 @@ b to place and t to detonate bomb.
 w to highlight position. s to toggle sound on/off.
 ==========
 
+To open a specific level:
+phear /usr/share/phear/data/levels/02
+The only levels available now in that folder are:
+01  02  03  04  05  06  07  08  09  10  11
+
 By picking up a diamond * you get 10 points, picking up money $ gives
 you 100 points. You get one extra life for every 1000 points you score.
 
