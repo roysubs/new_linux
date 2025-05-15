@@ -15,10 +15,10 @@ usage() {
     echo
     echo "Options:"
     echo "  h, help              Show this help message"
-    echo "  ex, examples         Show various find syntax examples"
-    echo "  b, biggest [N]       Find N biggest files (default: 10)"
-    echo "  n, newest [N]        Find N newest files (default: 10)"
-    echo "  o, oldest [N]        Find N oldest files (default: 10)"
+    echo "  hh, examples         Show various find syntax examples"
+    echo "  b, big, biggest [N]  Find N biggest files (default: 10)"
+    echo "  n, new, newest [N]   Find N newest files (default: 10)"
+    echo "  o, old, oldest [N]   Find N oldest files (default: 10)"
     echo "  e, empty             Find empty files"
     echo "  ed, empty-dirs       Find empty directories"
     echo "  d, duplicates        Find duplicate files (by content)"
@@ -194,7 +194,7 @@ while [[ $# -gt 0 ]]; do
             FAST="-xdev"
             shift
             ;;
-        ex|examples)
+        hh|examples)
             ACTION="examples"
             shift
             ;;

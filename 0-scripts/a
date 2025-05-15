@@ -21,59 +21,59 @@ command_exists() {
 
 # Check for apt (Debian/Ubuntu based)
 if command_exists apt; then
-    HELPER_SCRIPT="${SCRIPT_DIR}/aptx"
+    HELPER_SCRIPT="${SCRIPT_DIR}/aapt"
     if [ -x "$HELPER_SCRIPT" ]; then
-        # echo "Detected 'apt'. Running '$HELPER_SCRIPT'..."  # Don't show this for apt/apk as they start with same character"
+        # echo "Detected 'apt'. Running '$HELPER_SCRIPT'..."
         exec "$HELPER_SCRIPT" "$@"
     else
-        echo -e "${RED}Error: 'apt' command found, but 'aptx' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
+        echo -e "${RED}Error: 'apt' command found, but 'aapt' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
         exit 1
     fi
 # Check for apk (Alpine Linux)
 elif command_exists apk; then
-    HELPER_SCRIPT="${SCRIPT_DIR}/apkx"
+    HELPER_SCRIPT="${SCRIPT_DIR}/aapk"
     if [ -x "$HELPER_SCRIPT" ]; then
-        # echo "Detected 'apk'. Running '$HELPER_SCRIPT'..."  # Don't show this for apt/apk as they start with same character
+        # echo "Detected 'apk'. Running '$HELPER_SCRIPT'..."
         exec "$HELPER_SCRIPT" "$@"
     else
-        echo -e "${RED}Error: 'apk' command found, but 'apkx' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
+        echo -e "${RED}Error: 'apk' command found, but 'aapk' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
         exit 1
     fi
 # Check for dnf (Newer RHEL/Fedora based)
 elif command_exists dnf; then
-    HELPER_SCRIPT="${SCRIPT_DIR}/dnfx"
+    HELPER_SCRIPT="${SCRIPT_DIR}/anfx"
     if [ -x "$HELPER_SCRIPT" ]; then
-        echo "Detected 'dnf'. Running '$HELPER_SCRIPT'..."
+        # echo "Detected 'dnf'. Running '$HELPER_SCRIPT'..."
         exec "$HELPER_SCRIPT" "$@"
     else
-        echo -e "${RED}Error: 'dnf' command found, but 'dnfx' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
+        echo -e "${RED}Error: 'dnf' command found, but 'adnf' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
         exit 1
     fi
 # Check for yum (Older RHEL/Fedora based)
 elif command_exists yum; then
-     HELPER_SCRIPT="${SCRIPT_DIR}/yumx"
+     HELPER_SCRIPT="${SCRIPT_DIR}/ayum"
     if [ -x "$HELPER_SCRIPT" ]; then
-        echo "Detected 'yum'. Running '$HELPER_SCRIPT'..."
+        # echo "Detected 'yum'. Running '$HELPER_SCRIPT'..."
         exec "$HELPER_SCRIPT" "$@"
     else
-        echo -e "${RED}Error: 'yum' command found, but 'yumx' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
+        echo -e "${RED}Error: 'yum' command found, but 'ayum' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
         exit 1
     fi
 # Check for zypper (openSUSE)
 elif command_exists zypper; then
-     HELPER_SCRIPT="${SCRIPT_DIR}/zypperx"
+     HELPER_SCRIPT="${SCRIPT_DIR}/azypper"
     if [ -x "$HELPER_SCRIPT" ]; then
-        echo "Detected 'zypper'. Running '$HELPER_SCRIPT'..."
+        # echo "Detected 'zypper'. Running '$HELPER_SCRIPT'..."
         exec "$HELPER_SCRIPT" "$@"
     else
-        echo -e "${RED}Error: 'zypper' command found, but 'zypperx' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
+        echo -e "${RED}Error: 'zypper' command found, but 'azypper' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
         exit 1
     fi
 # Check for pacman (Arch Linux based)
 elif command_exists pacman; then
     HELPER_SCRIPT="${SCRIPT_DIR}/pacmanx"
     if [ -x "$HELPER_SCRIPT" ]; then
-        echo "Detected 'pacman'. Running '$HELPER_SCRIPT'..."
+        # echo "Detected 'pacman'. Running '$HELPER_SCRIPT'..."
         exec "$HELPER_SCRIPT" "$@"
     else
         echo -e "${RED}Error: 'pacman' command found, but 'pacmanx' script not found or not executable at '$HELPER_SCRIPT'.${NC}"
@@ -88,6 +88,34 @@ fi
 
 # The script should not reach here due to 'exec'
 exit 0
+
+
+####################
+#
+# Common installer stub
+# Use this in any script requiring pre-requisite packages
+#
+####################
+# 
+# missing_pkgs=(); REQUIRED_PKGS=(curl jq unzip)   # <-- Customize per script
+# for pkg in "${REQUIRED_PKGS[@]}"; do
+#   if ! command -v "$pkg" >/dev/null 2>&1; then echo "  [MISSING] $pkg"; missing_pkgs+=("$pkg"); fi
+# done
+# [ "${#missing_pkgs[@]}" -eq 0 ] && return 0 2>/dev/null || :   # Silently proceed if all present
+# if ! command -v a >/dev/null 2>&1; then   # Check for 'a' helper tool
+#   echo "ERROR: Missing packages and 'a' (package manager helper) not found.";  exit 1
+# fi
+# for pkg in "${missing_pkgs[@]}"; do       # Offer to install each missing package
+#   read -rp "Install missing package '$pkg' using 'a'? [y/N]: " ans
+#   case "$ans" in
+#     [yY]) a i "$pkg" ;;
+#     *) echo "Aborted. '$pkg' is required. Exiting."; exit 1 ;;
+#   esac
+# done
+# for pkg in "${missing_pkgs[@]}"; do
+#   if ! command -v "$pkg" >/dev/null 2>&1; then echo "ERROR: '$pkg' is still missing after attempted install. Exiting."; exit 1; fi
+# done
+
 
 
 

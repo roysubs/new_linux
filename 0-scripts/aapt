@@ -100,7 +100,6 @@ case "$option" in
     v)
         for package in "$@"; do
             echo "Information for '$package' (apt info in Debian, apt show in Mint):"
-            local info_cmd # Define local variable for the command string
             if grep --color=auto -q "Mint" /etc/os-release; then
                 info_cmd="apt show $package";
             else

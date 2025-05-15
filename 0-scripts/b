@@ -10,6 +10,25 @@ YELLOW='\e[33m'
 BLUE='\e[34m' # Added Blue for headings
 NC='\e[0m' # No Color
 
+missing_pkgs=(); REQUIRED_PKGS=(borgbackup)
+for pkg in "${REQUIRED_PKGS[@]}"; do
+    if ! command -v "$pkg" >/dev/null 2>&1; then echo "  [MISSING] $pkg"; missing_pkgs+=("$pkg"); fi
+done
+[ "${#missing_pkgs[@]}" -eq 0 ] && return 0 2>/dev/null || :   # Silently proceed if all present
+if ! command -v a >/dev/null 2>&1; then   # Check for 'a' helper tool
+  echo "ERROR: Missing packages and 'a' (package manager helper) not found.";  exit 1
+fi
+for pkg in "${missing_pkgs[@]}"; do       # Offer to install each missing package
+  read -rp "Install missing package '$pkg' using 'a'? [y/N]: " ans
+  case "$ans" in
+      [yY]) a i "$pkg" ;;
+      *) echo "Aborted. '$pkg' is required. Exiting."; exit 1 ;;
+  esac
+done
+for pkg in "${missing_pkgs[@]}"; do
+    if ! command -v "$pkg" >/dev/null 2>&1; then echo "ERROR: '$pkg' is still missing after attempted install. Exiting."; exit 1; fi
+done
+
 # --- Helper Functions ---
 
 # Function to show usage help
