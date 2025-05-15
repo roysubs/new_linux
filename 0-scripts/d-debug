@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+echo "BASH_VERSION: ${BASH_VERSION}"
 # d - Directory size summary with relative sizes and optional file/dir counts
 
 set -euo pipefail
@@ -73,6 +74,9 @@ echo "Calculating directory sizes in: $(realpath "$DIR")"
 echo "(using ${SIZE_MODE_DESC})"
 
 declare -A SIZES        # Associative array for directory sizes
+    echo "DEBUG: SIZES declared. Status: $?"
+    typeset -p SIZES # This shows how Bash sees SIZES
+    echo "DEBUG: Initial count of SIZES: ${#SIZES[@]}"
 declare -A NUM_FILES    # Associative array for file counts (if -c)
 declare -A NUM_DIRS     # Associative array for directory counts (if -c)
 TOTAL_SIZE=0            # Running total size (subdirs + loose files)
@@ -166,6 +170,17 @@ bar_space=$(( cols - name_pad - size_pad - extra_pad - 5 )) # Adjusted spacing
 (( bar_space < 10 )) && bar_space=10
 
 # Only display output if we have data to show
+    echo "DEBUG: Just before the failing if statement."
+    typeset -p SIZES
+    echo "DEBUG: Count of SIZES just before if: ${#SIZES[@]}"
+    echo "DEBUG: Value of LOOSE_TOTAL: $LOOSE_TOTAL"
+    local num_sizes_elements
+    echo "DEBUG: Attempting to get SIZES count..."
+    num_sizes_elements=${#SIZES[@]} # Does the script fail on THIS line?
+    echo "DEBUG: num_sizes_elements = $num_sizes_elements"
+
+if [[ "$num_sizes_elements" -gt 0 || "$LOOSE_TOTAL" -gt 0 ]]; then
+
 if [[ ${#SIZES[@]} -gt 0 || $LOOSE_TOTAL -gt 0 ]]; then
     # --- Print Header ---
     if $SHOW_COUNTS; then

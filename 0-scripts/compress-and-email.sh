@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Purpose: Compress a folder, display details, and email it.
+# Purpose: Compress a folder, display details, and then email it.
+# See 0-new-system/new6-email-with-gmail-relay.sh to auto-install gmail with relay on console. 
+
 # $1 = path to the folder to be compressed and emailed.
 # $2 = email to send the file to.
 # NOTE: Password of 1234 will be used to circumvent email virus scans.
@@ -23,7 +25,8 @@
 
 # Validate inputs
 if [[ -z "$1" || -z "$2" ]]; then
-  echo "Usage: $0 <folderpath> <email>"
+  echo "Purpose: Compress a folder, display details, and then email it.
+  echo "Usage: ${0##*/}  <folderpath>  <email>"
   exit 1
 fi
 

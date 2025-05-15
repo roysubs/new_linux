@@ -2,7 +2,7 @@
 
 # Usage check
 if [ $# -ne 2 ]; then
-    echo "Usage: $0 <file> <nth-most-recent>"
+    echo "Usage: ${0##*/} <file> <nth-most-recent>"
     exit 1
 fi
 

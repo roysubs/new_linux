@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# Check a port
+
 PORT=$1   # Replace with the port you want to check
 echo "ss -tuln | grep -q \":$PORT\\b\""
 if ss -tuln | grep -q ":$PORT\b"; then
