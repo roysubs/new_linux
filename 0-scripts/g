@@ -277,6 +277,13 @@ case "$option" in
         echo "====="
         CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
 
+        ~/new_linux/0-scripts/detect-vpn.sh
+        if [ $? -eq 0 ]; then
+            echo "No VPN detected, proceeding with push."
+        else
+            echo "VPN detected! Aborting push."
+            exit 1
+        fi
         if [[ $DEBUG_MODE -eq 1 ]]; then
             display_and_run "GIT_SSH_COMMAND='ssh -v' git push origin $CURRENT_BRANCH"
         else
