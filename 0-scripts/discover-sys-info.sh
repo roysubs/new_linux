@@ -45,6 +45,9 @@ CPU_CORES=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
 NUMA=$(lscpu | awk -F: '/NUMA node0 CPU\(s\)/ {print $2}' | xargs)
 LOGICAL_CORES=$(lscpu | awk -F: '/Thread\(s\) per core/ {print $2}' | xargs)
 
+# Get information about X server (if available)
+X_SERVER=$(ps -e | grep -E 'xfce|mate|gnome|kde|cinnamon|lxde|openbox|fluxbox|i3')
+
 # Get memory information
 TOTAL_MEMORY=$(free -g | awk '/Mem:/ {print $2}')
 
@@ -56,7 +59,7 @@ UPTIME=$(uptime -p)
 IP_ADDRESSES=$(ip -o -4 addr show | awk '{print $2 ": " $4}' | sed 's/\/[0-9]*//')
 
 # Get disk space
-DISK_SPACE=$(df -h | grep -E '^/dev/' | awk '{printf "    %-10s %-5s %-5s %-5s %-5s\n", $1, $2, $3, $4, $5}')
+DISK_SPACE=$(df -h | grep -E '^/dev/' | grep -v 'loop' | awk '{printf "    %-10s %-5s %-5s %-5s %-5s\n", $1, $2, $3, $4, $5}')
 
 # Get OS info
 OS_INFO=$(lsb_release -d | cut -f2-)
@@ -81,6 +84,7 @@ Uptime:          $UPTIME
 
 Hostname:        $HOSTNAME
 OS:              $OS_INFO
+X Server:        $X_SERVER
 Domain:          ${DOMAIN:-(none)}
 Primary Owner:   $PRIMARY_OWNER
 Make/Model:      $MAKE $MODEL

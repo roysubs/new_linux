@@ -156,7 +156,7 @@ to_human() {
     elif (( size < G )); then printf "%.1f MB" "$(bc <<< "scale=1; $size/$M")"
     elif (( size < T )); then printf "%.1f GB" "$(bc <<< "scale=1; $size/$G")"
     elif (( size < P )); then printf "%.1f TB" "$(bc <<< "scale=1; $size/$T")"
-    else                   printf "%.1f PB" "$(bc <<< "scale=1; $size/$P")" # Future proofing!
+    else                      printf "%.1f PB" "$(bc <<< "scale=1; $size/$P")" # Future proofing!
     fi
 }
 
