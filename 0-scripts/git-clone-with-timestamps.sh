@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "Update a Git repository directory so that all files match the timestamps on the remote."
-echo "A default 'git clone' will set all files to the same current timestamp instead of the"
+echo "Apply the timestamps on the local repo to be the same as they are on remote as a"
+echo "default 'git clone' will set all files to the same current timestamp instead of the"
 echo "last modified timestamp on the remote repository."
 
 # Ensure we are in the root of a Git project

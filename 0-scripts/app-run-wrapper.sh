@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# =====================================================
-# Filesystem Monitoring Tool
-# =====================================================
+# Application Process Monitoring Tool
 
 # Text formatting
 BOLD="\033[1m"
@@ -16,12 +14,12 @@ RESET="\033[0m"
 
 # Help message
 if [[ "$1" == "-h" || "$1" == "--help" || -z "$1" ]]; then
-    echo -e "${BOLD}Filesystem Monitoring Tool${RESET}"
+    echo -e "${BOLD}Application Process Monitoring Tool${RESET}"
     echo "This tool monitors filesystem changes, CPU/memory usage, and timing information"
     echo "before, during, and after running an application."
     echo
     echo "Usage:"
-    echo "  ${0##*/} <command_to_run> [arguments]"
+    echo "  ${0##*/} <command_to_run> [arguments]"   # $(basename $0) replacement
     echo
     echo "Example:"
     echo "  ${0##*/} angband"

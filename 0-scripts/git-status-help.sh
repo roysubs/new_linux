@@ -23,7 +23,7 @@ explain() {
     echo -e "\033[0;37m$2\033[0m"
 }
 
-clear
+clear -x
 echo -e "\033[1;35m"
 cat << "EOF"
   ____ _ _     ____  _        _
@@ -48,10 +48,14 @@ explain "Git File States" "In Git, files can be in several different states:
 
 3. Ignored: Files that Git has been explicitly told to ignore (via .gitignore)."
 
+read -n1 -rsp $'Press any key to continue...\n'
+
 # Standard Git Status
 section "1. Standard Git Status Command"
 explain "git status" "The standard, verbose status command. Shows detailed information about the current state of the repository."
 run_command "git status"
+
+read -n1 -rsp $'Press any key to continue...\n'
 
 # Short Status Format
 section "2. Short Status Format"
@@ -64,15 +68,21 @@ explain "git status --short (or -s)" "A more concise status display. Each line s
 - D = deleted file"
 run_command "git status --short"
 
+read -n1 -rsp $'Press any key to continue...\n'
+
 # Porcelain Format
 section "3. Porcelain Status Format"
 explain "git status --porcelain" "Machine-readable format designed for scripts. Similar to --short but with guaranteed stable output format across Git versions. It uses the same status codes as the short format."
 run_command "git status --porcelain"
 
+read -n1 -rsp $'Press any key to continue...\n'
+
 # Branch Status
 section "4. Branch Status Information"
 explain "git status -sb (short with branch info)" "Shows the short status format, but includes the branch name and tracking information."
 run_command "git status -sb"
+
+read -n1 -rsp $'Press any key to continue...\n'
 
 # Verbose Status
 section "5. Verbose Status Format"
@@ -80,20 +90,28 @@ explain "git status -v (verbose)" "Shows the standard status information plus th
 echo -e "\n\033[1;33m$ git status -v\033[0m"
 echo -e "(Command not run - would show standard status with the full diff of changes)"
 
+read -n1 -rsp $'Press any key to continue...\n'
+
 # Showing Ignored Files
 section "6. Showing Ignored Files"
 explain "git status --ignored" "Shows files that are being ignored (via .gitignore) in addition to regular status information."
 run_command "git status --ignored"
 
+read -n1 -rsp $'Press any key to continue...\n'
+
 # Showing Only Ignored Files
 explain "git status --ignored --porcelain | grep '^!!'" "Shows only ignored files in porcelain format - this is the most reliable method."
 run_command "git status --ignored --porcelain | grep '^!!' || echo 'No ignored files found'"
+
+read -n1 -rsp $'Press any key to continue...\n'
 
 # Different ways to see ignored files
 section "7. Other Ways To See Ignored Files"
 explain "git check-ignore *" "Tests which files are being ignored by Git."
 echo -e "\n\033[1;33m$ find . -type f -not -path '*/\.git/*' | git check-ignore --stdin\033[0m"
 find . -type f -not -path '*/\.git/*' | git check-ignore --stdin 2>/dev/null || echo 'No ignored files found or command failed'
+
+read -n1 -rsp $'Press any key to continue...\n'
 
 # Stashed Changes
 section "8. Working with Stashed Changes"
@@ -103,6 +121,8 @@ run_command "git stash list || echo 'No stashes found'"
 explain "git stash show" "Shows the changes recorded in the stash as a diff."
 run_command "git stash show 2>/dev/null || echo 'No stashes to show or empty stash'"
 
+read -n1 -rsp $'Press any key to continue...\n'
+
 # Ensure proper error handling for both commands
 echo -e "\n\033[1;32m🔍 Testing if stash exists:\033[0m"
 if git stash list | grep -q .; then
@@ -110,6 +130,8 @@ if git stash list | grep -q .; then
 else
     echo "No stashes found in this repository"
 fi
+
+read -n1 -rsp $'Press any key to continue...\n'
 
 # Merge Conflicts
 section "9. Detecting Merge Conflicts"
@@ -120,6 +142,8 @@ explain "Finding merge conflicts in files" "You can search for conflict markers 
 echo -e "\n\033[1;33m$ grep -l -r \"<<<<<<\" .\033[0m"
 # Actually run the command - it's harmless, just searches for conflict markers
 grep -l -r "<<<<<<" . 2>/dev/null || echo "No conflict markers found in files"
+
+read -n1 -rsp $'Press any key to continue...\n'
 
 # Explaining status symbols in prompt
 section "10. Understanding Status Symbols in Git Prompts"
