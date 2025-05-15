@@ -1,0 +1,28 @@
+🛠 Optional Enhancements You Might Consider
+Color output:
+
+Use tput setaf N for colorizing headers, sizes, warnings.
+
+Example: make "[Loose Files]" gray or italic.
+
+Depth control:
+
+Currently only scans direct children. Add a --depth N to allow scanning sub-subdirectories.
+
+JSON output option (--json):
+
+Useful for piping data into other scripts or tools.
+
+Interactive mode:
+
+Add an --interactive flag to allow expanding into subdirs.
+
+Parallelization:
+
+Consider using GNU Parallel or backgrounding du calls for large directories.
+
+Smart bar scaling:
+
+Right now, small items get invisible bars. Consider a log scale or minimum bar width.
+
+Would you like me to turn this into a reusable tool with a man page and bash-completion file, or help modularize it into functions for maintainability?

@@ -224,9 +224,9 @@ n()   { cd ~/new_linux || return; ls; }              # Jump to new_linux
 # Tools and Jump functions for personal folder (could be in a separate .bashrc-personal, but fine to leave here for now)
 # Use 'D' to jump to my the D variable Dv, and can use the variable like this:   mv *.mp4 \$Dv/   # Easy access for defined locations like this
 Dv=\"/mnt/sdc1/Downloads\"; D()  { cd \"\$Dv\" || echo \"Dir '\$Dv' not present\"; return; ls; }  # Jump to my personal Downloads folder
-DFv=\"\$Dv/0\\ Films\"; DF() { cd \"\$DFv\" || echo \"Dir '\$DFv' not present\"; return; ls; }  # Jump to '0 Films'
-DTv=\"\$Dv/0\\ TV\"; DT() { cd \"\$DTv\" || echo \"Dir '\$DTv' not present\"; return; ls; }     # Jump to '0 TV'
-DMv=\"\$Dv/0\\ Music\"; DM() { cd \"\$DMv\" || echo \"Dir '\$DMv' not present\"; return; ls; }  # Jump to '0 Music'
+DFv=\"\$Dv/0 Films\"; DF() { cd \"\$DFv\" 2>/dev/null && ls || echo \"Dir '\$DFv' not present\"; }  # Jump to '0 Films'
+DTv=\"\$Dv/0 TV\"; DT() { cd \"\$DTv\" 2>/dev/null && ls || echo \"Dir '\$DTv' not present\"; }     # Jump to '0 TV'
+DMv=\"\$Dv/0 Music\"; DM() { cd \"$DMv\" 2>/dev/null && ls || echo \"Dir '\$DMv' not present\"; }  # Jump to '0 Music'
 white() { cd ~/192.168.1.29-d || echo \"Directory not present\"; return; ls; }  # Jump to my 'WHITE' Win11 PC SMB share
 "
 

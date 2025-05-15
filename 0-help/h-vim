@@ -17,7 +17,7 @@ Getting up and running with Vim after a break can be <F2><F2><F2>
     - `C-v` (or `C-q`): VISUAL BLOCK (then Shift+i to insert on every line), `V` (Shift+v): VISUAL LINE, `v`: VISUAL MODE. `C-q` works also for VISUAL BLOCK due to `C-v` being a common terminal mapping.
 
 - **Neovim vs Vim**:
-    - Neovim (nvim) is a more modern version of Vim, with better support for plugins and features.
+    - Neovim (nvim) is a more modern version of Vim, with better support for plugins and features, :terminal instead of Ctrl+Z, etc
     - e.g. by default in Neovim, `:%s/Text/Replace/` will live-preview replacements on all affected lines, and indentation is automated for most languages (for `if-else` keywords etc) etc
 
 - **Breaking Out to Shell (bash jobs Ctrl+Z, fg, bg, and :sh)**:

@@ -72,32 +72,26 @@ fi
 echo "Calculating directory sizes in: $(realpath "$DIR")"
 echo "(using ${SIZE_MODE_DESC})"
 
-declare -A SIZES        # Associative array for directory sizes
-declare -A NUM_FILES    # Associative array for file counts (if -c)
-declare -A NUM_DIRS     # Associative array for directory counts (if -c)
+# Initialize associative arrays
+declare -A SIZES=()     # Associative array for directory sizes
+declare -A NUM_FILES=() # Associative array for file counts (if -c)
+declare -A NUM_DIRS=()  # Associative array for directory counts (if -c)
 TOTAL_SIZE=0            # Running total size (subdirs + loose files)
 LOOSE_TOTAL=0           # Running total size for loose files only
+LOOSE_FILE_COUNT=0      # Count of loose files (for -c option)
 
 # --- Collect Subdirectory Sizes ---
 # Iterate through items in the target directory ending with '/' (directories)
 for d in "$DIR"/*/; do
-    # echo "Checking: $d"
+    # Skip if not a valid directory path
+    [[ -d "$d" && ! -L "$d" ]] || continue
 
-    if [[ ! -d "$d" ]]; then
-        echo "  Skipped '$d' (not a directory)"
-        continue
-    fi
-    if [[ -L "$d" ]]; then
-        echo "  Skipped '$d' (symlink)"
-        continue
-    fi
-    
     # Check if stat command works on this directory
     if ! stat_output=$(stat -c %d "$d" 2>/dev/null); then
         echo "  Skipped '$d' (cannot stat)"
         continue
     fi
-    
+
     # Only do mount point check if stat was successful
     if [[ "$stat_output" != "$(stat -c %d "$DIR" 2>/dev/null)" ]]; then
         echo "  Skipped '$d' (mount point)"
@@ -126,16 +120,27 @@ for d in "$DIR"/*/; do
     fi
 done
 
-# --- Collect Loose File Sizes ---
-# Find items in the target directory (-mindepth 1 -maxdepth 1) that are files (-type f)
-while IFS= read -r -d '' file 2>/dev/null || [[ -n "$file" ]]; do
-    # Run du with the selected flags on the individual file
-    if size=$($SUDO du "${DU_FLAGS[@]}" "$file" 2>/dev/null | cut -f1); then
-        if [[ "$size" =~ ^[0-9]+$ ]]; then
-            (( LOOSE_TOTAL += size ))     # Add to the loose file total
-        fi
+# --- Count and Collect Loose File Sizes ---
+if [[ -d "$DIR" ]]; then
+    # Create a temporary array to store found files
+    mapfile -d $'\0' loose_files < <($SUDO find "$DIR" -mindepth 1 -maxdepth 1 -type f -print0 2>/dev/null || echo)
+    
+    # Count loose files if showing counts
+    if $SHOW_COUNTS; then
+        LOOSE_FILE_COUNT=${#loose_files[@]}
     fi
-done < <($SUDO find "$DIR" -mindepth 1 -maxdepth 1 -type f -print0 2>/dev/null || echo)
+    
+    # Calculate the size of each loose file
+    for file in "${loose_files[@]}"; do
+        [[ -n "$file" ]] || continue
+        
+        if size=$($SUDO du "${DU_FLAGS[@]}" "$file" 2>/dev/null | cut -f1); then
+            if [[ "$size" =~ ^[0-9]+$ ]]; then
+                (( LOOSE_TOTAL += size ))
+            fi
+        fi
+    done
+fi
 
 # Add loose file total to the grand total
 (( TOTAL_SIZE += LOOSE_TOTAL ))
@@ -179,23 +184,25 @@ if [[ ${#SIZES[@]} -gt 0 || $LOOSE_TOTAL -gt 0 ]]; then
     fi
 
     # --- Sorting ---
-    declare -a sorted_names # Array to hold sorted directory names
-    if $SORT_BY_NAME; then
-        # Sort keys (directory names) alphabetically
-        mapfile -t sorted_names < <(printf "%s\n" "${!SIZES[@]}" | sort)
-    else
-        # Sort by size (descending)
-        # Print "name size", sort numerically on 2nd field (-k2 -nr), print only 1st field (name)
-        declare -a temp_sorted_names
-        while read -r name size; do
-            temp_sorted_names+=("$name")
-        done < <(
-             for k in "${!SIZES[@]}"; do
-                 # Use printf for safer handling of names potentially starting with '-'
-                 printf "%s %s\n" "$k" "${SIZES[$k]}"
-             done | sort -k2 -nr
-        )
-        sorted_names=("${temp_sorted_names[@]}")
+    declare -a sorted_names=() # Array to hold sorted directory names
+    if [[ ${#SIZES[@]} -gt 0 ]]; then  # Only try to sort if we have entries
+        if $SORT_BY_NAME; then
+            # Sort keys (directory names) alphabetically
+            mapfile -t sorted_names < <(printf "%s\n" "${!SIZES[@]}" | sort)
+        else
+            # Sort by size (descending)
+            # Print "name size", sort numerically on 2nd field (-k2 -nr), print only 1st field (name)
+            declare -a temp_sorted_names=()
+            while read -r name size; do
+                temp_sorted_names+=("$name")
+            done < <(
+                 for k in "${!SIZES[@]}"; do
+                     # Use printf for safer handling of names potentially starting with '-'
+                     printf "%s %s\n" "$k" "${SIZES[$k]}"
+                 done | sort -k2 -nr
+            )
+            sorted_names=("${temp_sorted_names[@]}")
+        fi
     fi
 
     # --- Apply -top N Filter ---
@@ -241,7 +248,7 @@ if [[ ${#SIZES[@]} -gt 0 || $LOOSE_TOTAL -gt 0 ]]; then
         bar=$(printf "%-${barlen}s" "o" | tr ' ' 'o')
 
         if $SHOW_COUNTS; then
-             printf "%-*s %*s  %10s %10s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "-" "-" "$bar"
+             printf "%-*s %*s  %10s %10s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "$LOOSE_FILE_COUNT" "-" "$bar"
         else
              printf "%-*s %*s  [%s]\n" "$name_pad" "** Loose Files:" "$size_pad" "$hsize" "$bar"
         fi
