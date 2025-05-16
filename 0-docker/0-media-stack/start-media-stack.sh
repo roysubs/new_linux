@@ -1,5 +1,8 @@
 #!/bin/bash
 
+RED='\e[0;31m'
+NC='\033[0m'
+
 # Example of a complete stack
 
 set -e # Exit immediately if a command exits with a non-zero status. Note: We'll handle specific exits for conflicts.
@@ -279,8 +282,11 @@ echo
 
 # Prompt for VPN Provider
 echo "Select your VPN provider:"
-echo "NOTE: that these are OpenVPN connections, and *not* your regular credentials (such as your email address and password"
-echo "      used for your normal VPN login. Go to the provider site for details on how to get these credentials."
+echo -e "${RED}Notes: 1. This is NOT the normal username/password login for VPN login.${NC}"
+echo "       2. Using OpenVPN here as simpler setup (though more CPU intensive than WireGuard)."
+echo "       3. Go to your VPN provider web site, and to VPN > Manual Setup."
+echo "       4. Use the OpenVPN username and password there."
+echo
 echo "1) Surfshark (Default)"
 echo "2) NordVPN"
 echo "3) PIA (Private Internet Access)"
@@ -368,7 +374,6 @@ if [ -n "$VPN_COUNTRY_OR_REGION" ]; then
     # Ensure the value is quoted in case it contains spaces or special characters
     env_content+="VPN_COUNTRY_OR_REGION=\"${VPN_COUNTRY_OR_REGION}\""$'\n'
 fi
-
 
 echo "$env_content" > "$ENV_FILE"
 

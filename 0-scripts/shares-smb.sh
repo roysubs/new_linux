@@ -203,7 +203,7 @@ findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:spa
 
 # Detailed Samba Shares (Configured via testparm -s or custom script)
 echo -e "\n${CYAN}--- Samba Shares (Configured) ---${RESET}" | tee -a "$OUTPUT_FILE"
-echo "This shows share names [in brackets] and their corresponding paths on the server as defined in smb.conf." | tee -a "$OUTPUT_FILE"
+echo "Share names as defined in smb.conf." | tee -a "$OUTPUT_FILE"
 # Define the path to the custom table script (assumes it's in the same directory)
 # $BASH_SOURCE[0] is the path to the current script
 SCRIPT_DIR="$(dirname "$BASH_SOURCE[0]")"

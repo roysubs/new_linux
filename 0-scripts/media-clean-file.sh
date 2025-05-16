@@ -5,7 +5,7 @@ echo "Auto-rename media files to remove junk text and format as a proper name."
 # List of supported media file extensions
 media_extensions=("mkv" "avi" "mp3" "mp4" "cbr" "cbz" "mov" "flv" "wmv" "webm" "mpg" "mpeg" "jpg" "png" "gif")
 # Fast junk pattern list to strip from filenames (more specific terms go into the db file below)
-junk_pattern='\b(HDRip|HDCAM|BluRay|WEBRip|WEB[- ]DL|DVDRip|x264|XviD|TGx|YIFY|RARBG|PROPER|REPACK|EXTENDED|UNRATED|REMUX|IMAX|NF|Galaxytv|720p|1080p|2160p|4K)\b'
+junk_pattern='\b(HDRip|HDCAM|BluRay|WEBRip|WEB[- ]DL|DVDRip|x264|XviD|TGx|YIFY|RARBG|PROPER|REPACK|EXTENDED|UNRATED|REMUX|IMAX|NF|Galaxytv|720p|1080p|2160p|4K|HECV|x265-ELiTE|x265)\b'
 
 # Path to junk terms database (next to script)
 script_path="$(realpath "$0")"
