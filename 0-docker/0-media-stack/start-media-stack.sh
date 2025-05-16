@@ -3,7 +3,8 @@
 RED='\e[0;31m'
 NC='\033[0m'
 
-# Example of a complete stack
+# Check if docker is installed:
+if [ -f "docker-setup-deb-variants.sh" ]; then "./docker-setup-deb-variants.sh"; fi
 
 set -e # Exit immediately if a command exits with a non-zero status. Note: We'll handle specific exits for conflicts.
 
@@ -42,7 +43,7 @@ if [ "${#CONTAINER_NAMES[@]}" -ne "${#IMAGES[@]}" ]; then
 fi
 
 echo
-echo "Container names (and Image names):"
+echo "Container names (with Image names) that will be used:"
 # Loop using an index to pair container names and images
 for i in "${!CONTAINER_NAMES[@]}"; do
     # Get the container name at index i
@@ -55,7 +56,7 @@ done
 
 echo "" # Add a blank line for separation
 
-echo "Ports:"
+echo "Ports that will be used:"
 if [ "${#PORTS[@]}" -eq 0 ]; then
     echo "- No host ports exposed"
 else
