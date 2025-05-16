@@ -13,25 +13,19 @@ BASE_MEDIA="/mnt/media" # This is the mount point, seen by containers as the roo
 
 DOCKER_COMPOSE_FILE="docker-compose.yaml"
 
-# --- Ensure yq is installed ---
-if ! command -v yq &> /dev/null; then
-    echo "yq command not found. Installing yq..."
-    # Detect OS/architecture for yq download
-    YQ_BINARY="yq_linux_amd64"
-    case $(uname -m) in
+# Ensure mikefarah/yq is installed
+if ! command -v yq &>/dev/null || ! yq --version 2>&1 | grep -q "mikefarah/yq"; then
+    echo "Installing mikefarah/yq..."
+    YQ_ARCH=$(uname -m)
+    case "${YQ_ARCH}" in
         x86_64) YQ_BINARY="yq_linux_amd64";;
         aarch64) YQ_BINARY="yq_linux_arm64";;
-        *) echo "Unsupported architecture for yq: $(uname -m). Please install yq manually."; exit 1;;
+        *) echo "Unsupported arch: ${YQ_ARCH}"; exit 1;;
     esac
-
-    # Download yq
-    if curl -L "https://github.com/mikefarah/yq/releases/latest/download/$YQ_BINARY" -o /usr/local/bin/yq; then
-        sudo chmod +x /usr/local/bin/yq
-        echo "yq installed successfully to /usr/local/bin/."
-    else
-        echo "❌ Failed to download or install yq. Please install yq manually (e.g., via snap 'sudo snap install yq')."
-        exit 1
-    fi
+    sudo curl -L "https://github.com/mikefarah/yq/releases/latest/download/${YQ_BINARY}" -o /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq || { echo "Failed to install yq."; exit 1; }
+    echo "yq installed."
+else
+    echo "mikefarah/yq already installed."
 fi
 
 echo "🔍 Parsing docker-compose.yaml..."
