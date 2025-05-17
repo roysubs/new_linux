@@ -10,7 +10,7 @@ rm -rf ~/.config/media-stack
 
 # Stop and remove containers
 # docker rm -f gluetun qbittorrent sonarr radarr filebrowser jackett
-docker compose down
+docker compose -f docker-compose.yaml down
 
 read -p "Delete the .env file with VPN credentials? [y/N]: " del_env
 if [[ "$del_env" =~ ^[Yy]$ ]]; then
