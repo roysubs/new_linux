@@ -391,16 +391,11 @@ if command_exists "ponysay"; then
     press_any_key
 fi
 
-# --- Farewell ---
-
-clear -x
-echo "███████████████████████████████████████████████████████████████████████████████"
-echo "██                                                                           ██"
-echo "██         Hope you enjoyed the graphical terminal tools demo!               ██"
-echo "██                                                                           ██"
-echo "███████████████████████████████████████████████████████████████████████████████"
-echo ""
-echo "You can now use these commands yourself. Have fun!"
+echo "█████████████████████████████████████████████████████████████"
+echo "██                                                         ██"
+echo "██         End of graphical terminal tools demo!           ██"
+echo "██                                                         ██"
+echo "█████████████████████████████████████████████████████████████"
 echo ""
 
 exit 0

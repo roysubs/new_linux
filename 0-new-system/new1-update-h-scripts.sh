@@ -33,7 +33,7 @@ temp_file=$(mktemp)
 echo "Finding and copying h-* files containing 'mdcat' from $SOURCE_DIR to $DEST_DIR..."
 
 # Method 1: Standard grep with binary files treated as text
-find "$SOURCE_DIR" -maxdepth 1 -type f -name "h-*" | while read -r file; do
+find "$SOURCE_DIR" -maxdepth 1 -type f \( -name "h-*" -o -name "mdcat-get.sh" \) | while read -r file; do
     if grep -q "mdcat" "$file" 2>/dev/null || strings "$file" | grep -q "mdcat"; then
         # Make file executable
         chmod +x "$file"

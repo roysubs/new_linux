@@ -4,9 +4,18 @@
 
 # --- Configuration ---
 SAMBA_CONF="/etc/samba/smb.conf"
-SAMBA_USER_DB="/var/lib/samba/private/passdb.tdb" # Common location, might vary
+# SAMBA_USER_DB="/var/lib/samba/private/passdb.tdb" # Common location, might vary, not directly modified by script
 
-# --- Functions ---
+# --- Colors ---
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# --- Helper Functions ---
+
+# Function to print a command in green
+print_green_command() {
+  echo -e "${GREEN}$1${NC}"
+}
 
 # Function to check if a package is installed
 package_installed() {
@@ -17,8 +26,14 @@ package_installed() {
 install_samba() {
   echo "Samba not found. Attempting to install..."
   if [ -f /etc/debian_version ]; then
+    echo "Detected Debian/Ubuntu based system."
+    echo "Running: sudo apt update && sudo apt install -y samba samba-common-bin acl"
+    print_green_command "sudo apt update && sudo apt install -y samba samba-common-bin acl"
     sudo apt update && sudo apt install -y samba samba-common-bin acl
   elif [ -f /etc/redhat-release ]; then
+    echo "Detected Red Hat/CentOS/Fedora based system."
+    echo "Running: sudo yum clean all && sudo yum install -y samba samba-common samba-client"
+    print_green_command "sudo yum clean all && sudo yum install -y samba samba-common samba-client"
     sudo yum clean all && sudo yum install -y samba samba-common samba-client
   else
     echo "Unsupported distribution. Please install Samba manually."
@@ -26,29 +41,169 @@ install_samba() {
   fi
   if [ $? -eq 0 ]; then
     echo "Samba installed successfully."
+    # Attempt to enable and start services after install
+    echo "Attempting to enable and start Samba services."
+    print_green_command "sudo systemctl enable smbd nmbd"
+    sudo systemctl enable smbd nmbd 2>/dev/null
+    print_green_command "sudo systemctl start smbd nmbd"
+    sudo systemctl start smbd nmbd 2>/dev/null
+
+    # Fallback for older systems
+    if [ $? -ne 0 ]; then
+       print_green_command "sudo service smbd enable && sudo service nmbd enable"
+       sudo service smbd enable && sudo service nmbd enable 2>/dev/null
+       print_green_command "sudo service smbd start && sudo service nmbd start"
+       sudo service smbd start && sudo service nmbd start 2>/dev/null
+    fi
+
   else
     echo "Failed to install Samba. Please install it manually."
     exit 1
   fi
 }
 
-# Function to add a Samba user
-add_samba_user() {
-  local user="$1"
-  # Check if the system user exists
-  if ! id "$user" &> /dev/null; then
-    echo "System user '$user' does not exist. Please create it first."
-    exit 1
-  fi
-  echo "Adding Samba user '$user'."
-  sudo smbpasswd -a "$user"
-  if [ $? -eq 0 ]; then
-    echo "Samba user '$user' added."
+# Function to check firewall status
+check_firewall() {
+  echo "--- Checking Firewall Status ---"
+  local firewall_action_needed=0
+
+  if command -v ufw &> /dev/null; then
+    ufw_status=$(sudo ufw status | grep Status)
+    echo "UFW status: $ufw_status"
+    if [[ "$ufw_status" == "Status: active" ]]; then
+      ufw_samba_rules=$(sudo ufw status | grep -E '137|138|139|445|samba')
+      if [[ "$ufw_samba_rules" == *"/TCP ALLOW"* && "$ufw_samba_rules" == *"/UDP ALLOW"* ]] || [[ "$ufw_samba_rules" == *"samba ALLOW"* ]]; then
+        echo "UFW is active and Samba ports appear to be allowed."
+      else
+        echo "UFW is active, but Samba ports might be blocked."
+        firewall_action_needed=1
+      fi
+    else
+      echo "UFW is installed but not active. Firewall rules might be managed by iptables or firewalld, or traffic is currently unrestricted."
+      echo "It is recommended to use a firewall. If you want to use UFW, you can enable it with 'sudo ufw enable'."
+    fi
+  elif command -v firewall-cmd &> /dev/null; then
+    firewalld_status=$(sudo systemctl is-active firewalld)
+    echo "Firewalld status: $firewalld_status"
+    if [[ "$firewalld_status" == "active" ]]; then
+      if sudo firewall-cmd --zone=public --query-service=samba &> /dev/null || \
+         sudo firewall-cmd --zone=trusted --query-service=samba &> /dev/null || \
+         sudo firewall-cmd --list-all --zone=public | grep samba | grep yes &> /dev/null; then # More robust check
+        echo "Firewalld is active and Samba service appears to be allowed in a zone."
+      else
+        echo "Firewalld is active, but Samba service is not allowed in common zones (public/trusted)."
+        firewall_action_needed=1
+      fi
+    else
+       echo "Firewalld is installed but not active. Firewall rules might be managed by iptables or ufw, or traffic is currently unrestricted."
+       echo "It is recommended to use a firewall. If you want to use Firewalld, you can enable it with 'sudo systemctl enable --now firewalld'."
+    fi
   else
-    echo "Failed to add Samba user '$user'. Aborting."
-    exit 1
+    echo "Neither UFW nor Firewalld found. Firewall rules are likely managed directly by iptables/nftables."
+    echo "Please manually verify your iptables/nftables rules to ensure Samba ports (UDP 137,138, TCP 139,445) are open."
+    echo "You can view current iptables rules with 'sudo iptables -L -v -n'."
+    # We can't easily check specific iptables rules here, so we assume manual check is needed if no managed firewall
+    firewall_action_needed=0 # Don't prompt for iptables changes automatically
+  fi
+
+  if [ "$firewall_action_needed" -eq 1 ]; then
+     read -p "Samba ports may be blocked by the firewall. Would you like the script to attempt to open them with the detected firewall? (y/n): " -n 1 -r
+     echo ""
+     if [[ $REPLY =~ ^[Yy]$ ]]; then
+       if command -v ufw &> /dev/null && [[ "$ufw_status" == "Status: active" ]]; then
+         echo "Running: sudo ufw allow samba && sudo ufw reload"
+         print_green_command "sudo ufw allow samba && sudo ufw reload"
+         sudo ufw allow samba && sudo ufw reload
+         echo "UFW rules updated."
+       elif command -v firewall-cmd &> /dev/null && [[ "$firewalld_status" == "active" ]]; then
+         # Attempt to add to public zone, user can adjust later
+         echo "Running: sudo firewall-cmd --permanent --add-service=samba --zone=public && sudo firewall-cmd --reload"
+         print_green_command "sudo firewall-cmd --permanent --add-service=samba --zone=public && sudo firewall-cmd --reload"
+         sudo firewall-cmd --permanent --add-service=samba --zone=public
+         sudo firewall-cmd --reload
+         echo "Firewalld rules updated (added to public zone)."
+       else
+         echo "Could not automatically update firewall rules. Please do so manually."
+       fi
+     else
+       echo "Please manually ensure your firewall allows Samba traffic."
+     fi
+  fi
+
+  echo "----------------------------------"
+}
+
+
+# Function to add and enable a Samba user
+add_and_enable_samba_user() {
+  local user="$1"
+  # Check if the system user exists - already done before calling this function
+  echo "Checking Samba user '$user' status."
+
+  # Check if user exists in Samba db and is enabled
+  local samba_user_status=$(sudo pdbedit -L 2>/dev/null | grep "^$user:")
+
+  if [ -z "$samba_user_status" ]; then
+    echo "Samba user '$user' not found in Samba database. Adding user."
+    echo "Running: sudo smbpasswd -a '$user'"
+    print_green_command "sudo smbpasswd -a '$user'"
+    # smbpasswd -a will prompt for password if run interactively
+    sudo smbpasswd -a "$user"
+    if [ $? -eq 0 ]; then
+      echo "Samba user '$user' added."
+      # smbpasswd -a usually enables, but let's be sure
+      echo "Ensuring Samba user '$user' is enabled."
+      echo "Running: sudo smbpasswd -e '$user'"
+      print_green_command "sudo smbpasswd -e '$user'"
+      sudo smbpasswd -e "$user"
+       if [ $? -eq 0 ]; then
+         echo "Samba user '$user' is enabled."
+         return 0 # Indicate success
+       else
+         echo "Failed to enable Samba user '$user'. Aborting."
+         return 1 # Indicate failure
+       fi
+    else
+      echo "Failed to add Samba user '$user'. Aborting."
+      return 1 # Indicate failure
+    fi
+  else
+    echo "Samba user '$user' found in Samba database."
+    if [[ "$samba_user_status" == *"::[UD]*" ]]; then
+       echo "Samba user '$user' is currently disabled."
+       echo "Running: sudo smbpasswd -e '$user'"
+       print_green_command "sudo smbpasswd -e '$user'"
+       sudo smbpasswd -e "$user"
+       if [ $? -eq 0 ]; then
+         echo "Samba user '$user' enabled."
+         return 0 # Indicate success
+       else
+         echo "Failed to enable Samba user '$user'. Aborting."
+         return 1 # Indicate failure
+       fi
+    else
+      echo "Samba user '$user' is already enabled."
+      # Offer to change password if needed
+      read -p "Samba user '$user' is already enabled. Do you want to change their Samba password? (y/n): " -n 1 -r
+      echo ""
+      if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "Running: sudo smbpasswd '$user'"
+        print_green_command "sudo smbpasswd '$user'"
+        sudo smbpasswd "$user"
+         if [ $? -eq 0 ]; then
+           echo "Samba password for '$user' updated."
+           return 0 # Indicate success
+         else
+           echo "Failed to change Samba password for '$user'."
+           return 1 # Indicate failure
+         fi
+      else
+         return 0 # Indicate success (user exists and is enabled, no password change requested)
+      fi
+    fi
   fi
 }
+
 
 # Function to configure the Samba share
 configure_share() {
@@ -58,41 +213,134 @@ configure_share() {
   local guest_ok="$4"
   local valid_users="$5"
 
-  echo "Configuring Samba share '$share_name' for path '$share_path'."
+  echo "--- Configuring Samba Share ---"
+  echo "Share Name: '$share_name'"
+  echo "Share Path: '$share_path'"
+  echo "Writable: '$writable'"
+  echo "Guest Access: '$guest_ok'"
+  if [ -n "$valid_users" ]; then
+    echo "Valid Users: '$valid_users'"
+  fi
+  echo "-----------------------------"
+
 
   # Ensure the directory exists
   if [ ! -d "$share_path" ]; then
-    echo "Creating directory '$share_path'."
+    echo "Directory '$share_path' does not exist. Creating it."
+    echo "Running: sudo mkdir -p '$share_path'"
+    print_green_command "sudo mkdir -p '$share_path'"
     sudo mkdir -p "$share_path"
     if [ $? -ne 0 ]; then
       echo "Failed to create directory '$share_path'. Aborting."
       exit 1
     fi
+  else
+    echo "Directory '$share_path' already exists."
   fi
 
-  # Set appropriate permissions (adjust as needed for your use case)
-  # This example gives ownership to nobody:nogroup for simplicity with guest access,
-  # or the user for authenticated access. You might need more granular permissions.
+  # --- Check and Set Directory Permissions ---
+  echo "--- Checking and Setting Directory Permissions ---"
+  local current_permissions=$(stat -c "%a" "$share_path")
+  local current_owner=$(stat -c "%U" "$share_path")
+  local current_group=$(stat -c "%G" "$share_path")
+  local permissions_ok=0
+
+  echo "Current permissions for '$share_path': $current_permissions (Owner: $current_owner, Group: $current_group)"
+
   if [ "$guest_ok" = "yes" ]; then
-    sudo chown -R nobody:nogroup "$share_path"
-    sudo chmod -R 0777 "$share_path" # Be cautious with 777 in production
+    # For guest access, "others" need read and execute (for directories)
+    # If writable, "others" need write as well.
+     # Simple check: are 'others' permissions sufficient for read/write?
+     local others_perm=$(echo "$current_permissions" | cut -c 3) # Get the third digit (others)
+     if [ "$writable" = "yes" ]; then
+       if [ "$others_perm" -ge 6 ]; then # Need at least rw (6)
+         permissions_ok=1
+       fi
+     else
+       if [ "$others_perm" -ge 4 ]; then # Need at least r (4)
+         permissions_ok=1
+       fi
+     fi
+
+     if [ "$permissions_ok" -eq 0 ]; then
+       echo "Permissions ($current_permissions) might be too restrictive for guest access."
+       echo "Recommended for guest write: 0777 (allows anyone full access - use with caution!) or 0775 (owner/group rwx, others rx) with nobody:nogroup ownership."
+       echo "Recommended for guest read-only: 0755 (owner rwx, group/others rx) with nobody:nogroup ownership."
+
+       read -p "Would you like the script to attempt to set permissions for guest access (0777 for writable, 0755 for read-only) with nobody:nogroup ownership? (y/n): " -n 1 -r
+       echo ""
+       if [[ $REPLY =~ ^[Yy]$ ]]; then
+         echo "Setting ownership to nobody:nogroup and permissions."
+         echo "Running: sudo chown -R nobody:nogroup '$share_path'"
+         print_green_command "sudo chown -R nobody:nogroup '$share_path'"
+         sudo chown -R nobody:nogroup "$share_path"
+
+         if [ "$writable" = "yes" ]; then
+            echo "Running: sudo chmod -R 0777 '$share_path' (for guest write - use with caution!)"
+            print_green_command "sudo chmod -R 0777 '$share_path'"
+            sudo chmod -R 0777 "$share_path"
+         else
+            echo "Running: sudo chmod -R 0755 '$share_path' (for guest read-only)"
+            print_green_command "sudo chmod -R 0755 '$share_path'"
+            sudo chmod -R 0755 "$share_path"
+         fi
+         echo "Permissions and ownership updated."
+       else
+         echo "Please manually set appropriate permissions for guest access."
+       fi
+
+     else
+        echo "Current permissions ($current_permissions) appear potentially sufficient for guest access."
+     fi
+
   elif [ -n "$valid_users" ]; then
-    # Assuming the first user in the list will own the directory for simplicity
-    local owner_user=$(echo "$valid_users" | cut -d',' -f1)
-    if id "$owner_user" &> /dev/null; then
-      sudo chown -R "$owner_user":"$owner_user" "$share_path"
-      sudo chmod -R 0770 "$share_path"
+    # For authenticated access, the connecting user needs rwx via owner, group, or ACLs.
+    # The script by default attempts to set owner to the first user and chmod 0770.
+    local expected_owner=$(echo "$valid_users" | cut -d',' -f1)
+    local expected_perms="770" # rwx for owner and group, no access for others
+    local first_user_group=$(id -gn "$expected_owner" 2>/dev/null)
+
+    # Simple check: Is owner the first user AND permissions 770?
+    if [ "$current_owner" = "$expected_owner" ] && [ "$current_permissions" = "$expected_perms" ] && [ "$current_group" = "$first_user_group" ]; then
+       permissions_ok=1
+       echo "Current permissions, ownership, and group appear suitable for authenticated access by '$expected_owner'."
     else
-      echo "Warning: Owner user '$owner_user' not found. Directory permissions may need manual adjustment."
-       sudo chmod -R 0770 "$share_path" # Still set restrictive permissions initially
+       echo "Permissions ($current_permissions), ownership ($current_owner), or group ($current_group) might not be ideal for authenticated access by '$expected_owner'."
+       echo "Recommended: Ownership by the primary user ('$expected_owner'), group ownership by their primary group ('$first_user_group'), and permissions 0770 (owner and group rwx, others no access)."
+       echo "If multiple users need write access, consider creating a dedicated group, making it the group owner (chown :<group>), and setting permissions to 2770 (sticky bit + group write)."
+
+
+       read -p "Would you like the script to attempt to set ownership to '$expected_owner':'$first_user_group' and permissions to 0770? (y/n): " -n 1 -r
+       echo ""
+       if [[ $REPLY =~ ^[Yy]$ ]]; then
+         echo "Setting ownership to '$expected_owner':'$first_user_group' and permissions to 0770."
+         echo "Running: sudo chown -R '$expected_owner':'$first_user_group' '$share_path'"
+         print_green_command "sudo chown -R '$expected_owner':'$first_user_group' '$share_path'"
+         sudo chown -R "$expected_owner":"$first_user_group" "$share_path"
+
+         echo "Running: sudo chmod -R 0770 '$share_path'"
+         print_green_command "sudo chmod -R 0770 '$share_path'"
+         sudo chmod -R 0770 "$share_path"
+         echo "Permissions and ownership updated."
+       else
+         echo "Please manually set appropriate permissions for authenticated access."
+       fi
     fi
+
   else
-     sudo chmod -R 0700 "$share_path" # Default to restrictive if no guest and no users
+     # No guest and no valid users - likely restricted by global settings or expecting root/admin access
+     echo "No guest or valid users specified. Access will depend on global Samba settings and existing file permissions."
+     echo "Current permissions ($current_permissions) may be too restrictive."
+     # Don't offer to change automatically in this ambiguous case
   fi
+  echo "--------------------------------------------------"
 
 
   # Add the share definition to smb.conf
+  echo "Appending share configuration to $SAMBA_CONF."
+  print_green_command "sudo tee -a '$SAMBA_CONF'"
   echo "" | sudo tee -a "$SAMBA_CONF"
+  echo "; --- Share '$share_name' created by create-share-smb.sh ---" | sudo tee -a "$SAMBA_CONF"
   echo "[$share_name]" | sudo tee -a "$SAMBA_CONF"
   echo "  comment = Samba share for $share_path" | sudo tee -a "$SAMBA_CONF"
   echo "  path = $share_path" | sudo tee -a "$SAMBA_CONF"
@@ -101,54 +349,86 @@ configure_share() {
   if [ "$writable" = "yes" ]; then
     echo "  read only = no" | sudo tee -a "$SAMBA_CONF"
     echo "  writable = yes" | sudo tee -a "$SAMBA_CONF"
+    # Consider adding create mask and directory mask for finer control
+    # echo "  create mask = 0664" | sudo tee -a "$SAMBA_CONF" | sudo tee -a "$SAMBA_CONF"
+    # echo "  directory mask = 0775" | sudo tee -a "$SAMBA_CONF" | sudo tee -a "$SAMBA_CONF"
   else
-    echo "  read only = yes" | sudo tee -a "$SAMBA_CONF"
+    echo "  read only = yes" | sudo tee -a "$SAMBA_CONF" # Ensure read only is yes if not writable
     echo "  writable = no" | sudo tee -a "$SAMBA_CONF"
   fi
 
   if [ "$guest_ok" = "yes" ]; then
     echo "  guest ok = yes" | sudo tee -a "$SAMBA_CONF"
+    # Consider mapping to a specific guest account for better control
+    # echo "  guest account = nobody" | sudo tee -a "$SAMBA_CONF" | sudo tee -a "$SAMBA_CONF"
   else
     echo "  guest ok = no" | sudo tee -a "$SAMBA_CONF"
   fi
 
   if [ -n "$valid_users" ]; then
     echo "  valid users = $valid_users" | sudo tee -a "$SAMBA_CONF"
+    # Consider adding write list or force user/group for more control
+    # echo "  write list = $valid_users" | sudo tee -a "$SAMBA_CONF" | sudo tee -a "$SAMBA_CONF"
+    # echo "  force user = $(echo "$valid_users" | cut -d',' -f1)" | sudo tee -a "$SAMBA_CONF" | sudo tee -a "$SAMBA_CONF"
   fi
+   # Add force group if authenticated and multiple users might need write access and using group permissions
+   if [ -n "$valid_users" ] && [ "$writable" = "yes" ]; then
+       local first_user=$(echo "$valid_users" | cut -d',' -f1)
+       local first_user_group=$(id -gn "$first_user" 2>/dev/null)
+       if [ -n "$first_user_group" ]; then
+           echo "  force group = $first_user_group" | sudo tee -a "$SAMBA_CONF"
+           echo "Consider adding other valid users to the group '$first_user_group' for shared write access."
+       fi
+   fi
+
+
+  echo "; --- End of Share '$share_name' configuration ---" | sudo tee -a "$SAMBA_CONF"
 
   echo "Samba configuration for '$share_name' added to $SAMBA_CONF."
 }
 
 # Function to test Samba configuration
 test_samba_config() {
-  echo "Testing Samba configuration..."
+  echo "--- Testing Samba Configuration ---"
+  echo "Running: testparm -s '$SAMBA_CONF'"
+  print_green_command "testparm -s '$SAMBA_CONF'"
   testparm -s "$SAMBA_CONF"
   if [ $? -eq 0 ]; then
     echo "Samba configuration is OK."
+    return 0 # Indicate success
   else
     echo "Samba configuration has errors. Please check $SAMBA_CONF."
-    exit 1
+    return 1 # Indicate failure
   fi
+  echo "-----------------------------------"
 }
 
 # Function to restart Samba service
 restart_samba() {
-  echo "Restarting Samba service..."
+  echo "--- Restarting Samba Service ---"
   if systemctl is-active smbd &> /dev/null; then
+    echo "Using systemctl to restart smbd and nmbd."
+    echo "Running: sudo systemctl restart smbd nmbd"
+    print_green_command "sudo systemctl restart smbd nmbd"
     sudo systemctl restart smbd nmbd
   elif service smbd status &> /dev/null; then
+    echo "Using service to restart smbd and nmbd."
+    echo "Running: sudo service smbd restart && sudo service nmbd restart"
+    print_green_command "sudo service smbd restart && sudo service nmbd restart"
     sudo service smbd restart && sudo service nmbd restart
   else
     echo "Could not determine Samba service name or status. Please restart Samba manually."
-    exit 1
+    return 1 # Indicate failure
   fi
 
   if [ $? -eq 0 ]; then
     echo "Samba service restarted successfully."
+    return 0 # Indicate success
   else
     echo "Failed to restart Samba service. Please restart it manually."
-    exit 1
+    return 1 # Indicate failure
   fi
+  echo "--------------------------------"
 }
 
 # --- Main Script ---
@@ -159,6 +439,7 @@ SHARE_NAME=""
 WRITABLE="no"
 GUEST_OK="no"
 VALID_USERS=""
+ASSUME_YES="no"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -167,15 +448,17 @@ while [[ "$#" -gt 0 ]]; do
         -w|--writable) WRITABLE="yes" ;;
         -g|--guest) GUEST_OK="yes" ;;
         -u|--users) VALID_USERS="$2"; shift ;;
+        -y|--yes) ASSUME_YES="yes" ;;
         -h|--help)
             echo "Usage: create-share-smb.sh [OPTIONS]"
             echo "Options:"
             echo "  -p, --path <path>     : Absolute path to the directory to share (required)"
             echo "  -n, --name <name>     : Name of the Samba share (defaults to the last part of the path)"
-            echo "  -w, --writable        : Allow writing to the share (default is read-only)"
-            echo "  -g, --guest           : Allow guest access without a password"
-            echo "  -u, --users <user1,user2,...>: Comma-separated list of valid users for authenticated access"
-            echo "  -h, --help            : Show this help message"
+            echo "  -w|--writable        : Allow writing to the share (default is read-only)"
+            echo "  -g|--guest           : Allow guest access without a password"
+            echo "  -u|--users <user1,user2,...>: Comma-separated list of valid users for authenticated access"
+            echo "  -y|--yes             : Automatically answer yes to prompts (use with caution)"
+            echo "  -h|--help            : Show this help message"
             exit 0
             ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
@@ -201,35 +484,93 @@ if [ "$GUEST_OK" = "yes" ] && [ -n "$VALID_USERS" ]; then
   exit 1
 fi
 
+# --- Pre-configuration Checks ---
+
 # Check if Samba is installed, install if not
 if ! package_installed samba; then
-  install_samba
+  if [ "$ASSUME_YES" = "yes" ]; then
+    install_samba
+  else
+    read -p "Samba is not installed. Do you want to install it now? (y/n): " -n 1 -r
+    echo "" # Add a newline after the read prompt
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      install_samba
+    else
+      echo "Samba is required to create a share. Aborting."
+      exit 1
+    fi
+  fi
 fi
 
-# Add Samba users if specified
+# Check firewall status and prompt user
+check_firewall
+
+# Check if system users exist and add/enable Samba users if specified
 if [ -n "$VALID_USERS" ]; then
+  echo "--- Checking System Users and Samba User Status ---"
   IFS=',' read -ra USERS_ARRAY <<< "$VALID_USERS"
   for user in "${USERS_ARRAY[@]}"; do
-    add_samba_user "$user"
+    # Check if system user exists
+    if ! id "$user" &> /dev/null; then
+      echo "Error: System user '$user' specified in --users does not exist."
+      echo "Please create the system user '$user' before running this script."
+      exit 1 # Abort if a specified user doesn't exist
+    else
+      echo "System user '$user' exists."
+    fi
+
+    # Add and enable Samba user
+    if ! add_and_enable_samba_user "$user"; then
+      exit 1 # Abort if adding/enabling Samba user fails
+    fi
   done
+  echo "-----------------------------------"
 fi
 
-# Configure the share in smb.conf
+
+# --- Configuration Steps ---
+
+# Configure the share in smb.conf (includes permission check/set)
 configure_share "$SHARE_NAME" "$SHARE_PATH" "$WRITABLE" "$GUEST_OK" "$VALID_USERS"
 
 # Test the Samba configuration
-test_samba_config
+if ! test_samba_config; then
+  echo "Samba configuration test failed. Please fix the errors in $SAMBA_CONF before proceeding."
+  exit 1
+fi
 
 # Restart Samba service
-restart_samba
-
-echo "Samba share '$SHARE_NAME' at path '$SHARE_PATH' created and configured."
-echo "You should now be able to connect from a remote system."
-if [ "$GUEST_OK" = "yes" ]; then
-  echo "Access is allowed for guests."
-elif [ -n "$VALID_USERS" ]; then
-  echo "Access is restricted to users: $VALID_USERS."
+if ! restart_samba; then
+  echo "Failed to restart Samba service. Please restart it manually."
+  exit 1
 fi
-echo "Remember to configure your firewall to allow Samba traffic (usually UDP/137, UDP/138, TCP/139, TCP/445)."
+
+# --- Post-configuration Information ---
+echo "--- Share Creation Summary ---"
+echo "Samba share '$SHARE_NAME' at path '$SHARE_PATH' created and configured."
+echo "Access Type:"
+if [ "$GUEST_OK" = "yes" ]; then
+  echo "  Guest access is allowed."
+  echo "  **WARNING:** Guest access with liberal file permissions (like 0777) can be a security risk."
+elif [ -n "$VALID_USERS" ]; then
+  echo "  Access is restricted to users: $VALID_USERS (requires Samba password)."
+else
+   echo "  No guest or specific users defined. Access will depend on global Samba settings and existing file permissions."
+fi
+
+echo "Writable: $WRITABLE"
+
+echo ""
+echo "Important Notes:"
+echo "1. **Firewall:** Ensure your firewall on the server is configured to allow Samba traffic (UDP 137, 138 and TCP 139, 445) from the network where the remote systems are located. The script attempted to check common firewalls and offered to open ports, but manual verification might still be needed."
+echo "2. **SELinux/AppArmor:** If you are using SELinux or AppArmor, you may need to configure them to allow Samba access to the shared directory '$SHARE_PATH'. The script does NOT configure SELinux/AppArmor."
+echo "3. **File Permissions:** The script checked and potentially adjusted basic file permissions, but for complex scenarios (multiple users, specific group writes), you may need further manual adjustment (chown, chmod, or ACLs)."
+echo "4. **Samba Users:** For authenticated access, system users must exist and be added/enabled in the Samba database (handled by the script if -u is used)."
+echo ""
+echo "Attempt to connect from a remote system now using \\\\<server_ip_address>\\$SHARE_NAME"
+echo "If connecting by name fails, try connecting by IP address: \\\\$SHARE_IP_ADDRESS\\$SHARE_NAME (replace \$SHARE_IP_ADDRESS with your server's IP)."
+echo "If connection still fails after addressing the above, try clearing Windows cached credentials and restarting the Windows Workstation service."
+echo "Review Samba logs (`sudo tail -f /var/log/samba/log.*`) for specific error messages during connection attempts."
+echo "------------------------------"
 
 exit 0
