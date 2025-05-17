@@ -1,118 +1,90 @@
-# This Docker Compose file defines a media stack using Gluetun for VPN access.
+# This Docker Compose file defines a media stack using WireGuard for VPN access.
 # All services that handle torrents or need their traffic routed through the VPN
-# are configured to use Gluetun's network stack (`network_mode: service:gluetun`).
+# are configured to use WireGuard's network stack (`network_mode: service:wireguard`).
 # Ports for accessing the Web UIs of these services from the host (or local network)
-# are mapped *on the Gluetun service itself*.
+# are mapped *on the WireGuard service itself*.
 
-# Gluetun: VPN client that routes traffic for all of the below.
+# WireGuard: VPN client that routes traffic for all of the below.
 # qBittorrent: Torrent client, Web UI 8080
 # Radarr: Movie management, Web UI 7878
 # Sonarr: TV Series management, Web UI 8989
 # Jackett: Torrent indexer proxy, Web UI 9117
-# Filebrowser: Web-based file browser, Web UI 8081. Not using Filebrowser currently as I
-# have SAMBA shares on same network, but this will be useful if making these services 
-# available on the internet to be able to use from phone etc.
+# Filebrowser: Web-based file browser, Web UI (e.g., 8081 mapped to 80 internally)
 
 services:
-
-  # Application services (qbittorrent, radarr, sonarr, jackett) need to
-  # have network_mode: "service:wireguard" for this configuration.
-  # Example for qbittorrent:
-  # qbittorrent:
-  #   image: lscr.io/linuxserver/qbittorrent
-  #   container_name: qbittorrent
-  #   network_mode: "service:wireguard" # This routes qbittorrent's traffic through wireguard
-  #   environment:
-  #     # ... other qbittorrent environment variables (PUID, PGID, TZ, etc.)
-  #   volumes:
-  #     # ... qbittorrent volumes
-
   wireguard:
-    image: lscr.io/linuxserver/wireguard # Using the linuxserver WireGuard image
+    image: lscr.io/linuxserver/wireguard:latest
     container_name: wireguard
     cap_add:
-      - NET_ADMIN   # Required for VPN tunnel creation
-      - SYS_MODULE  # May be required to load the WireGuard kernel module if not built-in
-    devices:
-      - /dev/net/tun # Required device for VPN tunnel
-    # Port mappings for accessing Web UIs of services using this container's network.
-    # Traffic hitting the Host_Port on the Linux server is forwarded by Docker through
-    # the WireGuard container to the specified Container_Internal_Port on the
-    # corresponding container using this container's network.
-    ports:
-      - 8080:8080     # -> qBittorrent's internal 8080 (Web UI)
-      - 9117:9117     # -> Jackett's internal 9117 (Web UI)
-      - 8989:8989     # -> Sonarr's internal 8989 (Web UI)
-      - 7878:7878     # -> Radarr's internal 7878 (Web UI)
-      # Add the qBittorrent *torrent* port here if you need external seeders/leechers.
-      # The specific port is configured within qBittorrent's settings (often random or manually set).
-      - 6881:6881/tcp # -> qBittorrent's internal 6881 (TCP)
-      - 6881:6881/udp # -> qBittorrent's internal 6881 (UDP)
-    volumes:
-      # Mount your WireGuard configuration file here.
-      # You NEED to create this file manually and include your PrivateKey,
-      # the server's PublicKey, Endpoint, and your assigned Address.
-      # The path on the host should be where you store your wg0.conf.
-      # The path inside the container is typically /config/wg_confs/wg0.conf for linuxserver/wireguard.
-      - ${CONFIG_ROOT}/wireguard/wg0.conf:/config/wg_confs/wg0.conf:ro
-      # Optional: Mount the modules directory if your kernel doesn't have WireGuard built-in
-      # - /lib/modules:/lib/modules
+      - NET_ADMIN
+      - SYS_MODULE  # May be needed if host kernel doesn't auto-load wireguard module
     environment:
-      # PUID and PGID might still be relevant depending on how the image handles file permissions,
-      # but less critical for the WireGuard process itself compared to application containers.
-      # Consult the linuxserver/wireguard documentation to see if these are used/needed.
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      # The Gluetun-specific firewall and local network bypass settings
-      # are NOT environment variables for linuxserver/wireguard.
-      # These are handled differently as explained below.
+      - PUID=${PUID}  # Defined in .env by start-media-stack.sh
+      - PGID=${PGID}  # Defined in .env by start-media-stack.sh
+      - TZ=${TZ}      # Defined in .env by start-media-stack.sh
+      # The linuxserver/wireguard image typically auto-detects .conf files
+      # in the /config directory. The start-media-stack.sh script will place
+      # your WireGuard config (renamed to wg0.conf) into ${CONFIG_ROOT}/wireguard
+      # on the host, which is mounted to /config inside this container.
+      #
+      # LAN access (split tunneling) for WireGuard is typically configured within
+      # the wg0.conf file itself by adjusting the AllowedIPs for the [Peer] section.
+      # For example, if your VPN peer's AllowedIPs is 0.0.0.0/0, all traffic goes
+      # through the VPN. To exclude your LAN (e.g., 192.168.1.0/24), you would
+      # need more specific routes, or ensure your wg0.conf's [Interface] Address
+      # doesn't conflict and that AllowedIPs for the [Peer] doesn't try to route
+      # your local LAN traffic to the VPN.
+    volumes:
+      # The start-media-stack.sh script will create ${CONFIG_ROOT}/wireguard
+      # and copy your .conf file into it as wg0.conf.
+      - ${CONFIG_ROOT}/wireguard:/config
+      # Recommended for kernel module access if WireGuard module isn't built into host kernel or auto-loaded.
+      - /lib/modules:/lib/modules:ro
+    ports:
+      # These ports are exposed on the WireGuard container, and traffic is routed to the
+      # respective services that use `network_mode: service:wireguard`.
+      # Format: HostPort:ContainerInternalPort (which is the port the actual service listens on)
+
+      # qBittorrent Web UI
+      - 8080:8080
+      # Jackett Web UI
+      - 9117:9117
+      # Sonarr Web UI
+      - 8989:8989
+      # Radarr Web UI
+      - 7878:7878
+      # Filebrowser Web UI (if you re-enable it and its internal port is 80)
+      # - 8081:80
+
+      # qBittorrent torrenting ports (ensure these match qBittorrent's internal settings)
+      - 6881:6881/tcp
+      - 6881:6881/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      # Add the following if you use IPv6 through WireGuard and have it enabled on your host:
+      # - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
-    # network_mode is NOT set on the VPN container itself when using the default bridge
-    # network and network_mode: service: on other containers.
-    # If using a custom bridge network, you would use the 'networks:' key here.
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent # Using LinuxServer.io image
     container_name: qbittorrent
-    # --- CRITICAL ---
-    # Use the network stack of the gluetun container.
-    # All internet bound traffic from this container will go through the VPN.
-    network_mode: "service:wireguard"
-    # --- IMPORTANT ---
-    # Do NOT define a 'ports' section directly on this service when using "network_mode: service:gluetun"
-    # Port mappings for this service are defined in the 'gluetun' service.
-    # ---------------
-    # Ensures Gluetun starts before qBittorrent
+    network_mode: "service:wireguard" # All internet bound traffic via WireGuard
     depends_on:
-      - wireguard
+      - wireguard                   # Ensures WireGuard starts before qBittorrent
     environment:
-      # User ID and Group ID for running the application inside the container
       - PUID=${PUID}
       - PGID=${PGID}
-      # Timezone setting
       - TZ=${TZ}
-      # Specify the internal port for the Web UI (matching the port mapped on Gluetun)
-      - WEBUI_PORT=8080
-      # Optional: Ensure Web UI listens on all interfaces inside the container (usually default)
-      # - WEBUI_LISTEN_IP=0.0.0.0
+      - WEBUI_PORT=8080             # Internal port for qBittorrent Web UI
     volumes:
-      # Mount the qBittorrent config directory. Path from CONFIG_ROOT environment variable.
       - ${CONFIG_ROOT}/qbittorrent:/config
-      # Mount the media downloads directory.
-      # Host path: /mnt/media/downloads, standardise on this bind mount to point at wherever downloads are held
-      # Container path: /downloads. qBittorrent will see /downloads as its root for files.
-      # You will configure qBittorrent internally to save files to paths like /downloads/movies, /downloads/tv, etc.
-      # Note: This mapping means the entire /mnt/media *is not* directly visible inside qBittorrent at its root.
       - /mnt/media/downloads:/downloads
-    restart: unless-stopped # Restart container unless it is stopped manually
+    restart: unless-stopped
 
-  radarr:   # FILM MANAGER
+  radarr:    # FILM MANAGER
     image: lscr.io/linuxserver/radarr # Using LinuxServer.io image
     container_name: radarr
-    # Use Gluetun's network stack
-    network_mode: "service:wireguard"
-    # Do NOT define 'ports' here
+    network_mode: "service:wireguard" # All internet bound traffic via WireGuard
     depends_on:
       - wireguard
     environment:
@@ -120,22 +92,14 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      # Mount the Radarr config directory. Path from CONFIG_ROOT environment variable.
       - ${CONFIG_ROOT}/radarr:/config
-      # Mount the entire media root directory.
-      # Host path: /mnt/media (always use this for simplicity, bind mount it on host via scripts to true media location) 
-      # Container path: /mnt/media.
-      # Radarr will see the structure under /mnt/media on the host, including downloads, movies, and tv folders.
-      # Configure Radarr to monitor /mnt/media/downloads, and import into /mnt/media/films, etc.
-      - /mnt/media:/mnt/media
+      - /mnt/media:/mnt/media         # Radarr needs to see the whole media structure
     restart: unless-stopped
 
-  sonarr:   # TV MANAGER
+  sonarr:    # TV MANAGER
     image: lscr.io/linuxserver/sonarr # Using LinuxServer.io image
     container_name: sonarr
-    # Use Gluetun's network stack
-    network_mode: "service:wireguard"
-    # Do NOT define 'ports' here
+    network_mode: "service:wireguard" # All internet bound traffic via WireGuard
     depends_on:
       - wireguard
     environment:
@@ -143,76 +107,45 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      # Mount the Sonarr config directory. Path from CONFIG_ROOT environment variable.
       - ${CONFIG_ROOT}/sonarr:/config
-      # Mount the entire media root directory.
-      # Host path: /mnt/media (always use this for simplicity, bind mount it on host via scripts to true media location)
-      # Container path: /mnt/media. 
-      # Sonarr will see the structure under /mnt/media on the host, including downloads, movies, and tv folders.
-      # Configure Sonarr to monitor /mnt/media/downloads, and import into /mnt/media/tv, etc.
-      - /mnt/media:/mnt/media
+      - /mnt/media:/mnt/media         # Sonarr needs to see the whole media structure
     restart: unless-stopped
 
-  jackett:   # INDEX MANAGER
+  jackett:    # INDEX MANAGER
     image: lscr.io/linuxserver/jackett # Using LinuxServer.io image
     container_name: jackett
-    # Use Gluetun's network stack (needed to reach torrent sites via VPN)
-    network_mode: "service:wireguard"
-    # Do NOT define 'ports' here
+    network_mode: "service:wireguard" # All internet bound traffic via WireGuard
     depends_on:
       - wireguard
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # Optional: Jackett's internal port (usually 9117, matched in gluetun ports)
-      # - JACKETT_PORT=9117
     volumes:
-      # Mount the Jackett config directory. Path from CONFIG_ROOT environment variable.
       - ${CONFIG_ROOT}/jackett:/config
-      # Removed the /mnt/media/downloads volume mapping for Jackett (as discussed previously).
-      # If you DO need it, uncomment and adjust the path:
-      # - /mnt/media/downloads:/downloads # Example
     restart: unless-stopped
 
-# In a local network, this is not useful, but if the stack is exposed to full internet access
-# this could be useful from remote locations.
-#
-#  filebrowser:
-#    image: filebrowser/filebrowser # Using the official Filebrowser image
-#    container_name: filebrowser
-#    # Use Gluetun's network stack if you want its traffic via VPN, or if you need
-#    # it to access other containers on the gluetun network by name.
-#    # If you only need to access it from your LAN and it doesn't interact with
-#    # torrents/VPN, you could use the default bridge network and map its port there instead.
-#    # Based on the gluetun ports mapping, it's intended to go via gluetun:
-#    network_mode: "service:gluetun"
-#    # Do NOT define 'ports' here
-#    depends_on:
-#      - gluetun
-#    # User and Group ID for running Filebrowser
-#    # Ensure this user has read access to the mounted /srv directory using the specified PUID/PGID
-#    user: "${PUID}:${PGID}"
-#    volumes:
-#      # Mount the Filebrowser config database location. Path from CONFIG_ROOT environment variable.
-#      - ${CONFIG_ROOT}/filebrowser:/config
-#      # Mount the media root directory to be served by Filebrowser
-#      # Host path: /mnt/media (created/mounted by your script)
-#      # Container path: /srv (standard location for files served by Filebrowser)
-#      # You will configure Filebrowser to serve from /srv internally.
-#      - /mnt/media:/srv
-#    environment: # <-- Make sure this is the environment section for filebrowser
-#      - PUID=${PUID} # Assuming you have these in your .env for filebrowser user
-#      - PGID=${PGID} # Assuming you have these in your .env for filebrowser user
-#      - TZ=${TZ}
-#      - FB_DATABASE=/config/database.db
-#    # Required to prevent 'open /database.db: permission denied' as Filebrowser tries to create database.db
-#    # inside the container at root /, but PUID and PGID user inside the container don't have write permissions.
-#    # This command tells Filebrowser to create in config, which is external to the container.
-#    # command: ["/filebrowser", "-d", "/config/database.db"]
-#    restart: unless-stopped
+# filebrowser:
+#   image: filebrowser/filebrowser
+#   container_name: filebrowser
+#   network_mode: "service:wireguard" # Route via WireGuard if desired
+#   depends_on:
+#     - wireguard
+#   user: "${PUID}:${PGID}" # Run as the specified user
+#   volumes:
+#     - ${CONFIG_ROOT}/filebrowser:/config # For Filebrowser's database
+#     - /mnt/media:/srv                # Directory Filebrowser will serve
+#   environment:
+#     - PUID=${PUID}
+#     - PGID=${PGID}
+#     - TZ=${TZ}
+#     - FB_DATABASE=/config/database.db # Tells Filebrowser where to store its database
+#     # Filebrowser listens on port 80 inside the container by default.
+#     # If you want to access it on host port 8081, ensure '8081:80' is in wireguard's ports section.
+#   # command: ["--port", "80", "--database", "/config/database.db"] # Explicitly set internal port if needed
+#   restart: unless-stopped
 
 # Optional: Define networks if you need custom ones (not strictly needed with network_mode: service:)
 # networks:
-#   default: # Using the default bridge network for services not using network_mode: service:
-#     enable_ipv6: false # Disable IPv6 if it causes issues with VPN
+#   default:
+#     enable_ipv6: false # Example: Disable IPv6 on the default bridge if it causes issues
