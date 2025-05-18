@@ -57,36 +57,26 @@ else
 fi
 
 echo
-echo "Usage Examples:"
 cat <<EOF
+Usage Examples
+==============
 
-Basic Help:
-    globe -h
+Run with Docker:      docker run -it --rm globe -snc2 -g10
+Create an alias:      alias globe='docker run -it --rm globe'
+Then, .e.g,           globe -snc2 -g10
 
-Screensaver Mode:
-    globe -s
-
-With camera rotation:
-    globe -sc2
-
-Add night side and axis rotation:
-    globe -snc2 -g10
-
-Interactive Mode:
-    globe -i
+Basic Help:           globe -h
+Screensaver Mode:     globe -s
+With camera rotation: globe -sc2
+Add night side and axis rotation: globe -snc2 -g10
+Interactive Mode:     globe -i
     (Use arrows/mouse to pan, + and - to adjust speed, PgUp/PgDown to zoom)
+Combined interactive features:    globe -inc2 -g10
+Listing Mode (highlight coordinates):   echo "0,0.5;0.1,0.5;0.3,0.5" | globe -p
+Custom Textures:      globe -in --texture ./your_texture --texture-night ./your_night_texture
 
-Combined interactive features:
-    globe -inc2 -g10
-
-Listing Mode (highlight coordinates):
-    echo "0,0.5;0.1,0.5;0.3,0.5" | globe -p
-
-Custom Textures:
-    globe -in --texture ./your_texture --texture-night ./your_night_texture
-
-Run with Docker:
-    docker run -it --rm globe -snc2 -g10
+Or any of the more complex commands in the same way:
+    docker run -it --rm echo "0,0.5;0.1,0.5;0.3,0.5" | globe -p
 
 Enjoy your terminal globe!
 EOF

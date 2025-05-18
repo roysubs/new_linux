@@ -5,7 +5,7 @@ GAME_DIR="$HOME/games/2048.c"
 SOURCE_URL="https://raw.githubusercontent.com/mevdschee/2048.c/master/2048.c"
 SOURCE_FILE="2048.c"
 EXECUTABLE_NAME="2048"
-BIN_DIR="$HOME/bin"
+BIN_DIR="$HOME/.local/bin/"
 LINK_PATH="$BIN_DIR/$EXECUTABLE_NAME"
 
 # --- Helper function to check and install dependencies ---

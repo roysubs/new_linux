@@ -1,0 +1,4 @@
+games-rogue
+hyperrogue
+hyperrogue-music
+roguenarok

@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+
 <#
 .SYNOPSIS
     WSL Lifecycle Management Tool

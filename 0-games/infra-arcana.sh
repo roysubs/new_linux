@@ -17,8 +17,10 @@ echo "Updating system..."
 sudo apt update && sudo apt upgrade -y
 
 echo "Installing dependencies..."
-# Moved comment to its own line to prevent apt errors
-sudo apt install -y build-essential \
+# Ensure comments are on their own lines or before the command
+# Using standard spaces for indentation if desired, or no indentation
+sudo apt install -y \
+    build-essential \
     libasound2-dev \
     libbrotli-dev \
     libbz2-dev \
@@ -32,6 +34,7 @@ sudo apt install -y build-essential \
     libxrandr-dev \
     libsdl2-dev \
     libsdl2-image-dev \
+    libsdl2-mixer-dev \
     git \
     cmake
 
@@ -67,7 +70,7 @@ sudo make install
 
 # Clean up the temporary source and build directories
 echo "Cleaning up temporary source ($SOURCE_DIR) and build ($BUILD_DIR) directories..."
-rm -rf "$SOURCE_DIR" "$BUILD_DIR"
+sudo rm -rf "$SOURCE_DIR" "$BUILD_DIR"
 
 # Verify installation
 echo "Verifying installation..."
