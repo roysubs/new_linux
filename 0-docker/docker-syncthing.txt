@@ -1,8 +1,7 @@
 Adding the docker run -v $HOST_DIR as a Syncthing share
 =====
 
-The Docker script mounts HOST_DIR (/mnt/sdc1/Downloads/0-torrents-complete) into the container at /sync/0-torrents-complete with the -v flag.
-This does not create a syncthing share though and so only "Default Folder" (/var/syncthing/Sync) is shown in the Syncthing GUI.
+The Docker script mounts HOST_DIR (/mnt/sdc1/Downloads/0-torrents-complete) into the container at /sync/0-torrents-complete with the -v flag. This does not create a syncthing share though and so only "Default Folder" (/var/syncthing/Sync) is shown in the Syncthing GUI.
 
 To make the custom mount /mnt/sdc1/Downloads/0-torrents-complete (mounted at /sync/0-torrents-complete) a shared folder in Syncthing:
 - In the Syncthing Web GUI, click the "Add Folder" button (you can see it in your screenshot below the "Default Folder").
@@ -46,7 +45,6 @@ If the startup option sets the GUI address to listen on 0.0.0.0 or your local ne
 Even if it's set to 127.0.0.1 (localhost), the second warning about other local users/processes can still apply.
 Setting the GUI Password (Still Possible!): The good news is that the message about the address being overridden does not prevent you from setting the GUI authentication user and password. The password setting is separate from the address setting, even though they are on the same "GUI" tab in the settings. Therefore, to set the password, simply ignore the message about the address override. After saving a new password, the GUI should restart, and you will be prompted for the username and password you just set when you next access it. This will resolve the security warnings about the GUI being unprotected.
 
-
 Common places to check for configuration files or startup scripts include:
 
 /etc/systemd/system/syncthing@.service or similar paths on Linux using systemd.
@@ -57,31 +55,33 @@ Understanding where the address is set in the startup options can be helpful for
 
 
 
-Is my docker syncthing persistent, i.e., if I destroy the container, will the configuration xml be inside or outside of the container, so that if I recreate a new container, will my shares still be there?
+If the container is destroyed, will the same configuration persist when I recreate a new container (will my shares still be there)?
+=====
 
-Yes, your Syncthing configuration is persistent with this Docker script due to:
+Yes, the Syncthing configuration is persistent even between destroying the container due to:
 DOCKER_CMD+=" -v \"$ST_HOST_CONFIG_DIR:/var/syncthing/config\""
 
 This creates a volume mount at $HOME/.config/syncthing-docker, ensuring that the configuration for Syncthing is outside of the container, so destroying and recreating the container will immediately re-establish all previous settings (i.e., it will not wipe the configuration and create a blank setup). This line creates a volume mount. Syncthing stores its primary configuration file (config.xml), keys, and other essential data within its configuration directory, which by default is /var/syncthing/config in the official Docker image. Because you are mapping this directory to a location on your host filesystem, the config.xml file and all your Syncthing settings (including your device ID, connected devices, and defined shared folders) are stored outside the Docker container.
 
 Therefore, if you stop and remove the Syncthing container and then recreate a new one using the same script, the new container will mount the existing configuration directory from your host machine. This means your shares, device pairings, and all other settings will be preserved. This setup ensures that your Syncthing configuration is persistent and survives the lifecycle of the Docker container itself.
 
+The container will just pick up where you left off, and no synced data will be lost.
 
-If I rm the container, obvious syncing will stop, and remote systems that were actively syncing will halt. ok, will I lose data? If I then recreate the container, will it just pick up where it left off with sync partners?
+The actual files being synced on your host are stored in a directory that is mounted into the container via the -v "$TORRENTS_HOST_DIR:/sync/0-torrents-complete" line. This means the data lives on your host machine's filesystem, outside of the ephemeral container layer. When you remove the container (docker rm), you are only deleting the container instance, not the data volumes on your host.
 
-Yes, it will just pick up where you left off, and no, you will not lose your synced data.
+If you then recreate the container, it will just pick up where it left off with sync partners.
 
-The actual files being synced (in your case, the content of /mnt/sdc1/Downloads/0-torrents-complete on your host) are stored in a directory that is mounted into the container via the -v "$TORRENTS_HOST_DIR:/sync/0-torrents-complete" line. This means the data lives on your host machine's filesystem, outside of the ephemeral container layer. When you remove the container (docker rm), you are only deleting the container instance, not the data volumes on your host.
-
-If you then recreate the container, will it just pick up where it left off with sync partners? Yes.
 
 
 How do I add additional volume mounts to share?
+=====
 
-volume mounts can only be added during the creation of a container (cannot be added dynamically, except by a direct mount, or bind mount), but this is simple to do: stop and rm the container, then alter the startup script to include the additional volume mount, then create/start the new container (which will pick up all configuration, and so will be the same as the previous container) and go into the GUI and add the new volume mount as a Syncthing share.
+Volume mounts can only be added during the *creation* of a container (cannot be added dynamically, except by a direct mount, or bind mount), but this is simple to do: stop and rm the container, then alter the startup script to include the additional volume mount, then create/start the new container (which will pick up all configuration, and so will be the same as the previous container) and go into the GUI and add the new volume mount as a Syncthing share, OR, to add shared locations WITHOUT destroying the container, simply create a 'bind mount' within the existing share.
 
 
-So if I run this one script on 3 different computers, all in remote locations, just by adding the shares and establishing the connections (all in the web GUI) I can setup a 3-way sync mesh easily?
+
+If I run this one script on 3 different computers, all in remote locations, just by adding the shares and establishing the connections (all in the web GUI) I can setup a 3-way sync mesh easily?
+=====
 
 Yes, that is exactly how you would set up a 3-way sync mesh with Syncthing using that Docker script on multiple machines in remote locations.
 
@@ -95,11 +95,6 @@ Share Folders with Devices: Once the devices are connected (they should show up 
 Once you've performed these steps on all three machines, Syncthing will handle the discovery, connection, and synchronization of the shared folders across the three devices, forming a 3-way sync mesh. The host networking mode used in your script helps with local discovery, but for remote machines, Syncthing's global discovery and relaying will help them find each other over the internet.
 
 So, yes, running the script and then configuring the shares and connections via the Web GUI on each instance is the correct and easy way to establish your 3-way sync mesh.
-
-
-
-
-Okay, let's break down how Syncthing connects devices across different networks, like the three computers you have in separate buildings. It's understandable to feel a bit lost at first, but Syncthing is designed to be quite user-friendly even with network complexities.
 
 Here's the working model for how Syncthing connects your computers:
 
@@ -116,8 +111,19 @@ NAT Traversal: Syncthing attempts techniques like NAT hole punching to establish
 Relaying: If a direct connection cannot be established (often due to strict firewalls or complex NAT), Syncthing will automatically try to connect through a relay server. Relay servers are community- Contributed servers that simply forward the encrypted data between your devices. This allows your devices to sync even without any special router configuration, but it will generally be slower than a direct connection. Syncthing's data is end-to-end encrypted, so the relay server cannot read your files.
 Addressing Your Questions Directly:
 
-Do I need to pass tokens between the machines? Yes, you need to pass the Device IDs between the machines. When you add a remote device in the Syncthing web interface, you will enter the Device ID of the other computer. This is how you "introduce" the machines to each other and grant them permission to connect and sync shared folders. These Device IDs are often referred to in a similar context to how some systems might use tokens for initial pairing.
-Do I need to open ports on the routers? Not necessarily required for the devices to talk at all, but highly recommended for better performance.
+
+
+Do I need to pass tokens between the machines?
+=====
+
+Yes, you need to pass the Device IDs between the machines. When you add a remote device in the Syncthing web interface, you will enter the Device ID of the other computer. This is how you "introduce" the machines to each other and grant them permission to connect and sync shared folders. These Device IDs are often referred to in a similar context to how some systems might use tokens for initial pairing.
+
+
+
+Do I need to open ports on the routers?
+=====
+
+Not necessarily required for the devices to talk at all, but highly recommended for better performance.
 Syncthing can often connect using relaying without any port forwarding.
 To achieve a faster, direct connection, you ideally want to configure port forwarding on your routers. The default port Syncthing uses for syncing is 22000 (TCP and UDP). Forwarding this port from your router's external IP to the internal IP of the computer running Syncthing in each location will significantly increase the chances of a direct connection.
 Syncthing also uses port 21027 (UDP) for local and global discovery. While not strictly necessary for connection if global discovery works via port 22000, allowing this port can help with device discovery.
@@ -132,14 +138,9 @@ For a beginner, the easiest way to start is to install Syncthing on all three, a
 
 
 
+How to show the Syncthing Device ID?
+==========
 
-
-
-what is the command to get the id ?
-
-
-
-Show thinking
 You can get your Syncthing Device ID in a couple of ways:
 
 1. Using the Syncthing Web GUI (Most Common and Easiest):
@@ -160,3 +161,4 @@ Run the command: syncthing --device-id
 This command will print the Device ID to your console.
 
 The Device ID is a long string of characters, usually grouped with hyphens for readability (e.g., ABCD123-EFGH456-IJKL789-...). You'll need to copy and paste this ID into the "Add Remote Device" section of Syncthing on your other computers to link them.
+

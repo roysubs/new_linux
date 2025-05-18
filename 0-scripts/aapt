@@ -72,8 +72,7 @@ case "$option" in
             process_log "$HISTORY_LOG_OLD" "Reading from $HISTORY_LOG_OLD"
         fi
 
-        if command -v cowsay &>/dev/null; then cowsay "All done processing apt history logs. Moo."; fi
-
+        if command -v cowsay &>/dev/null; then cowsay "'apt' history processed. Moo."; fi
         ;;
 
     r)

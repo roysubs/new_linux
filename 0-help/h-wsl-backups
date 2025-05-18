@@ -1,3 +1,9 @@
+#!/bin/bash
+command -v mdcat &>/dev/null || "${0%/*}/mdcat-get.sh"; hash -r
+command -v mdcat &>/dev/null || { echo "Error: mdcat required but not available." >&2; exit 1; }
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(( $(tput cols) - 5 )); fi)
+mdcat --columns="$WIDTH" <(cat <<'EOF'
+
 Automatic Backups for WSL2, April 3, 2020
 Windows Task Scheduler - WSL Backup - General
 https://stephenreescarter.net/automatic-backups-for-wsl2/
@@ -325,3 +331,7 @@ October 3, 2022 at 3:48 am
 Thanks for this solution! It aided me in constructing my own backup solution for Sharepoint/OneDrive files (https://www.reddit.com/r/sharepoint/comments/xtuxj2/backing_up_sites_with_guest_access_only/?utm_source=share&utm_medium=web2x&context=3). I left a link to your article.
 
 Reply
+
+EOF
+) | less -R
+

@@ -328,6 +328,10 @@ else
     print_aligned "Active Session" "No active graphical session found via loginctl"
 fi
 
+X_SERVER=$(ps -e | grep -E 'xfce|mate|gnome|kde|cinnamon|lxde|openbox|fluxbox|i3')
+echo "Display processes: $X_SERVER"
+
+
 # ----------------------
 # Storage Information
 # ----------------------

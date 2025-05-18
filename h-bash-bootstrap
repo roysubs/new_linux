@@ -101,34 +101,35 @@ Re-running bootstrap
 Optional Add-ons
 =========================
 
-✅ Plex / qBittorrent / Sonarr / Radarr stack
-    - Via `h-docker-stack` or similar wrapper
-    - Uses `gluetun` VPN container for IP privacy
-    - Media folder paths standardized under `/media/`
-    - Surfshark WireGuard or OpenVPN supported
-    - Runs independently of bootstrap but shares media paths
+✅ Media-Stack containers (qBittorrent / Sonarr / Radarr)  
+    - Manage as a single container stack  
+    - Uses `wireguard` VPN container (significantly lower footprint than OpenVPN)  
+    - Media folder paths standardized under `/mnt/media` via bind mount  
+    - Media config paths standardized under `~/.config/media-stack`  
+    - Generic Wireguard setup with work with any VPN vendor  
 
-✅ Backup integration
-    - rsync + rclone hooks available
-    - Optional encryption with gocryptfs
+✅ Backup integration  
+    - rsync + rclone hooks available (wip)  
+    - Optional encryption with gocryptfs (wip)  
     - Syncs project files, dotfiles, media, etc
 
-✅ Sync + Sharing
-    - Syncthing bootstrap option
-    - Filebrowser for web UI access to `/media/`
+✅ Sync + Sharing  
+    - Syncthing as local or container install  
+    - Filebrowser for web UI access to `media-stack`
 
-✅ Monitoring Tools
-    - `docker-monitor2.py`: real-time stats + I/O + sampling
-    - CPU, mem, network, and container states
+✅ Monitoring Tools  
+    - `monitoring-stack` : grafana + prometheus instannt setup
+    - `docker-monitor2.py`: real-time stats + I/O + sampling  
+    - CPU, mem, network, and container states  
 
 ---
 
-See also:
-    - `h-vim`           ← Vim quickstart
-    - `h-git`           ← Git workflows and SSH key setup
-    - `h-docker-stack`  ← Media + VPN stack deploy
-    - `h-ssh`           ← SSH key, agent, known_hosts explained
-    - `h-inputrc`       ← Terminal keys and .inputrc behavior
+See also:  
+    - `h-vim`           ← Vim quickstart  
+    - `h-git`           ← Git workflows and SSH key setup  
+    - `h-docker-stack`  ← Media + VPN stack deploy  
+    - `h-ssh`           ← SSH key, agent, known_hosts explained  
+    - `h-inputrc`       ← Terminal keys and .inputrc behavior  
 
 EOF
 ) | less -R

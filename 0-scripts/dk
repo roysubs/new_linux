@@ -3,9 +3,10 @@
 # Unified wrapper for commonly used Docker commands, with auto-prune, color output, and compatibility for both bash and zsh.
 
 # Colors
-BLUE='\033[1;34m'
-GREEN='\033[0;32m'
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
 print_line() {
@@ -20,7 +21,8 @@ help_text() {
     printf "
 Docker Tool (dk). Usage: dk [option]
 Options:
-  look [name]   Look at container info (from outside with docker commands, and from within the container if a shell exists)
+  s|status|size|up    ${BLUE}docker ps --format${NC}  Created time and uptime only
+  info [name]   Look at container info (from outside with docker commands, and from within the container if a shell exists)
   im            ${BLUE}docker images${NC}   List all images (base images used to create containers)
   ps            ${BLUE}docker ps${NC} Can also add -a (all), -n N (last N created), -l (latest created), -f (filter)
   a             ${BLUE}docker ps -a${NC}  List all containers (including those that are stopped)
@@ -32,11 +34,10 @@ Options:
   pl|portslist  ${BLUE}docker ps --format${NC}  Ports, but in list output
   m|mounts      ${BLUE}docker ps --format${NC}  Name, Image, Mounts in table format
   ml|mountslist ${BLUE}docker ps --format${NC}  Mounts, but in list format
-  s|size|up|status    ${BLUE}docker ps --format${NC}  Created time and uptime only
   run [name] [image]  ${BLUE}sudo docker run -it --name [name] [image]${NC}  Create and start container
   it [name] <process> ${BLUE}docker exec -it [name] [process]${NC}  Interactive TTY
       Interactively enter container and start a process (could be bash, sh, top, etc)
-  exec         ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
+  x|ex|exec    ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
   start <name> ${BLUE}docker start <name>${NC}   Start a stopped container
   stop <name>  ${BLUE}docker stop <name>${NC}    Stop a running container
   rm  <name>   ${BLUE}docker rm <name>${NC}      Remove a container
@@ -193,7 +194,7 @@ case "$cmd" in
         done
         ;;
 
-    exec)
+    x|ex|exec)
         color_echo "docker exec -it $1 $2"
         docker exec -it $1 $2
         ;;
@@ -223,7 +224,7 @@ case "$cmd" in
         docker stop "$1"
         ;;
 
-    look)
+    info)
         # Check if container name ($1) is provided for the info command
         if [ $# -eq 0 ]; then
             echo "Usage: dk info <container_name>"
@@ -243,7 +244,7 @@ case "$cmd" in
         if [ -z "$BLUE" ]; then BLUE="\e[1;34m"; BOLD="\e[1m"; RESET="\e[0m"; fi;
     
         echo
-        echo "Gathering information for container '$container_name' using 'docker' commands:"
+        echo -e "${YELLOW}Gathering information for container '$container_name' using 'docker' commands:${NC}"
         echo
     
         # --- Docker Container Info (External View) ---
@@ -280,81 +281,133 @@ Labels: {{.Labels}}' \
         # --- Container Info (as seen from inside container) ---
         # Execute the chain of info commands inside the container, trying shells
         echo
-        echo "Gathering information for container '$container_name' from inside container (exec -it sh|bash|ash):"
+        echo -e "${YELLOW}Gathering information for container '$container_name' from inside container (exec -it sh|bash|ash):${NC}"
         echo
         echo -e "${BOLD}${BLUE}--- Container Info ---${RESET}" # Use main script colors here
+        echo
     
         # Define the internal script content once
         # IMPORTANT: Comments are removed from inside the single quotes below
         # to prevent "command not found" errors.
         read -r -d '' internal_script << 'EOF'
-            # Define colors and bold inside the container shell as well,
-            # as they are needed for the internal sections headers.
-            BLUE_INT=$(tput setaf 4 2>/dev/null) ;
-            BOLD_INT=$(tput bold 2>/dev/null) ;
-            RESET_INT=$(tput sgr0 2>/dev/null) ;
-            if [ -z "$BLUE_INT" ]; then BLUE_INT="\e[1;34m"; BOLD_INT="\e[1m"; RESET_INT="\e[0m"; fi;
-    
-            echo -e "${BOLD_INT}${BLUE_INT}--- Container System Info ---${RESET_INT}" ;
-            # Removed blank line after this header
-    
-            # Consolidated Initial Info
-            echo -e "${BOLD_INT}Hostname:${RESET_INT} $(hostname 2>/dev/null || echo "(Not available)")" ;
-            # Parse uptime to get just the duration (e.g., "19:56")
-            echo -e "${BOLD_INT}Uptime:${RESET_INT} $(uptime 2>/dev/null | sed "s/.* up //; s/,.*//")" ;
-            # Parse uptime to get just the load average (e.g., "5.07, 4.94, 3.32")
-            echo -e "${BOLD_INT}Load Average:${RESET_INT} $(uptime 2>/dev/null | sed "s/.* load average: //" || echo "(Not available)")" ;
-            echo -e "${BOLD_INT}CPU Cores:${RESET_INT} $(nproc 2>/dev/null || echo "(Not available)")" ;
-            echo -e "${BOLD_INT}Kernel:${RESET_INT} $(uname -a 2>/dev/null || echo "(Not available)")" ;
-            # Memory is complex to summarize on one line, refer to detailed section
-            echo -e "${BOLD_INT}Memory:${RESET_INT} See detailed section below" ;
-    
-    
-            # OS Info (removed URLs)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- OS Info ---${RESET_INT}";
-            cat /etc/os-release 2>/dev/null | grep -v "URL=" || echo "(Not available)" ;
-    
-            # Memory Usage (free -h or free -m)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- Memory Usage ---${RESET_INT}";
-            free -h 2>/dev/null || free -m 2>/dev/null || echo "(Not available)" ;
-            echo "Note: 'Used' shows memory from the container's perspective.";
-    
-            # Disk Usage (df -h or df -P)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- Disk Usage (/) ---${RESET_INT}";
-            df -h / 2>/dev/null || df -P / 2>/dev/null || echo "(Not available)" ;
-            echo "Note: 'Used' shows total on underlying filesystem, often shared.";
-    
-            # Network Interfaces (ip addr or ifconfig)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- Network Interfaces ---${RESET_INT}";
-            (ip addr show 2>/dev/null || ifconfig 2>/dev/null) || echo "(Not available or network tools missing)" ;
-    
-            # Listening Ports (ss or netstat -tulnp)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- Listening Ports ---${RESET_INT}";
-            (ss -tulnp 2>/dev/null || netstat -tulnp 2>/dev/null) || echo "(Not available, tools missing, or may require elevated privileges)" ;
-    
-            # Processes (ps aux sorted by CPU, command truncated)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- Processes (ps aux, sorted by %CPU) ---${RESET_INT}";
-            # Print manual header, then ps auxww --no-header for no header, sorted by %CPU,
-            # filtered to remove the info script commands, and truncated.
-            echo "USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND" ;
-            ps auxww --no-header 2>/dev/null | \
-            grep -vE "(ps auxww|bash -c .* Container System Info|sh -c .* Container System Info|ash -c .* Container System Info)" | \
-            sort -rnk3 2>/dev/null | \
-            cut -c -150 || echo "(Not available)" ;
-    
-            # Relevant Mounted Filesystems (filtered)
-            echo "" ;
-            echo -e "${BOLD_INT}${BLUE_INT}--- Relevant Mounted Filesystems ---${RESET_INT}";
-            # Filter out common pseudo/docker internal mounts and standard device/loopback mounts
-            mount 2>/dev/null | grep -vE "^(proc|sysfs|tmpfs|mqueue|shm|overlay|cgroup|devpts|/dev/|/sys/|/proc/|devicemapper|/dev/loop)" || echo "(Not available. Note that docker volume mounts are pseudo-filesystems, so are not shown here)" ;
-    
-            echo "" ; # Final blank line
+# Define colors and bold inside the container shell as well,
+# as they are needed for the internal sections headers.
+BLUE_INT=$(tput setaf 4 2>/dev/null) ;
+BOLD_INT=$(tput bold 2>/dev/null) ;
+RESET_INT=$(tput sgr0 2>/dev/null) ;
+if [ -z "$BLUE_INT" ]; then BLUE_INT="\e[1;34m"; BOLD_INT="\e[1m"; RESET_INT="\e[0m"; fi;
+
+echo -e "${BOLD_INT}${BLUE_INT}--- Container System Info ---${RESET_INT}" ;
+# Removed blank line after this header
+
+# Consolidated Initial Info
+echo -e "${BOLD_INT}Hostname:${RESET_INT} $(hostname 2>/dev/null || echo "(Not available)")" ;
+# Parse uptime to get just the duration (e.g., "19:56")
+echo -e "${BOLD_INT}Uptime:${RESET_INT} $(uptime 2>/dev/null | sed "s/.* up //; s/,.*//")" ;
+# Parse uptime to get just the load average (e.g., "5.07, 4.94, 3.32")
+echo -e "${BOLD_INT}Load Average:${RESET_INT} $(uptime 2>/dev/null | sed "s/.* load average: //" || echo "(Not available)")" ;
+echo -e "${BOLD_INT}CPU Cores:${RESET_INT} $(nproc 2>/dev/null || echo "(Not available)")" ;
+echo -e "${BOLD_INT}Kernel:${RESET_INT} $(uname -a 2>/dev/null || echo "(Not available)")" ;
+# Memory is complex to summarize on one line, refer to detailed section
+echo -e "${BOLD_INT}Memory:${RESET_INT} See detailed section below" ;
+
+# OS Info (removed URLs)
+echo "" ;
+echo -e "${BOLD_INT}${BLUE_INT}--- OS Info ---${RESET_INT}";
+cat /etc/os-release 2>/dev/null | grep -v "URL=" || echo "(Not available)" ;
+
+# Memory Usage (free -h or free -m)
+echo "" ;
+echo -e "${BOLD_INT}${BLUE_INT}--- Memory Usage ---${RESET_INT}";
+free -h 2>/dev/null || free -m 2>/dev/null || echo "(Not available)" ;
+echo "Note: 'Used' shows memory from the container's perspective.";
+
+# Disk Usage (df -h or df -P)
+echo "" ;
+echo -e "${BOLD_INT}${BLUE_INT}--- Disk Usage (/) ---${RESET_INT}";
+df -h / 2>/dev/null || df -P / 2>/dev/null || echo "(Not available)" ;
+echo "Note: 'Used' shows total on underlying filesystem, often shared.";
+
+# Network Interfaces (ip addr or ifconfig)
+echo "" ;
+echo -e "${BOLD_INT}${BLUE_INT}--- Network Interfaces ---${RESET_INT}";
+(ip addr show 2>/dev/null || ifconfig 2>/dev/null) || echo "(Not available or network tools missing)" ;
+
+# Listening Ports (ss or netstat -tulnp)
+echo "" ;
+echo -e "${BOLD_INT}${BLUE_INT}--- Listening Ports ---${RESET_INT}";
+(ss -tulnp 2>/dev/null || netstat -tulnp 2>/dev/null) || echo "(Not available, tools missing, or may require elevated privileges)" ;
+
+# # Processes (ps aux sorted by CPU, command truncated)
+# echo "" ;
+# echo -e "${BOLD_INT}${BLUE_INT}--- Processes (ps aux, sorted by %CPU) ---${RESET_INT}";
+# # Print manual header, then ps auxww --no-header for no header, sorted by %CPU,
+# # filtered to remove the info script commands, and truncated.
+# echo "USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND" ;
+# ps auxww --no-header 2>/dev/null | \
+# grep -vE "(ps auxww|bash -c .* Container System Info|sh -c .* Container System Info|ash -c .* Container System Info)" | \
+# sort -rnk3 2>/dev/null | \
+# cut -c -150 || echo "(Not available)" ;
+
+# Processes (ps aux sorted by CPU, command truncated)
+# Print manual header, then ps auxww --no-header for no header, sorted by %CPU,
+# filtered to remove the info script commands, and truncated.
+echo
+echo -e "${BOLD_INT}${BLUE_INT}--- Processes (ps aux, sorted by %CPU) ---${RESET_INT}";
+output_string=$(
+echo "USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND" ;
+ps auxww --no-header 2>/dev/null | \
+grep -vE "(ps auxww|bash -c .* Container System Info|sh -c .* Container System Info|ash -c .* Container System Info)" | \
+sort -rnk3 2>/dev/null | \
+cut -c -150 || echo "(Not available)" ;
+)
+# echo $output_string | column -t
+echo "$output_string" | awk '
+{
+    # Define the tighter printf format string for header and data
+    # Fields: USER, PID, %CPU, %MEM, VSZ, RSS, TTY, STAT, START, TIME, COMMAND
+    fmt = "%-5s %-5s %-4s %-4s %-7s %-6s %-5s %-4s %-5s %-5s %s\n";
+
+    # Handle specific lines first
+    if ($0 ~ /---\ Processes.*---/) { # Match the title line
+        print
+        next
+    }
+    if (/^$/) { # Empty line
+        print
+        next
+    }
+    if ($0 == "(Not available)") { # (Not available) message
+        print
+        next
+    }
+
+    if ($1 == "USER" && $2 == "PID" && $3 == "%CPU" && $4 == "%MEM") { # Likely the header line
+        command_header = $11
+        for (i = 12; i <= NF; i++) { command_header = command_header " " $i }
+        printf fmt, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, command_header;
+    } else if (NF >= 10) { # Likely a data line from ps
+        command = ""
+        if (NF >= 11) {
+            command = $11;
+            for (i = 12; i <= NF; i++) {
+                command = command " " $i;
+            }
+        }
+        printf fmt, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, command;
+    } else {
+        # Default for any other lines
+        print;
+    }
+}
+'
+# Relevant Mounted Filesystems (filtered)
+echo "" ;
+echo -e "${BOLD_INT}${BLUE_INT}--- Relevant Mounted Filesystems ---${RESET_INT}";
+# Filter out common pseudo/docker internal mounts and standard device/loopback mounts
+mount 2>/dev/null | grep -vE "^(proc|sysfs|tmpfs|mqueue|shm|overlay|cgroup|devpts|/dev/|/sys/|/proc/|devicemapper|/dev/loop)" || echo "(Not available. Note: Docker volume mounts are appear as normal filesystems to the container, so are not shown as mounts)" ;
+
+echo "" ; # Final blank line
 EOF
         # Attempt to execute the internal script with different shells (bash, sh, ash)
         # Redirect stderr for each exec attempt to suppress "executable file not found" errors

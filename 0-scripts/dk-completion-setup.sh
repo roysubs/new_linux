@@ -24,7 +24,7 @@ _dk_completion() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # List of dk subcommands that expect a container name next
-    commands_needing_container="start stop rm logs look it ex run"
+    commands_needing_container="start stop rm logs look run it x ex exec"
 
     # List of dk subcommands that expect an image name next
     commands_needing_image="rmi" # Add "im" if you want to complete image names after "dk im" (less common)
