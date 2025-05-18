@@ -13,8 +13,9 @@ show_help() {
     echo    "Path Tool. Usage: ${0##*/} [option] [argument]"   # replace basename with ${0##*/}
     echo    "Options:"
     echo    "  (no option)         Show current user's \$PATH, one entry per line. Duplicates are highlighted"
-    echo -e "                      in ${RED}red${NC}; non-existent paths are highlighted in ${YELLOW}yellow${NC}"
+    echo -e "                      in ${RED}red${NC}; non-existent paths are highlighted in ${YELLOW}yellow${NC}."
     echo    "  -h, --help          Show this help message."
+    echo    "  -hh                 A help explainer for how paths are generated."
     echo    "  -s, --sudo          Show the sudo/root user's \$PATH, formatted."
     echo    "                      (Checks for path existence by default)."
     echo    "  -a, --add <dir>     Append <dir> to the current session's \$PATH."
@@ -125,7 +126,11 @@ display_path() {
 
 if [ $# -eq 0 ]; then
     # Default action: display current user's PATH, checking existence
+    echo "PATH in this session:"
+    echo
     display_path "$PATH" "explicit_check" # Pass "explicit_check" to ensure non-existent message prints if needed
+    echo "Path Tool. Usage: ${0##*/} [option] [argument].   '${0##*/} -h' for options"
+    echo
     exit 0
 fi
 
@@ -347,7 +352,6 @@ EOF
             # --- Other Files ---
             "/etc/shells"    # Lists paths of valid login shells. Not for setting PATH itself.
         )
-        echo "### $HOME ###"
         
         if [[ -d "/etc/profile.d" ]]; then
             for f_in_profile_d in /etc/profile.d/*.sh; do
@@ -376,6 +380,45 @@ EOF
         fi
 
         ;;
+
+    -hh)
+        cat << EOF
+The $PATH environment variable can be quite extensive, and scripts files may only have explicit settings for a few of those directories, especially in in WSL (Windows Subsystem for Linux) environments, might not appear to be directly set in the usual Linux login scripts:
+
+Default System PATH (The Basics)
+
+Long before your ~/.bashrc or ~/.profile are executed, the system establishes a fundamental, default PATH. This often includes standard directories like:
+/usr/local/sbin
+/usr/local/bin
+/usr/sbin
+/usr/bin
+/sbin
+/bin
+And sometimes /usr/games, /usr/local/games.
+This initial PATH can be set by:
+The login program itself, often based on configurations in /etc/login.defs (look for ENV_PATH or ENV_SUPATH).
+Compiled-in defaults within the shell (e.g., bash).
+Early system-wide scripts like /etc/profile might set an initial PATH. Your p -f output didn't show a direct PATH= line from /etc/profile itself, but this file often contains logic that sets it or sources other files (like those in /etc/profile.d/) that do. The snap/bin path was found via /etc/profile.d/apps-bin-path.sh, which shows this mechanism is active.
+WSL Interoperability (The Windows Paths)
+
+This is the biggest contributor to the "mystery paths" in your case. WSL has a feature that automatically appends your Windows %PATH% environment variable to the Linux $PATH. This is why you see all those /mnt/c/... directories:
+/mnt/c/Program Files/PowerShell/7
+/mnt/c/Program Files (x86)/Common Files/Oracle/Java/java8path
+...and all the others under /mnt/c/.
+This behavior is typically controlled by the [interop] section in /etc/wsl.conf. If appendWindowsPath is set to true (which is often the default), these paths are added.
+The /usr/lib/wsl/lib path is also specific to WSL's infrastructure, set up during WSL's initialization.
+These paths are added by WSL outside of the standard Linux shell startup scripts your p -f command is checking.
+PAM (Pluggable Authentication Modules)
+
+PAM modules can influence the environment. For instance, pam_env.so can set environment variables based on /etc/environment and /etc/security/pam_env.conf.
+Your p -f output shows /etc/environment was checked, but no PATH modifications were reported from it in your current output. This means either PATH isn't set there, or it's set in a way your grep pattern didn't catch (though /etc/environment usually has simple KEY=VALUE pairs).
+Scripts Not Checked or Complex Logic:
+
+While your files_to_check list is quite comprehensive, there could be other less common scripts or system configurations.
+If scripts use complex logic to build the PATH (e.g., loops, conditional statements that append multiple directories without a direct PATH=... on one line for each), your grep command might only catch parts of it or miss the overall picture for those specific files.
+EOF
+    ;;  
+
     -c|--check)
         echo "Checking current \$PATH for non-existent directories:"
         display_path "$PATH" "explicit_check" # Pass flag to ensure message prints

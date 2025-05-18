@@ -1,1 +1,0 @@
-CTRL+SHIFT+roll-wheel to change transparency of PowerShell SSH window.

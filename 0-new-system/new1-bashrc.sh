@@ -205,11 +205,12 @@ alias tl+='tmux resize-pane -L 5' ; alias tr+='tmux resize-pane -R 5'
 alias tu+='tmux resize-pane -U 5' ; alias td+='tmux resize-pane -D 5'
 alias ifconfig='sudo ifconfig'    # 'ifconfig' (apt install net-tools) causes 'command not found' if run without sudo
 alias ipconfig='sudo ifconfig'    # Windows typo
+alias gacp='g acp'    # Common git tool use, git add, git commit, git push
 # Create 'bat' alias for 'batcat' (apt install bacula-console-qt) unless 'bat' (Bluetooth Audio Tool) is installed
 if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
 
 # Jump functions for new_linux, cannot be in scripts as have to be dotsourced.
-n()   { cd ~/new_linux || return; ls; }              # Jump to new_linux
+0n()  { cd ~/new_linux || return; ls; }              # Jump to new_linux project root
 0d()  { cd ~/new_linux/0-docker || return; ls; }     # Jump to new_linux/0-docker
 0g()  { cd ~/new_linux/0-games || return; ls; }      # Jump to new_linux/0-games
 0h()  { cd ~/new_linux/0-help || return; ls; }       # Jump to new_linux/0-help

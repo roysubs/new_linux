@@ -1,8 +1,0 @@
-#!/bin/bash
-sudo apt install net-tools telnetd   # netstat, ifconfig, telnet
-sudo apt install git
-sudo apt install btop htop
-sudo apt install duf                 # Modern alternative to du and df
-
-# Toys
-hollywood          # fun visual console app
