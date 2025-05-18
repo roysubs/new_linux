@@ -73,29 +73,31 @@ proc extract_concise_info {pane_output failed_attempts} {
     return $concise_output
 }
 
-proc reroll {log_path failed_attempts} {
+proc reroll {log_path current_attempt_number} {
     # Capture the current tmux pane output
     set pane_output [exec tmux capture-pane -t moria_session -p]
 
-    # Debug: Log the raw pane output
-    # log_message $log_path "[timestamp] Raw Pane Output:\n$pane_output\n"
+    # Debug: Log the raw pane output (uncomment if needed for further debugging)
+    # log_message $log_path "[timestamp] Raw Pane Output on attempt $current_attempt_number:\n$pane_output\n"
 
-    # Extract concise information
-    set concise_output [extract_concise_info $pane_output $failed_attempts]
+    # Extract concise information for logging
+    set concise_output [extract_concise_info $pane_output $current_attempt_number]
     log_message $log_path $concise_output
 
-    # Check for the desired stat (e.g., INT 18/20 or higher)
-    if {[regexp {INT\s*:\s*18/([2-9][0-9])} $pane_output]} {
-        send_user "Desired INT found. Stopping.\n"
-        return 1  ;# Indicating success
+    # Check for the desired stat (INT 18/20 or higher)
+    # Regex: INT, optional spaces, colon, optional spaces, "18/", then a digit 2-9, then any digit.
+    if {[regexp {INT\s*:\s*18/([2-9][0-9])} $pane_output match found_int_suffix]} {
+        set actual_int_found "18/$found_int_suffix"
+        set message "[timestamp] Attempt $current_attempt_number: Desired INT $actual_int_found found. Stopping."
+        log_message $log_path $message
+        send_user "\n$message\n"
+        return 1  ;# Indicating success (target found)
     }
 
-    # If not found, send space to reroll and increment the counter
-    log_message $log_path "[timestamp] Sending space key to tmux."
+    # If not found, send space to reroll
+    log_message $log_path "[timestamp] Attempt $current_attempt_number: Desired INT not found. Sending space key to tmux."
     exec tmux send-keys -t moria_session " " C-m
-
-    incr failed_attempts
-    return $failed_attempts
+    return 0 ;# Indicating target NOT found, continue rolling
 }
 
 # # Function to capture pane output and reroll
