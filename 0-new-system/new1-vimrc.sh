@@ -319,16 +319,17 @@ inoremap <F4> <Esc>:set list! listchars=tab:→\ ,trail:·,eol:¶<CR> \
 \" Enable persistent undo, so that undo will operate between different edit sessions of files
 set undofile
 
-\" Set the directory where undo files will be stored
-\" Create this directory if it doesn't exist
-\" Use a path within your home directory
-set undodir=\$HOME/.vim/undodir,\$HOME/.config/nvim/undodir,/tmp/undodir
-\" Optional: Set undolevels to -1 for potentially unlimited undo history (disk space permitting)
-\" set undolevels=-1
-\" There is no way to cycle old undos, so be cautious with very large files and histories, as this can consume disk space.
-\" Periodically clean, e.g. remove anything older than 90 days:   find /home/boss/.vim/undodir -type f -mtime +90 -delete
-
 "
+
+# Having problems with persistent undo for now
+# \" Set the directory where undo files will be stored
+# \" Create this directory if it doesn't exist
+# \" Use a path within your home directory
+# set undodir=\$HOME/.vim/undodir,\$HOME/.config/nvim/undodir,/tmp/undodir
+# \" Optional: Set undolevels to -1 for potentially unlimited undo history (disk space permitting)
+# \" set undolevels=-1
+# \" There is no way to cycle old undos, so be cautious with very large files and histories, as this can consume disk space.
+# \" Periodically clean, e.g. remove anything older than 90 days:   find /home/boss/.vim/undodir -type f -mtime +90 -delete
 
 # Neovim-specific settings block
 nvim_block="

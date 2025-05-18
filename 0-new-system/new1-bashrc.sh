@@ -210,6 +210,7 @@ alias gacp='g acp'    # Common git tool use, git add, git commit, git push
 if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
 
 # Jump functions for new_linux, cannot be in scripts as have to be dotsourced.
+00()  { cd ~/new_linux || return; ls; }              # Jump to new_linux project root
 0n()  { cd ~/new_linux || return; ls; }              # Jump to new_linux project root
 0d()  { cd ~/new_linux/0-docker || return; ls; }     # Jump to new_linux/0-docker
 0g()  { cd ~/new_linux/0-games || return; ls; }      # Jump to new_linux/0-games
