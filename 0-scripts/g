@@ -328,7 +328,7 @@ case "$option" in
         CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
 
         echo -e "\033[1;33mWarning: If you are using a VPN, it might interfere with the git push operation.\033[0m"
-        echo -e "\033[1;33mFor a smoother push, please consider temporarily disconnecting any active VPNs on this system before continuing.\033[0m"
+        echo -e "\033[1;33mPlease consider temporarily disconnecting any active VPNs on this system before continuing.\033[0m"
 
         if [[ $DEBUG_MODE -eq 1 ]]; then
             display_and_run env GIT_SSH_COMMAND='ssh -v' git push origin "$CURRENT_BRANCH"
