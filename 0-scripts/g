@@ -253,55 +253,73 @@ case "$option" in
         display_and_run git add -A --verbose
 
         echo "====="
-        echo "Scanning all tracked files for potential secrets using grep..."
         POTENTIAL_SECRETS_FOUND=0
+        SECRETS_DETECTED_MESSAGES="" # Accumulate messages for different secret types
 
-        # Define patterns for secrets
+        # Define patterns for secrets (ensure these are correct for ERE)
         GH_TOKEN_PATTERN='gh[pusr]_[a-zA-Z0-9]{36}'
         # Generic API Key / Secret pattern: common keywords followed by a colon or equals, then a likely key string
-        # Keywords are case-insensitive due to `grep -iE`
         GENERIC_KEY_FULL_PATTERN='(API_KEY|SECRET_KEY|PRIVATE_KEY|ACCESS_TOKEN|CLIENT_SECRET|AUTH_TOKEN|SESSION_KEY|TOKEN)\s*[:=]\s*["'\'']?[A-Za-z0-9\-_/+]{20,}["'\'']?'
+        # PEM private key headers
         PEM_KEY_PATTERN='-----BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY-----'
 
-        TRACKED_FILES_LIST=$(git ls-files)
-
-        if [ -n "$TRACKED_FILES_LIST" ]; then
-            # Check for GitHub Tokens
+        echo "Scanning all tracked files for potential secrets using 'git ls-files' and 'git grep'"
+        echo "We use the following basic pattern checks: 1. GitHub token pattern, 2. Generic secrets key pattern, 3. PEM key pattern"
+        echo "1. $GH_TOKEN_PATTERN"
+        echo "2. $GENERIC_KEY_FULL_PATTERN"
+        echo "3. $PEM_KEY_PATTERN"
+        echo
+        # Check if there are any files to scan to prevent xargs from erroring if ls-files is empty and -r is not supported/working
+        # We use "git ls-files -z | grep -q ." which checks if there is any character (hence any file) from ls-files -z
+        # grep -q is silent and exits 0 if match, 1 if not.
+        if git ls-files -z | grep -q '.'; then
             echo "Checking for GitHub tokens..."
-            # The `git grep ... -- $TRACKED_FILES_LIST` might have issues if filenames have spaces and TRACKED_FILES_LIST is not handled as an array.
-            # A more robust way for files with spaces, if needed, would be: git ls-files -z | xargs -0 git grep ...
-            # For simplicity here, assuming filenames are generally well-behaved or this script is run in contexts where it's fine.
-            # Alternatively, loop: echo "$TRACKED_FILES_LIST" | while read -r file; do git grep -H -n -E "$GH_TOKEN_PATTERN" "$file"; done && POTENTIAL_SECRETS_FOUND=1
-            if git grep -E --line-number --color=always "$GH_TOKEN_PATTERN" -- $TRACKED_FILES_LIST; then
+            # Use -e for pattern specification, which is safer for patterns starting with hyphens.
+            # xargs -0 -r handles null-terminated filenames from ls-files -z.
+            if git ls-files -z | xargs -0 -r git grep -E --line-number --color=always -e "$GH_TOKEN_PATTERN"; then
                 POTENTIAL_SECRETS_FOUND=1
-                echo -e "\033[1;33m   ^ Potential GitHub tokens found. Review matches above.\033[0m"
+                SECRETS_DETECTED_MESSAGES+=$'\n\033[1;33m   - Potential GitHub tokens found. Review matches above.\033[0m'
             fi
 
-            # Check for Generic API Keys (case-insensitive for keywords)
             echo "Checking for generic API/Secret keys (case-insensitive for keywords)..."
-            if git grep -iE --line-number --color=always "$GENERIC_KEY_FULL_PATTERN" -- $TRACKED_FILES_LIST; then
+            if git ls-files -z | xargs -0 -r git grep -iE --line-number --color=always -e "$GENERIC_KEY_FULL_PATTERN"; then
                 POTENTIAL_SECRETS_FOUND=1
-                echo -e "\033[1;33m   ^ Potential generic keys found. Review matches above.\033[0m"
+                SECRETS_DETECTED_MESSAGES+=$'\n\033[1;33m   - Potential generic keys/secrets found. Review matches above.\033[0m'
             fi
 
-            # Check for Private Key Headers
             echo "Checking for private key headers..."
-            if git grep -E --line-number --color=always "$PEM_KEY_PATTERN" -- $TRACKED_FILES_LIST; then
+            if git ls-files -z | xargs -0 -r git grep -E --line-number --color=always -e "$PEM_KEY_PATTERN"; then
                 POTENTIAL_SECRETS_FOUND=1
-                echo -e "\033[1;33m   ^ Potential private key headers found. Review matches above.\033[0m"
+                SECRETS_DETECTED_MESSAGES+=$'\n\033[1;33m   - Potential private key headers found. Review matches above.\033[0m'
             fi
         else
             echo "No tracked files to scan for secrets."
         fi
 
+        echo "====="
+        # Commit confirmation step
         if [ "$POTENTIAL_SECRETS_FOUND" -ne 0 ]; then
-            echo -e "\033[1;31m❌ Potential secrets detected in your workspace. Review the output above and remove them before committing.\033[0m"
-            exit 1
+            echo -e "\033[1;31m❌ CAUTION: Potential secrets were detected during the scan:\033[0m"
+            echo -e "$SECRETS_DETECTED_MESSAGES" # Display accumulated messages
+            echo -e "\033[1;31mPlease review these findings carefully.\033[0m"
         else
             echo -e "\033[1;32m✅ Basic secret scan passed. No obvious secrets detected in tracked files.\033[0m"
         fi
 
-        echo "====="
+        echo -e "\033[1;34mPlease review the output of the basic secrets check above.\033[0m"
+        echo -e "\033[1;33mCommitting secrets can lead to repository rejection by services like GitHub and may necessitate complex"
+        echo -e "\033[1;33mhistory rewriting (e.g., rebasing), which can be awkward and very time-consuming.\033[0m"
+        echo -e "\033[1;33mIf you are uncertain about the safety of the changes, please run a more comprehensive scan using a tool"
+        echo -e "\033[1;33mlike Gitleaks before committing.\033[0m"
+
+        read -rp $"Do you want to commit these changes with message \"$COMMIT_STR\"? [y/N]: " confirm_commit
+
+        if [[ ! "$confirm_commit" =~ ^[Yy]$ ]]; then
+            echo -e "\033[1;33mCommit cancelled by user.\033[0m"
+            exit 1
+        fi
+
+        echo "Proceeding with commit..."
         display_and_run git commit --verbose -m "$COMMIT_STR" || {
             echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
             exit 1
@@ -310,12 +328,13 @@ case "$option" in
         echo "====="
         CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
 
-        echo -e "\033[1;33m⚠️ Warning: If you are using a VPN, it might interfere with the git push operation.\033[0m"
+        echo -e "\033[1;33mWarning: If you are using a VPN, it might interfere with the git push operation.\033[0m"
+        echo -e "\033[1;33mFor a smoother push, please consider temporarily disconnecting any active VPNs on this system before continuing.\033[0m"
 
         if [[ $DEBUG_MODE -eq 1 ]]; then
             display_and_run env GIT_SSH_COMMAND='ssh -v' git push origin "$CURRENT_BRANCH"
         else
-            read -rp "✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
+            read -rp $"✅ Ready to push to origin/$CURRENT_BRANCH — press ENTER to confirm or Ctrl+C to cancel... "
             display_and_run git push origin "$CURRENT_BRANCH"
         fi
         ;;
