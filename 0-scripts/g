@@ -307,11 +307,10 @@ case "$option" in
         fi
 
         echo -e "\033[1;34mPlease review the output of the basic secrets check above.\033[0m"
-        echo -e "\033[1;33mCommitting secrets can lead to repository rejection by services like GitHub and may necessitate complex"
-        echo -e "\033[1;33mhistory rewriting (e.g., rebasing), which can be awkward and very time-consuming.\033[0m"
-        echo -e "\033[1;33mIf you are uncertain about the safety of the changes, please run a more comprehensive scan using a tool"
-        echo -e "\033[1;33mlike Gitleaks before committing.\033[0m"
-
+        echo -e "\033[1;33mCommitting secrets can lead to repository rejection by services like GitHub and may necessitate complex\033[0m"
+        echo -e "\033[1;33mhistory rewriting (e.g., rebasing), which can be awkward and time-consuming. If you are uncertain about\033[0m"
+        echo -e "\033[1;33mthe safety of the changes, please run a comprehensive scan using a tool like Gitleaks before committing.\033[0m"
+        echo
         read -rp $"Do you want to commit these changes with message \"$COMMIT_STR\"? [y/N]: " confirm_commit
 
         if [[ ! "$confirm_commit" =~ ^[Yy]$ ]]; then
