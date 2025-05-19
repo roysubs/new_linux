@@ -1,5 +1,5 @@
 #!/bin/bash
-# TMUX Tool Script ("t")   
+# TMUX Tool Script ("t")
 # Unified wrapper for commonly used tmux commands with colorful output and aliases.
 
 # Colors

@@ -210,19 +210,19 @@ alias gacp='g acp'    # Common git tool use, git add, git commit, git push
 if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias bat='batcat'; fi   # Use bat on Debian systems
 
 # Jump functions for new_linux, cannot be in scripts as have to be dotsourced.
-00()  { cd ~/new_linux || return; ls; }              # Jump to new_linux project root
-0n()  { cd ~/new_linux || return; ls; }              # Jump to new_linux project root
-0d()  { cd ~/new_linux/0-docker || return; ls; }     # Jump to new_linux/0-docker
-0g()  { cd ~/new_linux/0-games || return; ls; }      # Jump to new_linux/0-games
-0h()  { cd ~/new_linux/0-help || return; ls; }       # Jump to new_linux/0-help
-0i()  { cd ~/new_linux/0-install || return; ls; }    # Jump to new_linux/0-install
-0n()  { cd ~/new_linux/0-notes || return; ls; }      # Jump to new_linux/0-notes
-0ns() { cd ~/new_linux/0-new-system || return; ls; } # Jump to new_linux/0-new-system
-0s()  { cd ~/new_linux/0-scripts || return; ls; }    # Jump to new_linux/0-scripts
+00()  { cd ~/new_linux || return; ls; }                # Jump to new_linux project root
+0n()  { cd ~/new_linux || return; ls; }                # Jump to new_linux project root
+0ns() { cd ~/new_linux/0-new-system || return; ls; }   # Jump to new_linux/0-new-system
+0d()  { cd ~/new_linux/0-docker || return; ls; }       # Jump to new_linux/0-docker
+0g()  { cd ~/new_linux/0-games || return; ls; }        # Jump to new_linux/0-games
+0h()  { cd ~/new_linux/0-help || return; ls; }         # Jump to new_linux/0-help
+0i()  { cd ~/new_linux/0-install || return; ls; }      # Jump to new_linux/0-install
+0s()  { cd ~/new_linux/0-scripts || return; ls; }      # Jump to new_linux/0-scripts
+0w()  { cd ~/new_linux/0-web-services || return; ls; } # Jump to new_linux/0-web-serives
 0ms() { cd ~/new_linux/0-docker/0-media-stack || return; ls; }   # Jump to docker media-stack setup folder
-0mc() { cd ~/.config/media-stack/ || return; ls; }   # Jump to ~/.config/media-stack, all config folders for media-stack
+0mc() { cd ~/.config/media-stack/ || return; ls; }     # Jump to ~/.config/media-stack, all config folders for media-stack
 0mq() { cd ~/.config/media-stack/qbittorrent/qBittorrent/logs || return; ls; }  # Jump to media-stack qBittorrent logs
-0v()  { cd ~/.vnc || return; ls; }                   # Jump to ~/.vnc
+0v()  { cd ~/.vnc || return; ls; }                     # Jump to ~/.vnc
 # Tools and Jump functions for personal folder (could be in a separate .bashrc-personal, but fine to leave here for now)
 # Use 'D' to jump to my the D variable Dv, and can use the variable like this:   mv *.mp4 \$Dv/   # Easy access for defined locations like this
 Dv=\"/mnt/sdc1/Downloads\"; D()  { cd \"\$Dv\" || echo \"Dir '\$Dv' not present\"; return; ls; }  # Jump to my personal Downloads folder
