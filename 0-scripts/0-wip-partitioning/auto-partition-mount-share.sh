@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Author: Roy Wiseman, 2025-04
+
 # ========== PARTITION + FORMAT + MOUNT + NFS + SAMBA AUTOMATION ==========
 # This script creates a new ext4 partition on a specified block device,
 # formats it, mounts it, adds it to /etc/fstab, and shares it via NFS and Samba.

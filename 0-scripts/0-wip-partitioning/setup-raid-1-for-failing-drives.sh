@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Author: Roy Wiseman, 2025-04
+
 set -e
 
 RAID_DEV="/dev/md0"

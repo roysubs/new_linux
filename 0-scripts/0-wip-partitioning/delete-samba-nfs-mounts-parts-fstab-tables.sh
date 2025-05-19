@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Author: Roy Wiseman, 2025-04
+
 # Function to execute and display commands
 run_command() {
     echo -e "\033[34mRunning: $*\033[0m"
@@ -17,7 +19,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Display current lsblk including UUID
-run_command lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,UUID,MOUNTPOINTS
+run_command lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,UUID,MOUNTPOINTS | grep -v loop
 echo "# RM (Removable drive), RO (Read-only)"
 
 # Check if device argument is provided
@@ -94,21 +96,6 @@ else
     done
 fi
 
-# # Step 5: Remove all references to the device in /etc/fstab
-# echo "Step 5: Removing all references from /etc/fstab"
-# fstab_entry=$(grep -i "$device" /etc/fstab)
-# if [ -z "$fstab_entry" ]; then
-#     echo "No references to $device found in /etc/fstab."
-# else
-#     echo "Found the following references to $device in /etc/fstab:"
-#     echo "$fstab_entry"
-#     # run_command sed -i "\|${device}|d" /etc/fstab
-#     # Have not been able to get this sed expression to work via run_command
-#     echo -e "\033[34msed -i \"\|\${device}\|d\" /etc/fstab\033[0m"
-#     sed -i "\|${device}|d" /etc/fstab
-#     echo "References removed from /etc/fstab."
-# fi
-# Step 5: Remove all references to the device in /etc/fstab
 echo "Step 5: Removing all references from /etc/fstab"
 # Get the UUID of the device
 uuid=$(blkid -s UUID -o value "$device")
