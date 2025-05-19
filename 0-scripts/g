@@ -219,7 +219,7 @@ case "$option" in
         echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
         ;;
 
-    acp)
+acp)
         shift # Remove 'acp' from arguments
         DEBUG_MODE=0
         COMMIT_MSG_PARTS=()
@@ -258,9 +258,7 @@ case "$option" in
 
         # Define patterns for secrets (ensure these are correct for ERE)
         GH_TOKEN_PATTERN='gh[pusr]_[a-zA-Z0-9]{36}'
-        # Generic API Key / Secret pattern: common keywords followed by a colon or equals, then a likely key string
         GENERIC_KEY_FULL_PATTERN='(API_KEY|SECRET_KEY|PRIVATE_KEY|ACCESS_TOKEN|CLIENT_SECRET|AUTH_TOKEN|SESSION_KEY|TOKEN)\s*[:=]\s*["'\'']?[A-Za-z0-9\-_/+]{20,}["'\'']?'
-        # PEM private key headers
         PEM_KEY_PATTERN='-----BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY-----'
 
         echo "Scanning all tracked files for potential secrets using 'git ls-files' and 'git grep'"
@@ -269,13 +267,9 @@ case "$option" in
         echo "2. $GENERIC_KEY_FULL_PATTERN"
         echo "3. $PEM_KEY_PATTERN"
         echo
-        # Check if there are any files to scan to prevent xargs from erroring if ls-files is empty and -r is not supported/working
-        # We use "git ls-files -z | grep -q ." which checks if there is any character (hence any file) from ls-files -z
-        # grep -q is silent and exits 0 if match, 1 if not.
-        if git ls-files -z | grep -q '.'; then
+
+        if git ls-files -z | grep -q '.'; then # Check if there are any files to scan
             echo "Checking for GitHub tokens..."
-            # Use -e for pattern specification, which is safer for patterns starting with hyphens.
-            # xargs -0 -r handles null-terminated filenames from ls-files -z.
             if git ls-files -z | xargs -0 -r git grep -E --line-number --color=always -e "$GH_TOKEN_PATTERN"; then
                 POTENTIAL_SECRETS_FOUND=1
                 SECRETS_DETECTED_MESSAGES+=$'\n\033[1;33m   - Potential GitHub tokens found. Review matches above.\033[0m'
@@ -297,10 +291,9 @@ case "$option" in
         fi
 
         echo "====="
-        # Commit confirmation step
         if [ "$POTENTIAL_SECRETS_FOUND" -ne 0 ]; then
             echo -e "\033[1;31m❌ CAUTION: Potential secrets were detected during the scan:\033[0m"
-            echo -e "$SECRETS_DETECTED_MESSAGES" # Display accumulated messages
+            echo -e "$SECRETS_DETECTED_MESSAGES"
             echo -e "\033[1;31mPlease review these findings carefully.\033[0m"
         else
             echo -e "\033[1;32m✅ Basic secret scan passed. No obvious secrets detected in tracked files.\033[0m"
@@ -311,6 +304,7 @@ case "$option" in
         echo -e "\033[1;33mhistory rewriting (e.g., rebasing), which can be awkward and time-consuming. If you are uncertain about\033[0m"
         echo -e "\033[1;33mthe safety of the changes, please run a comprehensive scan using a tool like Gitleaks before committing.\033[0m"
         echo
+
         read -rp $"Do you want to commit these changes with message \"$COMMIT_STR\"? [y/N]: " confirm_commit
 
         if [[ ! "$confirm_commit" =~ ^[Yy]$ ]]; then
@@ -318,11 +312,29 @@ case "$option" in
             exit 1
         fi
 
-        echo "Proceeding with commit..."
-        display_and_run git commit --verbose -m "$COMMIT_STR" || {
-            echo -e "\033[1;31m❌ Commit failed. Aborting push.\033[0m"
+        # --- MODIFIED COMMIT HANDLING ---
+        echo "Attempting to commit changes..."
+        # We call git commit directly here to capture its specific output and status,
+        # rather than using display_and_run which might have its own exit-on-error logic.
+        commit_output_and_error=$(git commit --verbose -m "$COMMIT_STR" 2>&1)
+        commit_status=$?
+        # Always display the output of the commit attempt
+        echo "$commit_output_and_error"
+
+        # Check the commit status
+        if [ $commit_status -eq 0 ]; then
+            # A new commit was successfully created.
+            echo -e "\033[1;32m✅ New commit created successfully.\033[0m"
+        # Check for common "nothing to commit" messages if status is non-zero
+        elif echo "$commit_output_and_error" | grep -q -E "nothing to commit|no changes added to commit|nothing added to commit but untracked files present"; then
+            echo -e "\033[1;33mℹ️ No new changes were staged for this commit attempt. Previous local commits (if any) can still be pushed.\033[0m"
+            # This is NOT a script-halting error. We allow proceeding to the push stage.
+        else
+            # A different, unexpected error occurred during commit.
+            echo -e "\033[1;31m❌ Commit command failed for an unexpected reason. Review output above. Aborting attempt to push.\033[0m"
             exit 1
-        }
+        fi
+        # --- END OF MODIFIED COMMIT HANDLING ---
 
         echo "====="
         CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
@@ -337,7 +349,6 @@ case "$option" in
             display_and_run git push origin "$CURRENT_BRANCH"
         fi
         ;;
-
     ps|push)
         git push
         ;;
