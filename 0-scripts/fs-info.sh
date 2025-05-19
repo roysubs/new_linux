@@ -1,297 +1,392 @@
 #!/bin/bash
 
 # fs-info.sh
-# Displays a compact overview of filesystem, mount, and share information.
-# Designed to be run as a regular user, but some commands (lsblk, df)
-# may show more complete information if run with sudo.
+# Displays a comprehensive overview of filesystem, mount, disk health, and share information.
+# Designed to be run as a regular user, but some commands (lsblk, df, smartctl, showmount)
+# may show more complete information or require sudo for full functionality.
 
 # --- Color Definitions ---
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+ORANGE='\033[0;33m' # For commands
 RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# --- Helper: Check if command is available (basic check for non-sudo commands) ---
+ensure_command_available() {
+    local cmd="$1"
+    local pkg="$2"
+    if ! command -v "$cmd" >/dev/null; then
+        echo -e "${YELLOW}Command '$cmd' not found. Package '$pkg' might be needed.${NC}"
+        return 1
+    fi
+    return 0
+}
+
+
 # --- Function to display lsblk information (cleaned up) ---
 display_lsblk_info() {
     echo -e "${CYAN}${BOLD}--- Block Device Information (lsblk) ---${NC}"
-    echo -e "${YELLOW}Excluding loop devices. Run with sudo for potentially more details.${NC}"
-    if command -v lsblk >/dev/null; then
+    echo -e "${CYAN}${BOLD}----------------------------------------${NC}"
+    if ensure_command_available "lsblk" "util-linux"; then
+        echo -e "${ORANGE}Command: lsblk -e 7 -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT,LABEL,UUID,MODEL${NC}"
+        echo -e "${YELLOW}Excluding loop devices. Run with sudo for potentially more details.${NC}"
         lsblk -e 7 -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT,LABEL,UUID,MODEL
-    else
-        echo -e "${RED}lsblk command not found. Please install util-linux.${NC}"
     fi
+    echo ""
     echo ""
 }
 
 # --- Function to display df information (cleaned up) ---
 display_df_info() {
     echo -e "${CYAN}${BOLD}--- Filesystem Disk Space Usage (df) ---${NC}"
-    echo -e "${YELLOW}Excluding tmpfs, devtmpfs, squashfs, overlay, fuse.lxcfs. Run with sudo for potentially more details.${NC}"
-    if command -v df >/dev/null; then
+    echo -e "${CYAN}${BOLD}----------------------------------------${NC}"
+    if ensure_command_available "df" "coreutils"; then
+        echo -e "${ORANGE}Command: df -hT -x tmpfs -x devtmpfs -x squashfs -x overlay -x fuse.lxcfs${NC}"
+        echo -e "${YELLOW}Excluding tmpfs, devtmpfs, squashfs, overlay, fuse.lxcfs. Run with sudo for potentially more details.${NC}"
         df -hT -x tmpfs -x devtmpfs -x squashfs -x overlay -x fuse.lxcfs
-    else
-        echo -e "${RED}df command not found. Please install coreutils.${NC}"
     fi
+    echo ""
     echo ""
 }
 
-# --- Function to display fstab information (Corrected AWK with Tab Delimiter) ---
+# --- Function to display fstab information ---
 display_fstab_info() {
     local FSTAB_FILE="/etc/fstab"
-
-    echo -e "${CYAN}${BOLD}--- /etc/fstab Content and Field Explanation ---${NC}"
-    if [ ! -f "$FSTAB_FILE" ]; then
-        echo -e "${RED}$FSTAB_FILE not found.${NC}"
-        echo ""
-        return
-    fi
-
-    echo -e "${GREEN}fstab Fields Explanation:${NC}"
-    echo -e "  ${BOLD}1. Filesystem:${NC} Device, UUID, LABEL, or remote filesystem (e.g., UUID=..., /dev/sda1, //server/share)."
-    echo -e "  ${BOLD}2. Mount Point:${NC} Directory where the filesystem is attached (e.g., /, /home, /mnt/data)."
-    echo -e "  ${BOLD}3. Type:${NC} Filesystem type (e.g., ext4, xfs, ntfs, cifs, nfs, swap)."
-    echo -e "  ${BOLD}4. Options:${NC} Comma-separated mount options (e.g., defaults, nofail, ro, rw, user)."
-    echo -e "  ${BOLD}5. Dump:${NC} Used by 'dump' utility (0 = no dump, usually 0)."
-    echo -e "  ${BOLD}6. Pass:${NC} Used by 'fsck' for boot-time check order (0 = no check, 1 = root, 2 = other)."
-    echo ""
-
+    echo -e "${CYAN}${BOLD}--- /etc/fstab Content ---${NC}"
+    echo -e "${CYAN}${BOLD}--------------------------${NC}"
+    if [ ! -f "$FSTAB_FILE" ]; then echo -e "${RED}$FSTAB_FILE not found.${NC}\n"; return; fi
+    echo -e "${ORANGE}Source: $FSTAB_FILE (filtered and formatted)${NC}"
+    
     echo -e "${YELLOW}--- $FSTAB_FILE Entries ---${NC}"
     {
-        # Header with tab delimiters
         echo -e "Filesystem\tMount_Point\tType\tOptions\tDump\tPass"
         echo -e "----------\t-----------\t----\t-------\t----\t----"
         grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$FSTAB_FILE" | \
         awk '
-        NF >= 3 { # Process lines with at least filesystem, mountpoint, and type
-            filesystem = $1;
-            mount_point = $2;
-            type = $3;
-            
-            options_str = "defaults"; 
-            dump_str = "0";      
-            pass_str = "0";      
-
+        NF >= 3 { 
+            filesystem = $1; mount_point = $2; type = $3;
+            options_str = "defaults"; dump_str = "0"; pass_str = "0";      
             if (NF >= 6) {
-                # Last field is pass, second to last is dump
-                # Validate if they are numeric, otherwise they are part of options (and dump/pass get defaults)
-                if ($NF ~ /^[0-9]+$/) {
-                    pass_str = $NF;
-                    if ($(NF-1) ~ /^[0-9]+$/) {
-                        dump_str = $(NF-1);
-                        options_field_count = NF - 2 - 3; # Number of fields making up options (Total - fs - mp - type - dump - pass)
-                    } else { # $(NF-1) is not numeric, so it is part of options, dump is default 0
-                        dump_str = "0";
-                        options_field_count = NF - 1 - 3; 
-                    }
-                } else { # $NF is not numeric, so it is part of options, dump & pass are default 0
-                    dump_str = "0";
-                    pass_str = "0";
-                    options_field_count = NF - 0 - 3;
-                }
-                
+                if ($NF ~ /^[0-9]+$/) { pass_str = $NF; } 
+                if ($(NF-1) ~ /^[0-9]+$/) { dump_str = $(NF-1); }
                 current_options_temp = "";
-                if (options_field_count > 0) {
-                    for (i = 4; i <= (3 + options_field_count); i++) {
+                options_end_idx = NF - 2;
+                if (!($NF ~ /^[0-9]+$/)) { options_end_idx = NF; pass_str = "0"; } 
+                if (!($(NF-1) ~ /^[0-9]+$/) && ($NF ~ /^[0-9]+$/) ) { options_end_idx = NF - 1; dump_str = "0"; }
+                else if (!($(NF-1) ~ /^[0-9]+$/) && !($NF ~ /^[0-9]+$/)) { options_end_idx = NF; dump_str="0"; pass_str="0"; }
+                if (options_end_idx >= 4) {
+                    for (i = 4; i <= options_end_idx; i++) {
                         current_options_temp = current_options_temp (current_options_temp == "" ? "" : " ") $i;
                     }
                 }
-                if (current_options_temp != "") {
-                    options_str = current_options_temp;
-                } # else options_str remains "defaults" if options_field_count was 0 or less
-
+                if (current_options_temp != "") { options_str = current_options_temp; } 
+                else if (options_end_idx < 4) { options_str = "defaults"; }
             } else if (NF == 5) { 
-                # fs mp type opts dump (pass defaults to 0)
-                # OR fs mp type opt_part1 opt_part2 (dump=0, pass=0)
-                options_str = $4; # initial assumption
-                if ($5 ~ /^[0-9]+$/) { # If $5 is numeric, it IS dump
-                    dump_str = $5;
-                } else { # $5 is not numeric, so it must be part of options
-                    options_str = $4 " " $5; 
-                    dump_str = "0"; 
-                }
-                pass_str = "0"; 
-            } else if (NF == 4) { 
-                # fs mp type opts (dump=0, pass=0)
                 options_str = $4;
-            } # else NF == 3 (fs mp type), options/dump/pass remain defaults.
-            
-            # Final validation that parsed dump and pass are numeric
-            if (!(dump_str ~ /^[0-9]+$/)) dump_str="0";
-            if (!(pass_str ~ /^[0-9]+$/)) pass_str="0";
-
-            # Print with tab delimiters
+                if ($5 ~ /^[0-9]+$/) { dump_str = $5; } 
+                else { options_str = $4 " " $5; dump_str = "0"; }
+                pass_str = "0"; 
+            } else if (NF == 4) { options_str = $4; } 
+            if (!(dump_str ~ /^[0-9]+$/)) dump_str="0"; if (!(pass_str ~ /^[0-9]+$/)) pass_str="0";
             printf "%s\t%s\t%s\t%s\t%s\t%s\n", filesystem, mount_point, type, options_str, dump_str, pass_str;
         }'
-    } | column -t -s $'\t' # Use tab as separator for column, -n for no multiple adjacent delimiters
-
+    } | column -t -s $'\t'
+    echo -e "${YELLOW}Warning: Errors in ${FSTAB_FILE} can prevent system boot; edit with caution.${NC}"
+    echo -e "${GREEN}fstab Fields Explanation:${NC}"
+    echo -e "  ${BOLD}1. Filesystem:${NC} Device, UUID, LABEL, or remote fs."
+    echo -e "  ${BOLD}2. Mount Point:${NC} Directory where attached."
+    echo -e "  ${BOLD}3. Type:${NC} Filesystem type."
+    echo -e "  ${BOLD}4. Options:${NC} Mount options."
+    echo -e "  ${BOLD}5. Dump:${NC} 'dump' utility use (usually 0)."
+    echo -e "  ${BOLD}6. Pass:${NC} 'fsck' order (0=no check, 1=root, 2=other)."
     echo ""
-    echo -e "${YELLOW}Remember: Errors in ${FSTAB_FILE} can prevent system boot. Backup before editing:${NC} ${GREEN}sudo cp ${FSTAB_FILE} ${FSTAB_FILE}.$(date +%Y%m%d).bak${NC}"
     echo ""
 }
 
-
-# --- Function to display Samba shares (User Provided AWK script - with minor robustness tweaks) ---
-display_samba_shares() {
-    echo -e "${CYAN}${BOLD}--- Samba Share Configuration (from testparm) ---${NC}"
-    if ! command -v testparm >/dev/null; then
-        echo -e "${RED}testparm command not found. Please install Samba (e.g., samba-common-bin or samba package).${NC}"
+# --- Function to display SMART Disk Health ---
+display_smart_health() {
+    echo -e "${CYAN}${BOLD}--- SMART Disk Health Status ---${NC}"
+    echo -e "${CYAN}${BOLD}--------------------------------${NC}"
+    # Check if smartctl is accessible via sudo, as it often requires root.
+    if ! sudo smartctl --version >/dev/null 2>&1; then
+        echo -e "${YELLOW}Command 'smartctl' not found or not accessible via sudo.${NC}"
+        echo -e "${YELLOW}Please install 'smartmontools' and ensure sudo allows smartctl execution.${NC}"
         echo ""
         return
     fi
 
-    # User's awk script to parse testparm output (header order changed to match user's table example)
+    local disk_devices
+    disk_devices=$(lsblk -d -n -o NAME,TYPE | awk '$2=="disk" {print "/dev/"$1}')
+
+    if [ -z "$disk_devices" ]; then
+        echo "No physical disk devices found to check."
+        echo ""
+        return
+    fi
+
+    echo -e "${ORANGE}Commands: sudo smartctl -H <disk> / sudo smartctl -A <disk> (for each disk below)${NC}"
+    echo -e "${YELLOW}Fetching SMART health. This requires sudo privileges for each disk.${NC}"
+
+    # Group header and data for column -t
+    {
+        # Headers with tab delimiters
+        echo -e "Device\tOverall Health\tRealloc'd\tPending\tUncorrect"
+        echo -e "-------\t--------------\t---------\t-------\t---------"
+
+        for disk in $disk_devices; do
+            local health_output
+            local health_exit_code
+            
+            local health_status_raw="N/A"
+            local health_status_colored="${YELLOW}N/A${NC}"
+            local reallocated_sectors_raw="-"
+            local reallocated_sectors_colored="-"
+            local pending_sectors_raw="-"
+            local pending_sectors_colored="-"
+            local uncorrectable_sectors_raw="-"
+            local uncorrectable_sectors_colored="-"
+
+            # Run smartctl -H and capture its output and exit status
+            health_output=$(sudo smartctl -H "$disk" 2>&1)
+            health_exit_code=$?
+
+            if [ "$health_exit_code" -eq 0 ] || [ "$health_exit_code" -eq 2 ]; then
+                # Exit code 0 means PASSED, exit code 2 means FAILED.
+                # In both cases, SMART data was successfully read.
+                health_status_raw=$(echo "$health_output" | grep -iE '^(SMART overall-health self-assessment test result|self-assessment test result|SMART Health Status)' | awk -F': ' '{print $2}' | sed 's/\s*$//' | sed 's/self-assessment test result //')
+                [[ -z "$health_status_raw" ]] && health_status_raw="Unknown (code $health_exit_code)" # Fallback if grep fails
+
+                if [[ "$health_status_raw" =~ PASSED|OK|COMPLETED ]]; then
+                    health_status_colored="${GREEN}${health_status_raw}${NC}"
+                elif [[ "$health_status_raw" =~ FAILED|FAILING_NOW ]]; then
+                    health_status_colored="${RED}${health_status_raw}${NC}"
+                else # Could be "Unknown" or other status strings parsed
+                    health_status_colored="${YELLOW}${health_status_raw}${NC}"
+                fi
+
+                # Attempt to get attributes only if -H was somewhat successful in communicating
+                # Suppress errors from -A in case attributes are not available or parsing fails
+                reallocated_sectors_raw=$(sudo smartctl -A "$disk" 2>/dev/null | awk '$1=="5" && $2=="Reallocated_Sector_Ct" {print $NF}')
+                [ -z "$reallocated_sectors_raw" ] && reallocated_sectors_raw="-"
+                if [[ "$reallocated_sectors_raw" != "0" && "$reallocated_sectors_raw" != "-" ]]; then 
+                    reallocated_sectors_colored="${RED}${reallocated_sectors_raw}${NC}"; 
+                else
+                    reallocated_sectors_colored="$reallocated_sectors_raw";
+                fi
+
+                pending_sectors_raw=$(sudo smartctl -A "$disk" 2>/dev/null | awk '$1=="197" && $2=="Current_Pending_Sector" {print $NF}')
+                [ -z "$pending_sectors_raw" ] && pending_sectors_raw="-"
+                if [[ "$pending_sectors_raw" != "0" && "$pending_sectors_raw" != "-" ]]; then 
+                    pending_sectors_colored="${RED}${pending_sectors_raw}${NC}"; 
+                else
+                    pending_sectors_colored="$pending_sectors_raw";
+                fi
+                
+                uncorrectable_sectors_raw=$(sudo smartctl -A "$disk" 2>/dev/null | awk '$1=="198" && ($2=="Offline_Uncorrectable" || $2=="Reported_Uncorrect") {print $NF}')
+                [ -z "$uncorrectable_sectors_raw" ] && uncorrectable_sectors_raw="-"
+                if [[ "$uncorrectable_sectors_raw" != "0" && "$uncorrectable_sectors_raw" != "-" ]]; then 
+                    uncorrectable_sectors_colored="${RED}${uncorrectable_sectors_raw}${NC}"; 
+                else
+                    uncorrectable_sectors_colored="$uncorrectable_sectors_raw";
+                fi
+            else
+                # smartctl -H failed with an exit code other than 0 or 2
+                # This indicates a problem accessing SMART data itself (e.g., device doesn't support SMART, permissions issue).
+                health_status_colored="${YELLOW}No SMART Access (err $health_exit_code)${NC}"
+                # Attributes remain N/A as initialized
+                reallocated_sectors_colored="N/A" 
+                pending_sectors_colored="N/A"
+                uncorrectable_sectors_colored="N/A"
+            fi
+            # Use echo -e with tabs for column -t. 
+            # Variables already contain color codes, echo -e will interpret \t.
+            echo -e "${disk}\t${health_status_colored}\t${reallocated_sectors_colored}\t${pending_sectors_colored}\t${uncorrectable_sectors_colored}"
+        done
+    } | column -t -s $'\t' # Pipe the whole block (headers and data) to column
+    echo ""
+    echo ""
+}
+
+# --- Function to display Samba shares ---
+display_samba_shares() {
+    echo -e "${CYAN}${BOLD}--- Samba Share Configuration ---${NC}"
+    echo -e "${CYAN}${BOLD}---------------------------------${NC}"
+    if ! ensure_command_available "testparm" "samba or samba-common-bin"; then echo ""; return; fi
+    echo -e "${ORANGE}Source: testparm -s (parsed)${NC}"
+    
     testparm -s 2>&1 | awk '
     BEGIN {
-        current_share = ""
-        share_count = 0
-        # Headers matching user example order
-        headers[0] = "Name"
-        headers[1] = "Path"
-        headers[2] = "Read-Only"
-        headers[3] = "ValidUsers"
-        headers[4] = "CreateMask" # Swapped order from user AWK
-        headers[5] = "DirMask"   # Swapped order from user AWK
-        headers[6] = "Comment"
-
-
-        for (i = 0; i <= 6; i++) {
-            max_widths[i] = length(headers[i])
-        }
+        current_share = ""; share_count = 0;
+        headers[0] = "Name"; headers[1] = "Path"; headers[2] = "Read-Only"; headers[3] = "ValidUsers";
+        headers[4] = "CreateMask"; headers[5] = "DirMask"; headers[6] = "Comment";
+        for (i = 0; i <= 6; i++) max_widths[i] = length(headers[i]);
     }
-
-    { # Main processing block for every line
+    { 
         if ($0 ~ /^\[.*\]$/) {
+            if (current_share != "" && current_share != "global" && current_share != "printers") share_order[share_count++] = current_share;
+            first_bracket = index($0, "["); last_bracket = index($0, "]");
+            current_share = substr($0, first_bracket + 1, last_bracket - first_bracket - 1);
             if (current_share != "" && current_share != "global" && current_share != "printers") {
-                share_order[share_count++] = current_share
+                shares[current_share]["Path"] = "n/a"; shares[current_share]["Read-Only"] = "n/a"; shares[current_share]["ValidUsers"] = "n/a";
+                shares[current_share]["CreateMask"] = "n/a"; shares[current_share]["DirMask"] = "n/a"; shares[current_share]["Comment"] = "n/a";
             }
-            first_bracket = index($0, "[")
-            last_bracket = index($0, "]")
-            current_share = substr($0, first_bracket + 1, last_bracket - first_bracket - 1)
-
-            if (current_share != "" && current_share != "global" && current_share != "printers") {
-                shares[current_share]["path"] = "n/a"
-                shares[current_share]["readonly"] = "n/a"
-                shares[current_share]["validusers"] = "n/a"
-                shares[current_share]["createmask"] = "n/a"
-                shares[current_share]["dirmask"] = "n/a"
-                shares[current_share]["comment"] = "n/a"
-            }
-
         } else if (current_share != "" && current_share != "global" && current_share != "printers") {
-            line = $0
-            gsub(/^[ \t]+|[ \t]+$/, "", line) 
-
-            if (match(line, /^path[ \t]*=[ \t]*(.*)/, arr)) {
-                shares[current_share]["path"] = arr[1]
-            } else if (match(line, /^read only[ \t]*=[ \t]*(Yes|No)/, arr)) {
-                shares[current_share]["readonly"] = arr[1]
-            } else if (match(line, /^valid users[ \t]*=[ \t]*(.*)/, arr)) {
-                shares[current_share]["validusers"] = arr[1]
-            } else if (match(line, /^create mask[ \t]*=[ \t]*(.*)/, arr)) {
-                shares[current_share]["createmask"] = arr[1]
-            } else if (match(line, /^directory mask[ \t]*=[ \t]*(.*)/, arr)) {
-                shares[current_share]["dirmask"] = arr[1]
-            } else if (match(line, /^comment[ \t]*=[ \t]*(.*)/, arr)) {
-                shares[current_share]["comment"] = arr[1]
-            }
+            line = $0; gsub(/^[ \t]+|[ \t]+$/, "", line); 
+            if (match(line, /^path[ \t]*=[ \t]*(.*)/, arr)) shares[current_share]["Path"] = arr[1];
+            else if (match(line, /^read only[ \t]*=[ \t]*(Yes|No)/, arr)) shares[current_share]["Read-Only"] = arr[1];
+            else if (match(line, /^valid users[ \t]*=[ \t]*(.*)/, arr)) shares[current_share]["ValidUsers"] = arr[1];
+            else if (match(line, /^create mask[ \t]*=[ \t]*(.*)/, arr)) shares[current_share]["CreateMask"] = arr[1];
+            else if (match(line, /^directory mask[ \t]*=[ \t]*(.*)/, arr)) shares[current_share]["DirMask"] = arr[1];
+            else if (match(line, /^comment[ \t]*=[ \t]*(.*)/, arr)) shares[current_share]["Comment"] = arr[1];
         }
     }
-
     END {
-        if (current_share != "" && current_share != "global" && current_share != "printers") {
-            share_order[share_count++] = current_share
-        }
-
-        if (share_count == 0) {
-            print "No user-defined Samba shares found (excluding [global] and [printers] sections)."
-            exit
-        }
-        
+        if (current_share != "" && current_share != "global" && current_share != "printers") share_order[share_count++] = current_share;
+        if (share_count == 0) { print "No user-defined Samba shares found (excluding [global] and [printers])."; exit; }
         for (idx = 0; idx < share_count; idx++) {
-            share_name = share_order[idx]
-            if (length(share_name) > max_widths[0]) max_widths[0] = length(share_name)
-            if (length(shares[share_name]["path"]) > max_widths[1]) max_widths[1] = length(shares[share_name]["path"])
-            if (length(shares[share_name]["readonly"]) > max_widths[2]) max_widths[2] = length(shares[share_name]["readonly"])
-            if (length(shares[share_name]["validusers"]) > max_widths[3]) max_widths[3] = length(shares[share_name]["validusers"])
-            if (length(shares[share_name]["createmask"]) > max_widths[4]) max_widths[4] = length(shares[share_name]["createmask"])
-            if (length(shares[share_name]["dirmask"]) > max_widths[5]) max_widths[5] = length(shares[share_name]["dirmask"])
-            if (length(shares[share_name]["comment"]) > max_widths[6]) max_widths[6] = length(shares[share_name]["comment"])
+            sn = share_order[idx];
+            if (length(sn) > max_widths[0]) max_widths[0] = length(sn);
+            if (length(shares[sn]["Path"]) > max_widths[1]) max_widths[1] = length(shares[sn]["Path"]);
+            if (length(shares[sn]["Read-Only"]) > max_widths[2]) max_widths[2] = length(shares[sn]["Read-Only"]);
+            if (length(shares[sn]["ValidUsers"]) > max_widths[3]) max_widths[3] = length(shares[sn]["ValidUsers"]);
+            if (length(shares[sn]["CreateMask"]) > max_widths[4]) max_widths[4] = length(shares[sn]["CreateMask"]);
+            if (length(shares[sn]["DirMask"]) > max_widths[5]) max_widths[5] = length(shares[sn]["DirMask"]);
+            if (length(shares[sn]["Comment"]) > max_widths[6]) max_widths[6] = length(shares[sn]["Comment"]);
         }
-
-        fmt_str = ""
-        separator_str = ""
-        # Using tab as a delimiter for printf to column -t
+        fmt_str = ""; sep_str = "";
         for (col = 0; col <= 6; col++) {
-            fmt_str = fmt_str "%-" max_widths[col] "s" (col < 6 ? "\t" : "\n")
-            for (j = 0; j < max_widths[col]; j++) separator_str = separator_str "="
-            if (col < 6) separator_str = separator_str "\t" # Tab for separator line too
+            fmt_str = fmt_str "%-" max_widths[col] "s" (col < 6 ? "\t" : "\n");
+            for (j = 0; j < max_widths[col]; j++) sep_str = sep_str "=";
+            if (col < 6) sep_str = sep_str "\t"; 
         }
-        
-        printf fmt_str, headers[0], headers[1], headers[2], headers[3], headers[4], headers[5], headers[6]
-        print separator_str
-
+        printf fmt_str, headers[0], headers[1], headers[2], headers[3], headers[4], headers[5], headers[6]; print sep_str;
         for (idx = 0; idx < share_count; idx++) {
-            share_name = share_order[idx]
-            printf fmt_str, share_name, shares[share_name]["path"], shares[share_name]["readonly"], \
-                   shares[share_name]["validusers"], shares[share_name]["createmask"], \
-                   shares[share_name]["dirmask"], shares[share_name]["comment"]
+            sn = share_order[idx];
+            printf fmt_str, sn, shares[sn]["Path"], shares[sn]["Read-Only"], shares[sn]["ValidUsers"], \
+                   shares[sn]["CreateMask"], shares[sn]["DirMask"], shares[sn]["Comment"];
         }
-    }
-    ' | column -t -s $'\t' -n # Tell column to use tab as separator
+    }' | column -t -s $'\t'
+    echo ""
     echo ""
 }
 
-
-# --- Function to display NFS exports ---
-display_nfs_exports() {
+# --- Function to display NFS exports (Server Perspective) ---
+display_nfs_exports_server() {
     local EXPORTS_FILE="/etc/exports"
-    echo -e "${CYAN}${BOLD}--- NFS Export Configuration ($EXPORTS_FILE) ---${NC}"
+    echo -e "${CYAN}${BOLD}--- NFS Server Export Configuration ---${NC}"
+    echo -e "${CYAN}${BOLD}---------------------------------------${NC}"
 
-    if [ ! -f "$EXPORTS_FILE" ]; then
-        echo -e "${YELLOW}$EXPORTS_FILE not found. NFS server may not be configured.${NC}"
-        echo ""
-        return
+    local nfs_server_service="nfs-kernel-server" 
+    if ! systemctl list-units --type=service --all 2>/dev/null | grep -q "${nfs_server_service}.service"; then
+        nfs_server_service="nfs-server" 
+    fi
+    
+    local is_active=false
+    if systemctl is-active --quiet "$nfs_server_service" 2>/dev/null; then
+        is_active=true
     fi
 
-    if [ ! -s "$EXPORTS_FILE" ] || ! grep -qE '^[^#]' "$EXPORTS_FILE"; then
+    echo -e "${ORANGE}Source: $EXPORTS_FILE (filtered)${NC}"
+    if [ ! -f "$EXPORTS_FILE" ]; then
+        echo -e "${YELLOW}$EXPORTS_FILE not found. NFS server may not be configured to export filesystems.${NC}"
+    elif [ ! -s "$EXPORTS_FILE" ] || ! grep -qE '^[^#]' "$EXPORTS_FILE"; then
          echo "No active exports found in $EXPORTS_FILE (file is empty or all lines are comments)."
     else
-        echo -e "${YELLOW}Path Client(s) (Options)${NC}"
-        echo "--------------------------------------------------"
-        # Print non-comment, non-empty lines
-        grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$EXPORTS_FILE"
-        echo "--------------------------------------------------"
+        {
+            echo -e "Path\tClients_and_Options"
+            echo -e "----\t-------------------"
+            grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$EXPORTS_FILE" | awk '
+            NF >= 1 { # Must have at least a path
+                path = $1;
+                clients_options = "";
+                if (NF >= 2) {
+                    for (i = 2; i <= NF; i++) {
+                        clients_options = clients_options (clients_options == "" ? "" : " ") $i;
+                    }
+                } else {
+                    clients_options = "(No clients/options specified)";
+                }
+                printf "%s\t%s\n", path, clients_options;
+            }'
+        } | column -t -s $'\t'
     fi
 
-    if command -v showmount >/dev/null; then
-        echo -e "\n${YELLOW}Active NFS Exports (attempting 'sudo showmount -e localhost'):${NC}"
+    # Check for showmount availability using sudo
+    if sudo showmount --version >/dev/null 2>&1; then
+        echo -e "\n${YELLOW}Active NFS Exports (sudo showmount -e localhost):${NC}"
+        echo -e "${ORANGE}Command: sudo showmount -e localhost${NC}"
         if sudo showmount -e localhost 2>/dev/null; then
             : 
         else
-            echo "Could not retrieve active exports via 'showmount -e localhost'."
-            echo "NFS server might not be running, not exporting to localhost, or rpcbind might be needed."
+            echo "Could not retrieve active exports. NFS server might not be running or exporting."
+        fi
+        
+        echo -e "\n${YELLOW}Active NFS Client Connections (sudo showmount -a localhost):${NC}"
+        echo -e "${ORANGE}Command: sudo showmount -a localhost${NC}"
+        if sudo showmount -a localhost 2>/dev/null; then
+            : 
+        else
+            echo "No active client connections, or NFS server not responding."
         fi
     else
-        echo -e "\n${YELLOW}'showmount' command not found. Cannot display active exports.${NC}"
-        echo "Install nfs-common (or similar package) to use 'showmount'."
+        echo -e "\n${YELLOW}'showmount' command not found or not accessible via sudo.${NC}"
+        echo -e "${YELLOW}Install nfs-common (or similar package) and ensure sudo access to use 'showmount'.${NC}"
     fi
+    
+    echo -e "\n${YELLOW}NFS Server Service Status Summary (${nfs_server_service}):${NC}"
+    echo -e "${ORANGE}Command: systemctl status $nfs_server_service --no-pager | grep -E 'Active:|Loaded:|Main PID:'${NC}"
+    if $is_active; then
+        systemctl status "$nfs_server_service" --no-pager | grep -E 'Active:|Loaded:|Main PID:' | sed 's/^[[:space:]]*//'
+    else
+        echo -e "${RED}Service $nfs_server_service is not active.${NC}"
+    fi
+    echo ""
+    echo ""
+}
+
+# --- Function to display Remote Mounted Filesystems (Client Perspective) ---
+display_remote_mounts() {
+    echo -e "${CYAN}${BOLD}--- Remote Mounted Filesystems (This System as Client) ---${NC}"
+    echo -e "${CYAN}${BOLD}----------------------------------------------------------${NC}"
+    local found_any_remote_mount=false
+
+    echo -e "${ORANGE}Source: mount -l -t cifs / mount -l -t nfs,nfs4 (parsed)${NC}"
+    if mount -l -t cifs 2>/dev/null | grep -q '^//'; then 
+        echo -e "\n${YELLOW}Samba (SMB/CIFS) Client Mounts:${NC}"
+        mount -l -t cifs | awk '{printf "%s\n  on: %s\n  options: %s\n\n", $1, $3, $6}'
+        found_any_remote_mount=true
+    fi
+
+    if mount -l -t nfs,nfs4 2>/dev/null | grep -q ':'; then 
+        echo -e "\n${YELLOW}NFS Client Mounts:${NC}"
+        mount -l -t nfs,nfs4 | awk '{printf "%s\n  on: %s\n  options: %s\n\n", $1, $3, $6}'
+        found_any_remote_mount=true
+    fi
+    
+    if ! $found_any_remote_mount; then
+        echo "No remote CIFS or NFS mounts found on this system."
+    fi
+    echo ""
     echo ""
 }
 
 
 # --- Main Script Execution ---
-echo -e "${BOLD}=========================================${NC}"
-echo -e "${BOLD}      Filesystem Information Utility     ${NC}"
-echo -e "${BOLD}=========================================${NC}"
+echo -e "${BOLD}====================================${NC}"
+echo -e "${BOLD}      Filesystem Information        ${NC}"
+echo -e "${BOLD}====================================${NC}"
 echo ""
 
+display_smart_health
+display_samba_shares
+display_nfs_exports_server
+display_remote_mounts
+display_fstab_info
 display_lsblk_info
 display_df_info
-display_fstab_info
-display_samba_shares
-display_nfs_exports
 
 echo -e "${GREEN}${BOLD}Info gathering complete.${NC}"
 echo ""
