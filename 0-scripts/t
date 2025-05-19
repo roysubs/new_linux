@@ -25,8 +25,8 @@ Options:
   list          List buffers, clients, panes, sessions, windows
   t|s|start     Start tmux, 't t', 't s', 't start'; ${BLUE}tmux${NC}
   a <name>      Attach to session <name> (or to last session if no name); ${BLUE}tmux attach-session -t <name>${NC}
-  d             Detach from current session; ${BLUE}tmux detach${NC}A
-  f|b           Switch panes (f for forwards, b for backwards); ${BLUE}tmux select-pane -t :.+${NC} (:.- for backwards)
+  d             Detach from current session; ${BLUE}tmux detach${NC}  'C-b d'
+  f|b           Panes (f forwards, b backwards); tmux select-pane -t :.+ (forwards), or :.- (backwards)
   sh            Split Horizontal (create pane, split line is top to bottom)
   sv            Split Vertical (create pane, split line is left to right)
   sg            Split Grid (create panes to form a 2x2 grid)
@@ -38,7 +38,7 @@ Options:
          Right-click context-sensitive menu
     off: Mouse-wheel will scroll console history
   panes         Flash up the pane numbers, and show details in console
-  ren <name>    Rename session
+  ren|rename <name>   Rename session
   swi <name>    Switch to session
   k             ${BLUE}tmux kill${NC} | Kill current tmux pane
   hk            Help summary of common key binding defaults and some commands
@@ -139,7 +139,7 @@ case "$1" in
     ru) tmux resize-pane -U 5 ;;
     rd) tmux resize-pane -D 5 ;;
 
-    ren)
+    ren|rename)
         shift
         tmux rename-session "$1"
         ;;

@@ -3,8 +3,6 @@
 # Script to create/manage an NFS share on Debian
 # Version 1.0
 
-# echo "${0##*/}: Create/manage a NFS share"
-
 # Automatically elevate privileges with sudo if not running as root
 if [ "$(id -u)" -ne 0 ]; then
     echo "Elevation required; rerunning as sudo..." 1>&2 # Print to stderr
@@ -13,7 +11,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # --- Configuration ---
-APP_NAME="create-share-nfs.sh"
+APP_NAME="${0##*/}"
 EXPORTS_FILE="/etc/exports"
 EXPORTS_FILE_BACKUP="/etc/exports.original_script_backup"
 # nfs-common provides showmount and other utilities, good to have on server too.

@@ -3,8 +3,6 @@
 # Script to create/manage a Samba share
 # Version 1.0
 
-echo "${0##*/}: Create/manage a Samba share"
-
 # Automatically elevate privileges with sudo if not running as root
 if [ "$(id -u)" -ne 0 ]; then
     echo "Elevation required; rerunning as sudo..." 1>&2 # Print to stderr
@@ -13,7 +11,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # --- Configuration ---
-APP_NAME="create-share-samba.sh"
+APP_NAME="${0##*/}"
 SMB_CONF_FILE="/etc/samba/smb.conf"
 SMB_CONF_BACKUP="/etc/samba/smb.conf.original_script_backup"
 REQUIRED_PKGS="samba smbclient cifs-utils"
