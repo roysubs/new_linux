@@ -131,7 +131,7 @@ while [[ $# -gt 0 ]]; do
             SHOW_CMD=true
             shift
             ;;
-        hh|examples) # Find examples
+        hf|h-find) # Find examples
             ACTION="find_examples"
             shift
             ;;
