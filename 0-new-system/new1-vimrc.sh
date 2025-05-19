@@ -316,12 +316,11 @@ inoremap <F4> <Esc>:set list! listchars=tab:→\ ,trail:·,eol:¶<CR> \
         \\ :echo \"Hidden chars \" . (&list ? \"ON\" : \"OFF\") . \", Statusline \" . (&laststatus == 2 ? \"ON\" : \"OFF\")<CR>a
 \" Old version 'list' only:   nnoremap <F4> :set list! listchars=tab:→\\ ,trail:·,eol:¶<CR>
 
-\" Enable persistent undo, so that undo will operate between different edit sessions of files
-set undofile
-
 "
 
 # Having problems with persistent undo for now
+# \" Enable persistent undo, so that undo will operate between different edit sessions of files
+# set undofile
 # \" Set the directory where undo files will be stored
 # \" Create this directory if it doesn't exist
 # \" Use a path within your home directory
