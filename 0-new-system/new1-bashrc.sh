@@ -211,12 +211,11 @@ if ! command -v bat &> /dev/null && command -v batcat &> /dev/null; then alias b
 
 # Jump functions for new_linux, cannot be in scripts as have to be dotsourced.
 00()  { cd ~/new_linux || return; ls; }                # Jump to new_linux project root
-0n()  { cd ~/new_linux || return; ls; }                # Jump to new_linux project root
-0ns() { cd ~/new_linux/0-new-system || return; ls; }   # Jump to new_linux/0-new-system
 0d()  { cd ~/new_linux/0-docker || return; ls; }       # Jump to new_linux/0-docker
 0g()  { cd ~/new_linux/0-games || return; ls; }        # Jump to new_linux/0-games
 0h()  { cd ~/new_linux/0-help || return; ls; }         # Jump to new_linux/0-help
 0i()  { cd ~/new_linux/0-install || return; ls; }      # Jump to new_linux/0-install
+0n()  { cd ~/new_linux/0-new-system || return; ls; }   # Jump to new_linux/0-new-system
 0s()  { cd ~/new_linux/0-scripts || return; ls; }      # Jump to new_linux/0-scripts
 0w()  { cd ~/new_linux/0-web-services || return; ls; } # Jump to new_linux/0-web-serives
 0ms() { cd ~/new_linux/0-docker/0-media-stack || return; ls; }   # Jump to docker media-stack setup folder

@@ -71,5 +71,5 @@ fi
 print_header "\nFinal Instructions:"
 echo "If your SSH key is missing, add it to GitHub under Settings -> SSH and GPG keys."
 echo "If problems persist, try restarting your SSH agent with: eval \"\$(ssh-agent -s)\" and re-running ssh-add."
-echo "\nDone!"
+echo -e "\nDone!"
 

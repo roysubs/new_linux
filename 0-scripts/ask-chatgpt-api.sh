@@ -2,17 +2,17 @@
 
 # Send a question as a command-line argument and outputs the GPT's answer directly to the console.
 # Set your OpenAI API Key: The script expects your API key to be in an environment variable named
-# OPENAI_API_KEY. Do not hardcode your API key into the script. Set it in your shell session like this:
-#     export OPENAI_API_KEY="your_actual_api_key_here"
+# OPENAI_KEY. Do not hardcode your API key into the script. Set it in your shell session like this:
+#     export OPENAI_KEY="your_actual_key_here"
 # This could also be put into ~/.bashrc
 
 # --- Configuration & Prerequisites ---
 
 # 1. Check for OpenAI API Key
-if [ -z "$OPENAI_API_KEY" ]; then
-  echo "Error: The OPENAI_API_KEY environment variable is not set." >&2
+if [ -z "$OPENAI_KEY" ]; then
+  echo "Error: The OPENAI_KEY environment variable is not set." >&2
   echo "Please set it before running the script:" >&2
-  echo "  export OPENAI_API_KEY='your_actual_api_key_here'" >&2
+  echo "  export OPENAI_KEY='your_actual_api_key_here'" >&2
   exit 1
 fi
 
@@ -54,7 +54,7 @@ json_payload=$(jq -n \
 # -S: show error message on explicit error, used with -s
 # --max-time: maximum time in seconds that you allow the whole operation to take
 api_response=$(curl -s -S -X POST "$API_URL" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Authorization: Bearer $OPENAI_KEY" \
   -H "Content-Type: application/json" \
   --max-time "$REQUEST_TIMEOUT_SECONDS" \
   -d "$json_payload")

@@ -115,7 +115,7 @@ case "$option" in
     sx)
         for searchstr in "$@"; do
             # First, get your list of packages, for example:
-            apt-cache search --names-only $searchstr | awk '{print $1}' > packages_to_check.txt
+            apt-cache search --names-only $searchstr | awk '{print $1}' > /tmp/packages_to_check.txt
             # Or use the output from the apt-file search in point 2 if you prefer that starting list
 
             echo "Executables from packages:"

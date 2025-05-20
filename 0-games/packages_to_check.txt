@@ -1,3 +1,0 @@
-bsdgames
-nbsdgames
-bsdgames-nonfree

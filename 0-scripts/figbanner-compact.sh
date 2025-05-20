@@ -1,6 +1,6 @@
 ####################
 # Display login banner, except for when starting a new tmux/byobu session)
-####################
+#################### 
 
 RGB() { awk 'BEGIN{ s="          "; s=s s s s s s s s; for (colnum = 0; colnum<77; colnum++) { r = 255-(colnum*255/76); g = (colnum*510/76); b = (colnum*255/76); if (g>255) g = 510-g; printf "\033[48;2;%d;%d;%dm", r,g,b; printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b; printf "%s\033[0m", substr(s,colnum+1,1); } printf "\n";}'; }
 ver() { local RELEASE; if [ -f /etc/os-release ]; then . /etc/os-release; RELEASE="${PRETTY_NAME:-$NAME}"; elif [ -f /etc/redhat-release ]; then RELEASE=$(cat /etc/redhat-release); elif [ -f /etc/lsb-release ]; then RELEASE=$(grep -E '^(DISTRIB_DESCRIPTION|DESCRIPTION)=' /etc/lsb-release | head -n1 | cut -d'=' -f2- | sed 's/"//g'); elif [ -f /etc/debian_version ]; then RELEASE="Debian $(cat /etc/debian_version)"; elif [ -f /etc/alpine-release ]; then RELEASE="Alpine $(cat /etc/alpine-release)"; fi; printf "${RELEASE:-Unknown Distro}, $(uname -msr)\n"; }

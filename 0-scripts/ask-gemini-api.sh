@@ -11,15 +11,15 @@
 # On other systems, search for "install jq [your OS]".
 # Set your Google API Key: The script expects your API key to be in an environment variable named GOOGLE_API_KEY. 
 # Do not hardcode your API key into the script. Set it in your shell session like this:
-#     export GOOGLE_API_KEY="your_actual_google_api_key_here"
+#     export GOOGLE_KEY="your_actual_google_key_here"
 
 # --- Configuration & Prerequisites ---
 
 # 1. Check for Google API Key
-if [ -z "$GOOGLE_API_KEY" ]; then
-  echo "Error: The GOOGLE_API_KEY environment variable is not set." >&2
+if [ -z "$GOOGLE_KEY" ]; then
+  echo "Error: The GOOGLE_KEY environment variable is not set." >&2
   echo "Please set it before running the script:" >&2
-  echo "  export GOOGLE_API_KEY='your_actual_google_api_key_here'" >&2
+  echo "  export GOOGLE_KEY='your_actual_google_api_key_here'" >&2
   exit 1
 fi
 
@@ -43,7 +43,7 @@ fi
 # Using gemini-1.5-flash-latest for a balance of speed and capability.
 # You can also use "gemini-1.5-pro-latest" or other available models.
 MODEL_NAME="gemini-1.5-flash-latest"
-API_URL="https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GOOGLE_API_KEY}"
+API_URL="https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GOOGLE_KEY}"
 REQUEST_TIMEOUT_SECONDS=60 # Set a timeout for the API call
 
 # Inform the user that the script is working

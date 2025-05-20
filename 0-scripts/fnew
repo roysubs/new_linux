@@ -18,7 +18,7 @@ use_sudo=""
 
 # Check for the -s flag
 if [[ "$1" == "-s" ]]; then
-    use_sudo="sudo"
+    use_sudo="sudo "
     shift  # Remove -s from arguments
 fi
 
@@ -51,17 +51,17 @@ elif [[ -n "$1" ]]; then
 fi
 
 # Find files and get modification times using stat
-find_cmd="$use_sudo find \"$dir\" -xdev -type f | head -n \"$num\""
+find_cmd="${use_sudo}find \"$dir\" -xdev -type f | head -n \"$num\""
 
 # Display the command before execution
-echo "$find_cmd | xargs -I {} stat --format '%y %n' {}"
+echo "# $find_cmd | xargs -I {} stat --format '%y %n' {} | sort -rh"
 echo
 
 # Start timer
 start_time=$(date +%s)
 
 # Execute the command with a cleaner date format
-eval "$find_cmd" | xargs -I {} stat --format '%y %n' {} | sed 's/\.[0-9]*\s\+\([+-][0-9]\{4\}\)\?//'
+eval "$find_cmd" | xargs -I {} stat --format '%y %n' {} | sed 's/\.[0-9]*\s\+\([+-][0-9]\{4\}\)\?//' | sort -rh
 
 # End timer and calculate duration
 end_time=$(date +%s)

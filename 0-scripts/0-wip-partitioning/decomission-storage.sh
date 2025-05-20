@@ -230,9 +230,6 @@ unmount_filesystem_path() {
 remove_fstab_entries_for_identifier() {
     local identifier="$1" 
     _log_step "Fstab Cleanup: Searching for entries related to '$identifier'"
-
-    if ! backup_file "$FSTAB_FILE"; then return 1; fi
-    
     _log_info "Searching for fstab entries matching '$identifier'..."
     local id_for_awk="$identifier" 
     
@@ -252,6 +249,7 @@ remove_fstab_entries_for_identifier() {
     for line in "${fstab_lines_found[@]}"; do echo "  $line"; done
 
     if ask_yes_no "Do you want to comment out these fstab entries?"; then
+    if ! backup_file "$FSTAB_FILE"; then return 1; fi   # Only backup if user confirms making changes
         # Use awk to comment out matching lines
         if sudo awk -v id_match_str="$id_for_awk" '
             BEGIN{ modified_count=0 }
@@ -298,13 +296,17 @@ delete_partition_device() {
 
     local base_disk
     base_disk=$(sudo lsblk -np -o PKNAME "$partition_device" 2>/dev/null)
+    #!!! base_disk=$(lsblk -no PKNAME "$partition_device" 2>/dev/null)
     if [ -z "$base_disk" ]; then
         _log_error "Could not determine base disk for partition '$partition_device'. Cannot delete."
         return 1
     fi
+    # Convert disk name to full path
+    base_disk="/dev/$base_disk"
     
     local part_num_str
     part_num_str=$(sudo lsblk -npo PARTN "$partition_device" 2>/dev/null)
+    #!!! part_num_str=$(echo "$partition_device" | grep -oE '[0-9]+$')
     if ! [[ "$part_num_str" =~ ^[0-9]+$ ]]; then 
         _log_warn "lsblk PARTN for '$partition_device' not found/invalid, attempting string manipulation fallback..."
         part_num_str=$(echo "$partition_device" | grep -oE '[0-9]+$')
