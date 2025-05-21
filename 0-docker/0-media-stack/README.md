@@ -6,8 +6,8 @@ This project sets up a self-hosted media download and management automation suit
 - qBittorrent (actually qbittorrent-nox but image name is qbittorent)
 - Sonarr
 - Radarr
-- Jackett
-- Filebrowser
+- Prowlarr
+- (Filebrowser)
 
 ## Setup
 
@@ -17,8 +17,8 @@ This project sets up a self-hosted media download and management automation suit
    - qBittorrent: http://localhost:8080
    - Sonarr: http://localhost:8989
    - Radarr: http://localhost:7878
-   - Jackett: http://localhost:9117
-   - Filebrowser: http://localhost:8081
+   - Prowlarr: http://localhost:9117
+   - (Filebrowser: http://localhost:8081)
 
 ## Teardown
 
