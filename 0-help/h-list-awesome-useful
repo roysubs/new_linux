@@ -4,9 +4,7 @@
 FILE="/tmp/awesome-useful-projects-repos.md"
 URL="https://raw.githubusercontent.com/Furthir/awesome-useful-projects/main/repos.md"
 INTRO="# Intro
-A list of over 500 (and counting) open source projects that aims to have projects that is useful for any person that falls in between the range of tech-illiterate and head developer (is casual the word? idk). Maybe except for the Other section, that's just for fun.
-
-This list does **NOT** include projects related to development such as APIs, libraries, and frameworks."
+A list of over 500 (and counting) open source projects. These are projects useful for any person from tech-illiterate to head developer (except for the 'Other' section, which is just for fun). This list does **NOT** include projects related to development such as APIs, libraries, and frameworks."
 
 # Check if the file already exists
 if [[ -f "$FILE" ]]; then
@@ -28,6 +26,7 @@ else
 fi
 
 # Display the file using glow
-glow -p -w $(( $(tput cols) - 6 )) "$FILE"
-
+# glow -p -w $(( $(tput cols) - 6 )) "$FILE"
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(( $(tput cols) - 5 )); fi)
+mdcat --columns="$WIDTH" <(cat "$FILE") | less -R
 

@@ -1,12 +1,18 @@
 #!/bin/bash
 
-
+### Notes to integrate at some point ###
 # Need to talk about ALT+Mouse drag and other things like that - it selects a box etc
+# By default, in terminal:
+# Ctrl+Shift+c to copy selected text into clipboard
+# Ctrl+Shift+v to paste from clipboard into a terminal
+# If not, Terminal preferences are usually in right-click inside the terminal, then Preferences or Settings, or in the menu bar Edit > Preferences.
+# Look for the Shortcuts section and ensure "Paste" is mapped to Ctrl+Shift+V.
 
 
 # This will mimic Ctrl+L to quick-clear the screen *without* removing history
 # This may not work in GNOME terminal
 softclear() { printf '\033[H\033[2J'; }
+# However, it is better to just use this:   clear -x
 
 # Define colors
 GREEN='\033[0;32m'

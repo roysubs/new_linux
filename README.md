@@ -1,11 +1,17 @@
 new_linux Bootstrap Project
 =========================
 
-• This new_linux repo can rapidly bootstrap any Linux system:
+---
 
-  • Run source ./update-bashrc-vimrc-paths.sh in the root of new_linux
+▶ Purpose: A reusable, modular bootstrap layer for any Linux syste running bash
 
-  • Essential .bashrc / .vimrc, .inputrc configuration (all idempotent and non-invasive)
+---
+
+The `new_linux` repo can rapidly bootstrap any Linux system:
+
+  • Run `source ./update-bashrc-vimrc-paths.sh` in the root of `new_linux`
+
+  • Essential `.bashrc`, `.vimrc`, and`.inputrc` configuration (all idempotent and non-invasive)
 
   • Menu guided new system setup to get up and running fast
 
@@ -15,15 +21,10 @@ new_linux Bootstrap Project
 
   • Help system for many aspects of Linux and common applications
 
-  • Deploying clean, idempotent helper scripts: a, b, def, dk, g, h, z, etc
+  • Deploying clean, powerful, and easy to use helper scripts: `a`, `b`, `def`, `dk`, `g`, `h`, `z`, etc
 
-════════════════════════════════════════════════════════════════════════════════════════════════════
-
-▶ Purpose: A reusable, modular bootstrap layer for:
-
-════════════════════════════════════════════════════════════════════════════════════════════════════
-
-┄Bootstrap Process
+Bootstrap Process
+=========================
 
  1. 🏁 Initial Setup
 
@@ -37,48 +38,6 @@ new_linux Bootstrap Project
     • Adds aliases, functions, and helper logic cleanly
     • Idempotent: avoids duplication if .bashrc already contains a block
     • Preserves any existing user logic
-boss@hp2:~/new_linux/0-help$
-boss@hp2:~/new_linux/0-help$ cat h-new_linux-notes
-#!/bin/bash
-if ! command -v mdcat >/dev/null 2>&1; then echo "Install mdcat to render markdown."; fi
-WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(($(tput cols) - 5)); fi)
-mdcat --columns="$WIDTH" <(cat <<'EOF'
-
-Bash Bootstrap Help
-=========================
-
-- This help file explains the new_linux repo and how to rapidly bootstrap any Linux system:
-
-    - Run `source ./update-bashrc-vimrc-paths.sh` in the root of `new_linux`
-
-
-    - Essential `.bashrc` / `.vimrc`, `.inputrc` configuration (all idempotent and non-invasive)
-    - Menu guided new system setup to get up and running fast
-    - Idempotent Docker logic, and sane interactive defaults with various projects
-    - Git integration with SSH and clean setup scripts to connect to GitHub
-    - Help system for many aspects of Linux and common applications
-    - Deploying clean, idempotent helper scripts: `a`, `b`, `def`, `dk`, `g`, `h`, `z`, etc
-
----
-
-▶ Purpose:
-    A reusable, modular bootstrap layer for:
-
----
-
-Bootstrap Process
-=========================
-
-1. 🏁 Initial Setup
-    - Custom .bashrc setup provides the very useful `h` and `def` functions
-    - Ensures required tools are installed: `curl`, `git`, `vim`, `mdcat`, etc (wip)
-    - Ensures Bash and Readline behave consistently across sessions
-    - Adds 0-scripts to PATH for access to core scripts: `a`, `b`, `d`, `f`, `g`, `z`, `dk`, etc
-
-2. 🐚 .bashrc and Shell Environment
-    - Adds aliases, functions, and helper logic cleanly
-    - Idempotent: avoids duplication if `.bashrc` already contains a block
-    - Preserves any existing user logic
 
 3. 🎯 .inputrc and Navigation
     - Adds readline keybindings:
@@ -130,38 +89,34 @@ Bootstrap Process
 
 Re-running bootstrap
 =========================
-🌀 Fully Idempotent:
-    - Script detects and skips existing entries in `.bashrc`, `.inputrc`, etc
-    - Will never break your shell or duplicate entries
-    - If rerun, will:
-        - Print summary of what it would do
-        - Ask for confirmation before overwriting anything
-        - Offer `diff` style output of any proposed changes
+🌀 Fully Idempotent:  
+    - Script detects and skips existing entries in `.bashrc`, `.inputrc`, etc  
+    - Will never break your shell or duplicate entries  
+    - If rerun, will:  
+        - Print summary of what it would do  
+        - Ask for confirmation before overwriting anything  
+        - Offer `diff` style output of any proposed changes  
 
 ---
 
 Optional Add-ons
 =========================
 
-✅ Media-Stack containers (qBittorrent / Sonarr / Radarr)
-    - Manage as a single container stack
-    - Uses `wireguard` VPN container (significantly lower footprint than OpenVPN)
-    - Media folder paths standardized under `/mnt/media` via bind mount
-    - Media config paths standardized under `~/.config/media-stack`
-    - Generic Wireguard setup with work with any VPN vendor
+✅ Media-Stack containers (qBittorrent / Sonarr / Radarr)  
+    - Manage as a single container stack  
+    - Uses `wireguard` VPN container (significantly lower footprint than OpenVPN)  
+    - Media folder paths standardized under `/mnt/media` via bind mount  
+    - Media config paths standardized under `~/.config/media-stack`  
+    - Generic Wireguard setup with work with any VPN vendor  
 
-✅ Backup integration
-    - rsync + rclone hooks available (wip)
-    - Optional encryption with gocryptfs (wip)
-    - Syncs project files, dotfiles, media, etc
+✅ Backup, Sync, and Sharing integration  
+    - rsync, rclone, and borgbackup scripts available (wip)  
+    - Syncthing as local or container install  
+    - Filebrowser for web UI access to `media-stack`  
 
-✅ Sync + Sharing
-    - Syncthing as local or container install
-    - Filebrowser for web UI access to `media-stack`
-
-✅ Monitoring Container Stack
-    - `monitoring-stack` : grafana + prometheus instannt setup
-    - CPU, mem, network, and container states
+✅ Monitoring Container Stack  
+    - `monitoring-stack` : grafana + prometheus instannt setup  
+    - CPU, mem, network, and container states  
 
 ---
 
@@ -240,12 +195,3 @@ Scripts for more specialized tools, automation, and specific software stacks.
 * `new6-python-venv-and-pipx.sh`: Sets up Python virtual environments and installs `pipx` for managing Python command-line applications in isolated environments.
 
 ---
-### Recommendations:
-
-1.  **Review Unclear Scripts**: For scripts like `new0-ssh-setup.sh` (if it differs significantly from `new0-openssh-server-setup.sh`), `new1-update-h-scripts.sh`, and `new2-x11-f1.sh`, try to recall their exact purpose or inspect their contents to write a more accurate description.
-2.  **Consolidate**: If scripts have overlapping functionality (e.g., multiple XRDP or SSH setup scripts), consider merging them or clearly documenting why different versions exist.
-3.  **Missing Phases**: Address the scripts for phases 3, 4, and 5. If they were part of your plan, you'll need to create/restore them. If they are no longer needed, you can remove references to them.
-4.  **Selector Script**: If `new-selector.py` and `new-select-one.py` are important for using this collection, ensure they are present and briefly describe their usage at the beginning of your README.
-5.  **Keep it Updated**: As you add, remove, or modify scripts, make it a habit to update this README.md file. It's invaluable for yourself in the future and for anyone else who might use your scripts.
-
-You can copy and paste the content above into your `new00-read-me.txt` (or preferably, a `README.md` file for better rendering on platforms like GitHub). Remember to fill in any blanks or clarify the points marked for your attention.

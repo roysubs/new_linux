@@ -1,3 +1,9 @@
+#!/bin/bash
+command -v mdcat &>/dev/null || "${0%/*}/mdcat-get.sh"; hash -r
+command -v mdcat &>/dev/null || { echo "Error: mdcat required but not available." >&2; exit 1; }
+WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(( $(tput cols) - 5 )); fi)
+mdcat --columns="$WIDTH" <(cat <<'EOF'
+
 MATE is enabled by default on Debian with MATE.
 
 Ensure SSH is Active: Before you make these changes, ensure SSH is running to maintain remote access:
@@ -26,10 +32,5 @@ Reverting to Graphical Mode:
    sudo systemctl set-default graphical.target
    sudo systemctl isolate graphical.target
 
-
-
-
-
-
-
-
+EOF
+) | less -R
