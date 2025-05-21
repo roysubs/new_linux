@@ -14,7 +14,7 @@ print_line() {
 }
 
 color_echo() {
-    echo -e "${GREEN}$1${NC}\n"
+    echo -e "# ${GREEN}$1${NC}\n"
 }
 
 help_text() {
