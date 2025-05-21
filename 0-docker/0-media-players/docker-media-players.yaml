@@ -5,11 +5,12 @@ services:
     # Using host network for Plex is often easier for discovery (DLNA, GDM) and avoids manual port mapping for all its services.
     # If you prefer not to use host mode, remove network_mode and map all required ports:
     # ports:
-    #   - "32400:32400/tcp" # Main Plex port
-    #   - "3005:3005/tcp"   # Plex Companion
-    #   - "8324:8324/tcp"   # Plex Roku via Plex Companion
-    #   - "32469:32469/tcp" # Plex DLNA Server
-    #   - "1900:1900/udp"   # Plex DLNA Server (discovery)
+    #   Shifted all Plex ports +1 to avoid conflict with local install
+    #   - "32401:32400/tcp" # Main Plex port
+    #   - "3006:3005/tcp"   # Plex Companion
+    #   - "8325:8324/tcp"   # Plex Roku via Plex Companion
+    #   - "32470:32469/tcp" # Plex DLNA Server
+    #   - "1901:1900/udp"   # Plex DLNA Server (discovery)
     #   - "32410:32410/udp" # GDM discovery
     #   - "32412:32412/udp" # GDM discovery
     #   - "32413:32413/udp" # GDM discovery
@@ -99,7 +100,7 @@ services:
       # Ensure paths match how you'd set them up in Kodi sources
     ports:
       - "8088:8080" # Kodi web interface (Chorus2 default 8080, changed to avoid common conflicts)
-      - "9090:9090" # Kodi JSON-RPC TCP
+      - "9091:9090" # Kodi JSON-RPC TCP, conflict with 9090 for Prometheus, so moving to 9091
       - "9777:9777/udp" # Kodi EventServer
     restart: unless-stopped
 
