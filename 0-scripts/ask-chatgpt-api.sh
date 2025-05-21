@@ -18,8 +18,8 @@ fi
 
 # 2. Check for input question
 if [ -z "$1" ]; then
-  echo "Usage: $0 \"Your question to ChatGPT\"" >&2
-  echo "Example: $0 \"What is the capital of France?\"" >&2
+  echo "Usage: ${0##*/} \"Your question to ChatGPT\"" >&2
+  echo "Example: ${0##*/} \"What is the capital of France?\"" >&2
   exit 1
 fi
 USER_PROMPT="$1"

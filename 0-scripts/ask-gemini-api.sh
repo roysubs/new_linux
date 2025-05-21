@@ -25,8 +25,8 @@ fi
 
 # 2. Check for input question
 if [ -z "$1" ]; then
-  echo "Usage: $0 \"Your question to Gemini\"" >&2
-  echo "Example: $0 \"What are the main moons of Jupiter?\"" >&2
+  echo "Usage: ${0##*/} \"Your question to Gemini\"" >&2
+  echo "Example: ${0##*/} \"What are the main moons of Jupiter?\"" >&2
   exit 1
 fi
 USER_PROMPT="$1"

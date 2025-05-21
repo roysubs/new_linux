@@ -24,7 +24,7 @@ _dk_completion() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # List of dk subcommands that expect a container name next
-    commands_needing_container="start stop rm logs look run it x ex exec"
+    commands_needing_container="start stop restart rm logs look run it x ex exec"
 
     # List of dk subcommands that expect an image name next
     commands_needing_image="rmi" # Add "im" if you want to complete image names after "dk im" (less common)
@@ -35,7 +35,7 @@ _dk_completion() {
         # Use compgen -W to generate matches from a wordlist
         # Use -W "$(command)" to use the output of a command as the wordlist
         # Redirect stderr to /dev/null to suppress errors if docker is not running
-        local container_names=$(docker ps -aq --format '{{.Names}}' 2>/dev/null)
+        local container_names=$(docker ps -a --format '{{.Names}}' 2>/dev/null)
 
         # Use compgen -W to handle names with spaces correctly when quoted
         COMPREPLY=( $(compgen -W "${container_names}" -- "$cur") )
@@ -106,6 +106,4 @@ else
     echo "Please ensure bash-completion is correctly installed on your system." >&2
     exit 1 # Indicate failure
 fi
-
-exit 0
 

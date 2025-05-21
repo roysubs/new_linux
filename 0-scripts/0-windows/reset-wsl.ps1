@@ -9,7 +9,7 @@ It uses aggressive confirmation prompts to prevent accidental data loss.
 Finally, it offers to install a fresh WSL distribution after the uninstallation.
 
 .NOTES
-Author: Gemini
+Author: Roy Wiseman
 Version: 1.0
 Date: 2025-05-12
 Requires: PowerShell, WSL installed and configured.

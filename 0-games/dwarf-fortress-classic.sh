@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Dwarf Fortress Classic Setup Script for Debian/Ubuntu-based Systems (Console Mode)
-# Author: Your AI Assistant (based on successful troubleshooting)
+# Author: Roy Wiseman
 # Date: 2025-04-23
 #
 # This script aims to set up Dwarf Fortress Classic (32-bit Linux version)

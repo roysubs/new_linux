@@ -10,7 +10,7 @@ rm -rf ~/.config/media-stack
 
 # Stop and remove containers
 # docker rm -f wireguard qbittorrent sonarr radarr filebrowser jackett
-docker compose -f docker-compose-media-stack.yaml down
+docker compose -f docker-compose-wireguard.yaml down
 
 read -p "Delete the .env file with VPN credentials? [y/N]: " del_env
 if [[ "$del_env" =~ ^[Yy]$ ]]; then
@@ -24,6 +24,12 @@ if [[ "$del_configs" =~ ^[Yy]$ ]]; then
   rm -rf "$CONFIG_ROOT"
   echo "Config folders deleted."
 fi
+
+# read -p "Delete media folders in $BASE_MEDIA? [y/N]: " del_media
+# if [[ "$del_media" =~ ^[Yy]$ ]]; then
+#   rm -rf "$BASE_MEDIA"/downloads "$BASE_MEDIA"/movies "$BASE_MEDIA"/tv
+#   echo "Media folders deleted."
+# fi
 
 echo "Removal complete."
 

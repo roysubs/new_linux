@@ -21,34 +21,35 @@ help_text() {
     printf "
 Docker Tool (dk). Usage: dk [option]
 Options:
-  s|status|size|up    ${BLUE}docker ps --format${NC}  Created time and uptime only
-  info [name]   Look at container info (from outside with docker commands, and from within the container if a shell exists)
-  im            ${BLUE}docker images${NC}   List all images (base images used to create containers)
-  ps            ${BLUE}docker ps${NC} Can also add -a (all), -n N (last N created), -l (latest created), -f (filter)
-  a             ${BLUE}docker ps -a${NC}  List all containers (including those that are stopped)
-  n <N>         ${BLUE}docker ps -n N${NC}  List last <N> created (if N omitted, default to N=1)
-  l             ${BLUE}docker ps -l${NC}  List latest created (can add -a to also check stopped)
-  ps            ${BLUE}docker ps${NC}  -a (all), -n N (last N created), -l (latest created), -f (filter)
-  f             ${BLUE}docker ps -f [filtername=string]${NC}  Type 'dk f' to see all filter options
-  p|ports       ${BLUE}docker ps --format${NC}  Name, Image, Ports in table format
-  pl|portslist  ${BLUE}docker ps --format${NC}  Ports, but in list output
-  m|mounts      ${BLUE}docker ps --format${NC}  Name, Image, Mounts in table format
-  ml|mountslist ${BLUE}docker ps --format${NC}  Mounts, but in list format
+  s|status|size  ${BLUE}docker ps --format${NC}  Created time and uptime only
+  info [name]    Look at container info (from outside with docker commands, and from within the container if a shell exists)
+  im             ${BLUE}docker images${NC}   List all images (base images used to create containers)
+  ps             ${BLUE}docker ps${NC} Can also add -a (all), -n N (last N created), -l (latest created), -f (filter)
+  a              ${BLUE}docker ps -a${NC}  List all containers (including those that are stopped)
+  n <N>          ${BLUE}docker ps -n N${NC}  List last <N> created (if N omitted, default to N=1)
+  l|last         ${BLUE}docker ps -l${NC}  List latest created (can add -a to also check stopped)
+  ps             ${BLUE}docker ps${NC}  -a (all), -n N (last N created), -l (latest created), -f (filter)
+  f              ${BLUE}docker ps -f [filtername=string]${NC}  Type 'dk f' to see all filter options
+  p|ports        ${BLUE}docker ps --format${NC}  Name, Image, Ports in table format
+  pl|portslist   ${BLUE}docker ps --format${NC}  Ports, but in list output
+  m|mounts       ${BLUE}docker ps --format${NC}  Name, Image, Mounts in table format
+  ml|mountslist  ${BLUE}docker ps --format${NC}  Mounts, but in list format
   run [name] [image]  ${BLUE}sudo docker run -it --name [name] [image]${NC}  Create and start container
   it [name] <process> ${BLUE}docker exec -it [name] [process]${NC}  Interactive TTY
       Interactively enter container and start a process (could be bash, sh, top, etc)
-  x|ex|exec    ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
-  start <name> ${BLUE}docker start <name>${NC}   Start a stopped container
-  stop <name>  ${BLUE}docker stop <name>${NC}    Stop a running container
-  rm  <name>   ${BLUE}docker rm <name>${NC}      Remove a container
-  rmi <img>    ${BLUE}docker rmi <img>${NC}      Remove an image
-  logs <name>  ${BLUE}docker logs -f <name>${NC}   Follow logs from a container
-  prune        ${BLUE}docker system prune -f${NC}  Remove unused data
-  volprune     ${BLUE}docker volume prune -f${NC}  Remove unused volumes
-  clean        Run all prune operations
-  up [name]    ${BLUE}docker-compose up -d [name]${NC}   Start container(s) with docker-compose
-  down         ${BLUE}docker-compose down${NC}           Stop and remove docker-compose containers
-  -h, --help   Show this help menu
+  x|ex|exec      ${BLUE}docker exec -it <name> <process>${NC}   Enter container and run bash
+  start <name>   ${BLUE}docker start <name>${NC}   Start a stopped container
+  stop <name>    ${BLUE}docker stop <name>${NC}    Stop a running container
+  restart<name>  ${BLUE}docker stop <name>${NC}    Stop a running container
+  rm <name>      ${BLUE}docker rm <name>${NC}      Remove a container
+  rmi <img>      ${BLUE}docker rmi <img>${NC}      Remove an image
+  logs <name>    ${BLUE}docker logs -f <name>${NC}   Follow logs from a container
+  prune          ${BLUE}docker system prune -f${NC}  Remove unused data
+  volprune       ${BLUE}docker volume prune -f${NC}  Remove unused volumes
+  clean          Run all prune operations
+  up [name]      ${BLUE}docker-compose up -d [name]${NC}   Start container(s) with docker-compose
+  down           ${BLUE}docker-compose down${NC}           Stop and remove docker-compose containers
+  -h, --help     Show this help menu
 
 "
 }
@@ -195,33 +196,38 @@ case "$cmd" in
         ;;
 
     x|ex|exec)
-        color_echo "docker exec -it $1 $2"
-        docker exec -it $1 $2
+        color_echo "docker exec -it $@"
+        docker exec -it $@
         ;;
 
     run)
-        color_echo "sudo docker run -it --name $1 $2"
-        sudo docker run -it --name $1 $2
+        color_echo "sudo docker run -it --name $@"
+        sudo docker run -it --name $@
         ;;
 
     up)
         color_echo "docker-compose up -d $1"
-        docker-compose up -d "$1"
+        docker-compose up -d $1
         ;;
 
     down)
-        color_echo "docker-compose down"
-        docker-compose down
+        color_echo "docker-compose down $@"
+        docker-compose down $@
         ;;
 
     start)
-        color_echo "docker start $1"
-        docker start "$1"
+        color_echo "docker start $@"
+        docker start $@
         ;;
 
     stop)
-        color_echo "docker stop $1"
-        docker stop "$1"
+        color_echo "docker stop $@"
+        docker stop $@
+        ;;
+
+    restart)
+        color_echo "docker restart $@"
+        docker restart $@
         ;;
 
     info)

@@ -5,9 +5,9 @@ WIDTH=$(if [ $(tput cols) -ge 105 ]; then echo 100; else echo $(( $(tput cols) -
 mdcat --columns="$WIDTH" <(cat <<'EOF'
 
 
-# Setting Up YouCompleteMe for Vim
+# YouCompleteMe for Vim
 
-This guide will help you set up the **YouCompleteMe** plugin for **Vim**. It includes installation steps, usage instructions, and how to disable or uninstall the plugin if needed.
+This is a guide to up the **YouCompleteMe** programming autocompletion plugin for **Vim** with installation steps, usage instructions, and how to disable or uninstall the plugin if needed.
 
 ## Step 1: Install vim-plug
 

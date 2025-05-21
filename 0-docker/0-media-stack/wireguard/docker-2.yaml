@@ -22,6 +22,7 @@ services:
       - PUID=${PUID}  # Defined in .env by start-media-stack.sh
       - PGID=${PGID}  # Defined in .env by start-media-stack.sh
       - TZ=${TZ}      # Defined in .env by start-media-stack.sh
+      - LAN_NETWORK=192.168.1.0/24,100.64.0.0/10
       # The linuxserver/wireguard image typically auto-detects .conf files
       # in the /config directory. The start-media-stack.sh script will place
       # your WireGuard config (renamed to wg0.conf) into ${CONFIG_ROOT}/wireguard
@@ -40,11 +41,11 @@ services:
       - ${CONFIG_ROOT}/wireguard:/config
       # Recommended for kernel module access if WireGuard module isn't built into host kernel or auto-loaded.
       - /lib/modules:/lib/modules:ro
+      - ${CONFIG_ROOT}/wireguard/add-nat.sh:/etc/cont-init.d/99-add-nat.sh
     ports:
       # These ports are exposed on the WireGuard container, and traffic is routed to the
       # respective services that use `network_mode: service:wireguard`.
       # Format: HostPort:ContainerInternalPort (which is the port the actual service listens on)
-
       # qBittorrent Web UI
       - 8080:8080
       # Jackett Web UI
@@ -55,7 +56,6 @@ services:
       - 7878:7878
       # Filebrowser Web UI (if you re-enable it and its internal port is 80)
       # - 8081:80
-
       # qBittorrent torrenting ports (ensure these match qBittorrent's internal settings)
       - 6881:6881/tcp
       - 6881:6881/udp

@@ -272,26 +272,27 @@ fi
 # --- WireGuard VPN Configuration ---
 echo
 echo "--- WireGuard VPN Configuration ---"
-echo -e "${RED}Important Note:${NC} This script assumes you are using a WireGuard Docker image (like linuxserver/wireguard)"
-echo "that expects a WireGuard configuration file (e.g., wg0.conf) in its mapped config volume."
+echo -e "${RED}Important Note:${NC} This script uses a WireGuard Docker image (linuxserver/wireguard)"
+echo "that expects a WireGuard configuration file (e.g., wg0.conf or no-osl.conf etc) in its mapped config volume."
 echo
-echo "You need to obtain a WireGuard configuration file (often ending in .conf, like 'no-osl.conf' or similar) from your VPN provider."
-echo "This typically involves:"
-echo "  1. Logging into your VPN provider's website."
-echo "  2. Navigating to a 'Manual Setup', 'Router Setup', or 'WireGuard Configuration' section."
-echo "  3. You might need to generate a new key pair (public/private key). Your provider will guide you if this is necessary."
-echo "     If you generate a key pair, you'll usually provide your PUBLIC key to the VPN service, and they will incorporate it into the .conf file they provide you."
-echo "  4. Download the generated .conf file to your system."
-echo "  5. You *must* add the following to the [Interface] section of the no-osl.conf file:"
-echo "         PostUp = DBG_IP=\$(ip -4 route show default dev eth0 | awk '/default/ {print \$3}'); ip -4 route add 192.168.1.0/24 via \$DBG_IP dev eth0"
-echo "     Change 192.168.1.0/24 to match your subnet."
-
-
+echo -e "You need to obtain this WireGuard configuration file from your VPN provider."
+echo -e "This typically involves:"
+echo -e "  1. Logging into your VPN provider's website."
+echo -e "  2. Navigating to a 'Manual Setup', 'Router Setup', or 'WireGuard Configuration' section."
+echo -e "  3. You might need to generate a new key pair (public/private key). Your provider will guide you if this is necessary."
+echo -e "     If you generate a key pair, you'll usually provide your PUBLIC key to the VPN service, and they will incorporate it into the .conf file they provide you."
+echo -e "  4. Download the generated .conf file to your system."
+echo -e "  5. You ${RED}*must*${NC} add the following to the [Interface] section of the no-osl.conf file:"
+echo -e "         PostUp = DBG_IP=\$(ip -4 route show default dev eth0 | awk '/default/ {print \$3}'); ip -4 route add 192.168.1.0/24 via \$DBG_IP dev eth0"
+echo -e "     ${YELLOW}Change 192.168.1.0/24 to match your subnet.${NC}"
 echo
 
-WIREGUARD_CONFIG_FILE_PATH=""
+echo "--- Wireguard Config File Setup ---"
+# Prompt user for the source path with default
+DEFAULT_CONFIG_FILE_PATH="/home/boss/no-osl.conf"   # Define the default here
 while true; do
-    read -p "Enter the FULL path to your WireGuard configuration file (e.g., /home/user/vpn_configs/no-osl.conf): " WIREGUARD_CONFIG_FILE_PATH
+    read -p "Enter the FULL path to your WireGuard configuration file (default: $DEFAULT_CONFIG_FILE_PATH): " CONFIG_FILE_PATH_INPUT
+    WIREGUARD_CONFIG_FILE_PATH="${CONFIG_FILE_PATH_INPUT:-$DEFAULT_CONFIG_FILE_PATH}"   # Use default if input is empty
     if [ -f "$WIREGUARD_CONFIG_FILE_PATH" ]; then
         echo "✅ WireGuard configuration file found at: $WIREGUARD_CONFIG_FILE_PATH"
         break
