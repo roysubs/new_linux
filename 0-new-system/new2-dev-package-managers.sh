@@ -1,6 +1,22 @@
 #!/bin/bash
 
 set -e
+echo "This script will step through the installation of various package managers."
+echo "- yarn (JS)"
+echo "- For pipx, we create a Python virtual environment in the user's home directory (isolated from system Python)"
+echo "- pipx (Isolated Python tools)"
+echo "- cargo (Rust)"
+echo "- Composer (PHP)"
+echo "- Maven (Java)"
+echo "- Gradle (Java)"
+echo "- CPAN (Perl)"
+echo "- Homebrew (Linuxbrew)"
+echo "- Miniconda (Python/R)"
+echo "- cabal (Haskell)"
+echo "- Go (Golang)"
+echo
+read -p "Would you like to continue? [Y/n] " choice
+[[ "$choice" =~ ^[Yy]$ ]] || { echo "Exiting."; exit 1; }
 
 # Only update if it's been more than 2 days since the last update (to avoid constant updates)
 if [ -e /var/cache/apt/pkgcache.bin ]; then
@@ -20,23 +36,6 @@ confirm() {
     esac
 }
 
-# Create a Python virtual environment in the user's home directory (isolated from system Python)
-create_python_venv() {
-    VENV_DIR="$HOME/.local/python_env"
-    if [ ! -d "$VENV_DIR" ]; then
-        echo "Creating Python virtual environment at $VENV_DIR..."
-        python3 -m venv "$VENV_DIR"
-        echo "Virtual environment created! To activate it, run: source $VENV_DIR/bin/activate"
-    else
-        echo "Python virtual environment already exists at $VENV_DIR."
-    fi
-}
-
-# Activate virtual environment
-activate_venv() {
-    source "$HOME/.local/python_env/bin/activate"
-}
-
 # Node.js & npm
 echo -e "\033[1;33m\n### 💻 Node.js & npm\033[0m"
 if confirm "Node.js and npm"; then
@@ -50,6 +49,21 @@ if confirm "Yarn (JS)"; then
     sudo npm install -g yarn
 fi
 
+# For pipx, we create a Python virtual environment in the user's home directory (isolated from system Python)
+create_python_venv() {
+    VENV_DIR="$HOME/.local/python_env"
+    if [ ! -d "$VENV_DIR" ]; then
+        echo "Creating Python virtual environment at $VENV_DIR..."
+        python3 -m venv "$VENV_DIR"
+        echo "Virtual environment created! To activate it, run: source $VENV_DIR/bin/activate"
+    else
+        echo "Python virtual environment already exists at $VENV_DIR."
+    fi
+}
+# Activate virtual environment
+activate_venv() {
+    source "$HOME/.local/python_env/bin/activate"
+}
 # pipx (Isolated Python tools)
 echo -e "\033[1;33m\n### 🐍 pipx (Isolated Python CLI tools)\033[0m"
 if confirm "pipx (Isolated Python CLI tools)"; then
