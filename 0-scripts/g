@@ -7,18 +7,99 @@
 INVOCATION_DIR="$(pwd)"
 
 # --- Helper Functions ---
-echo_blue() {
-    echo -e "\033[1;34m$@\033[0m"
-}
+
+C_NORMAL="\033[0m"
+C_BOLD="\033[1m"
+C_DIM="\033[2m" # You might not need this one, but it's an option
+
+C_RED="\033[0;31m"
+C_GREEN="\033[0;32m"
+C_YELLOW="\033[0;33m" # For your M default
+C_BLUE="\033[0;34m"   # For general blue text like the icon
+C_MAGENTA="\033[0;35m" # For your R default
+C_CYAN="\033[0;36m"    # For your ?? default
+
+C_BOLD_RED="\033[1;31m"
+C_BOLD_GREEN="\033[1;32m"
+C_BOLD_YELLOW="\033[1;33m"
+C_BOLD_BLUE="\033[1;34m"
+C_BOLD_MAGENTA="\033[1;35m"
+C_BOLD_CYAN="\033[1;36m"
+
+echo_blue() { echo -e "\033[1;34m$@\033[0m"; }
+echo_red() { echo -e "\033[1;31m$@\033[0m"; }
+echo_yellow() { echo -e "\033[1;32m$@\033[0m"; }
 
 display_and_run() {
     echo -e "\033[1;34m$@\033[0m" # Echo the command
     eval "$@" # Execute the command
 }
 
-echo_red() {
-    echo -e "\033[1;31m$@\033[0m"
+print_git_status_legend() {
+    # --- Essential ANSI Color Codes (defined locally for this function) ---
+    local C_NORMAL="\033[0m"
+    local C_BOLD="\033[1m"
+
+    local C_RED="\033[0;31m"
+    local C_GREEN="\033[0;32m"
+    local C_YELLOW="\033[0;33m"
+    local C_BLUE="\033[0;34m"
+    local C_MAGENTA="\033[0;35m"
+    local C_CYAN="\033[0;36m"
+
+    local C_BOLD_RED="\033[1;31m"
+    local C_BOLD_GREEN="\033[1;32m"
+    local C_BOLD_YELLOW="\033[1;33m"
+    local C_BOLD_BLUE="\033[1;34m"
+    local C_BOLD_MAGENTA="\033[1;35m"
+    local C_BOLD_CYAN="\033[1;36m"
+    # --- End Essential Color Codes ---
+
+    # User's chosen colors for general letter meanings in the top line
+    local C_USER_MODIFIED="${C_BOLD_YELLOW}M${C_NORMAL}"
+    local C_USER_ADDED="${C_BOLD_GREEN}A${C_NORMAL}"
+    local C_USER_DELETED="${C_BOLD_RED}D${C_NORMAL}"
+    local C_USER_RENAMED="${C_BOLD_MAGENTA}R${C_NORMAL}"
+    local C_USER_UNTRACKED="${C_BOLD_CYAN}??${C_NORMAL}" # Valid variable name
+
+    # Specific colors for XY example outputs (to better match typical terminal)
+    local C_EX_M_MOD="${C_BOLD_RED}M${C_NORMAL}"    # Red M for modifications
+    local C_EX_A_ADD="${C_BOLD_GREEN}A${C_NORMAL}"  # Green A for staged adds
+    local C_EX_QQ_UNTRK="${C_BOLD_CYAN}??${C_NORMAL}" # Cyan ?? for untracked
+    local C_EX_UU_CONF="${C_BOLD_RED}UU${C_NORMAL}" # Red UU for conflicts
+
+    # Legend Text Construction
+    local L1_ICON="${C_BOLD_BLUE}🔍${C_NORMAL}"
+    local L1_TEXT1="Git --short Status: ${C_BOLD_GREEN}X${C_NORMAL}${C_BOLD_RED}Y${C_NORMAL} PATH (${C_BOLD_GREEN}X${C_NORMAL}=Staged, ${C_BOLD_RED}Y${C_NORMAL}=Unstaged). Codes:"
+    local L1_CODES="${C_USER_MODIFIED}=Mod ${C_USER_ADDED}=Add ${C_USER_DELETED}=Del ${C_USER_RENAMED}=Ren ${C_USER_UNTRACKED}=Untrk"
+
+    local L2_STAGED="${C_BOLD_GREEN}Staged (Index)${C_NORMAL}:    Changes prepared for 'git commit'."
+    local L2_UNSTAGED="${C_BOLD_RED}Unstaged (Worktree)${C_NORMAL}: File modifications not yet staged for commit."
+
+    # Examples
+    local EX_M_S_DESC="Staged Mod:"   ; local EX_M_S_CODE="${C_EX_M_MOD} "
+    local EX_M_U_DESC="Unstaged Mod:" ; local EX_M_U_CODE=" ${C_EX_M_MOD}"
+    local EX_MM_DESC="Both Mod:"      ; local EX_MM_CODE="${C_EX_M_MOD}${C_EX_M_MOD}"
+    local EX_A_S_DESC="Staged Add:"   ; local EX_A_S_CODE="${C_EX_A_ADD} "
+    local EX_QQ_DESC="Untracked:"    ; local EX_QQ_CODE="${C_EX_QQ_UNTRK}" # Contains "??", valid
+    local EX_UU_DESC="Conflict:"     ; local EX_UU_CODE="${C_EX_UU_CONF}"
+
+    # Output the legend
+    echo -e "${L1_ICON} ${L1_TEXT1} ${L1_CODES}"
+    echo -e "  ${L2_STAGED}"
+    echo -e "  ${L2_UNSTAGED}"
+    echo -e "  ${C_BOLD_BLUE}e.g.${C_NORMAL}"
+    # printf for alignment. %b interprets escape sequences in the CODE variables.
+    echo -e "    $(printf "%-14s%-15b | %-14s%-15b | %-12s%-15b" \
+        "$EX_M_S_DESC" "$EX_M_S_CODE" \
+        "$EX_M_U_DESC" "$EX_M_U_CODE" \
+        "$EX_MM_DESC" "$EX_MM_CODE")"
+    echo -e "    $(printf "%-14s%-15b | %-14s%-15b | %-12s%-15b" \
+        "$EX_A_S_DESC" "$EX_A_S_CODE" \
+        "$EX_QQ_DESC" "$EX_QQ_CODE" \
+        "$EX_UU_DESC" "$EX_UU_CODE")"
 }
+
 # --- End Helper Functions ---
 
 if [ $# -eq 0 ]; then
@@ -232,14 +313,12 @@ case "$option" in
 
     s)
         display_and_run git status
-        echo -e "\033[1;34m🔍 Git status legend:\033[0m Left=staged  Right=unstaged  \033[1;33mM\033[0m=modified  \033[1;32mA\033[0m=added  \033[1;31mD\033[0m=deleted  \033[1;35mR\033[0m=renamed  \033[1;36m??\033[0m=untracked"
-        echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
+        print_git_status_legend
         ;;
 
     ss)
         display_and_run git status --short
-        echo -e "\033[1;34m🔍 Git status legend:\033[0m Left=staged  Right=unstaged  \033[1;33mM\033[0m=modified  \033[1;32mA\033[0m=added  \033[1;31mD\033[0m=deleted  \033[1;35mR\033[0m=renamed  \033[1;36m??\033[0m=untracked"
-        echo -e "    e.g.  \033[1;33mM \033[0m=staged mod,  \033[1;33m M\033[0m=unstaged mod,  \033[1;33mMM\033[0m=both,  \033[1;36m??\033[0m=new file not yet added"
+        print_git_status_legend
         ;;
 
     acp)
@@ -332,6 +411,18 @@ case "$option" in
         echo -e "\033[1;33mhistory rewriting (e.g., rebasing), which can be awkward and time-consuming. If you are uncertain about\033[0m"
         echo -e "\033[1;33mthe safety of the changes, please run a comprehensive scan using a tool like Gitleaks before committing.\033[0m"
         echo
+        echo "--------------------------------------------------"
+        echo_blue "ℹ️ You are about to commit to the following project:"
+        PROJECT_DIR_DISPLAY=$(pwd)
+        ORIGIN_URL_DISPLAY=$(git config --get remote.origin.url 2>/dev/null)
+        echo_blue "   Project Root: $PROJECT_DIR_DISPLAY"
+        if [ -n "$ORIGIN_URL_DISPLAY" ]; then
+            echo_blue "   Remote 'origin': $ORIGIN_URL_DISPLAY"
+        else
+            echo_red "   Remote 'origin': Not configured or could not be determined."
+        fi
+        echo "--------------------------------------------------"
+
 
         read -rp $"Do you want to commit these changes with message \"$COMMIT_STR\"? [y/N]: " confirm_commit
 

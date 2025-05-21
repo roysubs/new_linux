@@ -14,7 +14,7 @@ echo
 echo "1. By Apparent Size (Sum of individual file sizes)"
 echo "   Not the used space on disk but counting each file by it's byte size."
 
-run_command "find . -type d -name \".git\" -prune -o -type f -print0 | xargs -0 du -bc | awk 'END{print $1}'"
+run_command "find . -type d -name \".git\" -prune -o -type f -print0 | xargs -0 du -bch | awk 'END{print \$1}'"
 
 # Explanation:
 # find .: Starts the search in the current directory (.).
@@ -35,7 +35,7 @@ run_command "find . -type d -name \".git\" -prune -o -type f -print0 | xargs -0 
 echo "2. By Space Used on Disk (Actual disk allocation)"
 echo "   The actual disk space occupied by the files, which can be larger than the apparent size due to block allocation."
 
-run_command "find . -type d -name \".git\" -prune -o -print0 | xargs -0 du -scb | awk 'END{print $1}'"
+run_command "find . -type d -name \".git\" -prune -o -print0 | xargs -0 du -scb | awk 'END{print \$1}'"
 
 echo
 echo "Or, for a more human-readable total at the end (e.g., KB, MB, GB):"
