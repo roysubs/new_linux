@@ -4,8 +4,8 @@
 # This script will:
 # 1. Check for and install dependencies
 # 2. Download the latest binary release
-# 3. Install both terminal and graphical modes if available
-# 4. Create a symlink for easy execution
+# 3. Install with proper directory structure
+# 4. Create working launchers
 
 set -e  # Exit on error
 echo "=== Infra Arcana Installation Script ==="
@@ -29,9 +29,9 @@ install_dependencies() {
     echo "Checking and installing dependencies..."
     
     # Package lists for different distros
-    DEBIAN_DEPS="libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-ttf-2.0-0 wget unzip"
-    FEDORA_DEPS="SDL2 SDL2_image SDL2_ttf wget unzip"
-    ARCH_DEPS="sdl2 sdl2_image sdl2_ttf wget unzip"
+    DEBIAN_DEPS="libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-ttf-2.0-0 libsdl2-mixer-2.0-0 wget unzip"
+    FEDORA_DEPS="SDL2 SDL2_image SDL2_ttf SDL2_mixer wget unzip"
+    ARCH_DEPS="sdl2 sdl2_image sdl2_ttf sdl2_mixer wget unzip"
     
     if command -v apt-get &> /dev/null; then
         echo "Debian/Ubuntu detected"
@@ -48,6 +48,7 @@ install_dependencies() {
         echo "- SDL2"
         echo "- SDL2_image"
         echo "- SDL2_ttf"
+        echo "- SDL2_mixer"
         echo "- wget"
         echo "- unzip"
     fi
@@ -135,22 +136,67 @@ download_and_install() {
     # Make binaries executable
     chmod +x "$INSTALL_DIR"/ia "$INSTALL_DIR"/*.sh 2>/dev/null || true
     
+    # Find the actual game executable
+    echo "Looking for game executables..."
+    GAME_EXEC=$(find "$INSTALL_DIR" -name "ia" -type f -perm /u+x -print | head -n 1)
+    
+    if [ -z "$GAME_EXEC" ]; then
+        echo "Warning: Could not find main game executable 'ia'"
+        # Look for any executable file as fallback
+        GAME_EXEC=$(find "$INSTALL_DIR" -type f -perm /u+x -print | grep -v ".sh" | head -n 1)
+        if [ -z "$GAME_EXEC" ]; then
+            echo "Error: No executable found in the installation directory"
+            exit 1
+        fi
+    fi
+    
+    echo "Found game executable: $GAME_EXEC"
+    
+    # Create the main launcher script that works properly
+    echo "Creating launcher scripts..."
+    cat > "$INSTALL_DIR/ia_launcher.sh" << EOF
+#!/bin/bash
+# Change to the game directory (critical for resource loading)
+cd "\$(dirname "\$(readlink -f "\$0")")"
+
+# Environment variables to help with SDL compatibility
+export SDL_VIDEO_X11_VISUALID=""
+export LIBGL_ALWAYS_SOFTWARE=1
+export SDL_AUDIODRIVER=pulseaudio
+export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
+
+# Run the game from the correct directory
+./ia "\$@"
+EOF
+    chmod +x "$INSTALL_DIR/ia_launcher.sh"
+    
     # Create symlinks for easy access
-    echo "Creating symlinks..."
-    ln -sf "$INSTALL_DIR/ia" "$BIN_LINK_DIR/ia"
+    ln -sf "$INSTALL_DIR/ia_launcher.sh" "$BIN_LINK_DIR/ia"
+    ln -sf "$INSTALL_DIR/ia_launcher.sh" "$BIN_LINK_DIR/infra-arcana"
     
-    # Check if there are separate terminal and graphical binaries
-    if [ -f "$INSTALL_DIR/ia_term" ]; then
-        chmod +x "$INSTALL_DIR/ia_term"
-        ln -sf "$INSTALL_DIR/ia_term" "$BIN_LINK_DIR/ia_term"
-        echo "Terminal interface symlink created: ia_term"
-    fi
+    # Create a safe mode launcher with more compatibility options
+    cat > "$INSTALL_DIR/ia_safe_launcher.sh" << EOF
+#!/bin/bash
+# Change to the game directory
+cd "\$(dirname "\$(readlink -f "\$0")")"
+
+# More aggressive compatibility settings
+export LIBGL_ALWAYS_SOFTWARE=1
+export SDL_VIDEODRIVER=x11
+export SDL_AUDIODRIVER=pulseaudio
+export SDL_VIDEO_X11_VISUALID=""
+export SDL_RENDER_DRIVER=software
+export MESA_GL_VERSION_OVERRIDE=3.0
+export __GL_SYNC_TO_VBLANK=0
+
+# Run the game
+./ia "\$@"
+EOF
+    chmod +x "$INSTALL_DIR/ia_safe_launcher.sh"
+    ln -sf "$INSTALL_DIR/ia_safe_launcher.sh" "$BIN_LINK_DIR/ia_safe"
     
-    if [ -f "$INSTALL_DIR/ia_sdl" ]; then
-        chmod +x "$INSTALL_DIR/ia_sdl"
-        ln -sf "$INSTALL_DIR/ia_sdl" "$BIN_LINK_DIR/ia_sdl"
-        echo "Graphical interface symlink created: ia_sdl"
-    fi
+    echo "Main game launcher created: ia and infra-arcana"
+    echo "Safe mode launcher created: ia_safe"
 }
 
 # Run the installation
@@ -164,16 +210,15 @@ rm -rf "$TEMP_DIR"
 echo "=== Installation Complete ==="
 echo ""
 echo "To play Infra Arcana:"
-echo "  Graphical mode: ia or infra-arcana"
-echo "  Text mode: ia_text"
+echo "  Standard mode: ia or infra-arcana"
+echo "  Safe mode (if you encounter issues): ia_safe"
 echo ""
 echo "NOTE: If you get 'command not found', you need to either:"
 echo "  1. Run the command: source ~/.bashrc"
 echo "  2. Start a new terminal session"
 echo ""
-echo "If you encounter a segmentation fault with the graphical version:"
-echo "  1. Try the text mode with: ia_text"
-echo "  2. Or run from the game directory: cd $(dirname "$GAME_EXEC") && ./ia"
+echo "The game runs in graphical mode with X11 forwarding support."
+echo "Make sure you have X11 forwarding enabled if using SSH."
 echo ""
 echo "Infra Arcana - Game Controls Summary:"
 echo "------------------------------------"

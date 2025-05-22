@@ -153,7 +153,7 @@ PGID=$(id -g)
 echo "Using UID=$PUID and GID=$PGID, TimeZone=$TZ"
 
 echo "--- Media Directory Setup ---"
-DEFAULT_SOURCE_PATH="/mnt/sdc1/Downloads" # Example: Changed default to avoid direct 'Downloads' in path
+DEFAULT_SOURCE_PATH="/mnt/sdc1/Downloads"
 read -p "Enter path to your actual media location (e.g. /srv/mymedia, this will be bind-mounted to $BASE_MEDIA) [default: $DEFAULT_SOURCE_PATH]: " SOURCE_PATH_INPUT
 SOURCE_PATH="${SOURCE_PATH_INPUT:-$DEFAULT_SOURCE_PATH}"
 echo "Using source path for media: $SOURCE_PATH"
