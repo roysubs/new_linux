@@ -2,7 +2,7 @@
 
 # Check if a block device is provided as an argument.
 if [ -z "$1" ]; then
-  echo "Usage: $0 /dev/sdX"
+  echo "Usage: $i{0##*/} /dev/sdX"
   exit 1
 fi
 

@@ -1,0 +1,35 @@
+# docker exec -it heimdall php /app/www/artisan list
+
+Or, change the working directory for the docker exec command using the -w flag:
+
+# docker exec -it -w /app/www heimdall php artisan list
+
+You could manually enter PHP code in a Tinker session:
+Bash
+
+docker exec -it -w /app/www heimdall php artisan tinker
+Then, within Tinker (the >>> prompt):
+PHP
+
+// Example: Create a new item (column names might vary)
+// You'd need to know the correct namespace and model name, e.g., App\Models\Item
+// $item = new App\Models\Item();
+// $item->title = 'My New Programmatic App';
+// $item->url = 'http://newapp.local';
+// $item->icon = 'default.png'; // or a Font Awesome class
+// $item->colour = '#aabbcc';
+// $item->save();
+
+// Example: Find and delete an item
+// $itemToDelete = App\Models\Item::where('title', 'Old App')->first();
+// if ($itemToDelete) {
+//     $itemToDelete->delete();
+// }
+
+// Example: List items
+// App\Models\Item::all()->pluck('title', 'url');
+You could also pipe scripts into Tinker or create custom Artisan commands (using php artisan make:command) if you had more complex or repetitive tasks, though creating a custom command is a more advanced development task.
+In summary:
+
+For non-PHP scripting or direct database access: SQLite manipulation is your best bet.
+For programmatic management using PHP within the application's environment: php artisan tinker allows you to use Laravel's Eloquent ORM to manage your items.

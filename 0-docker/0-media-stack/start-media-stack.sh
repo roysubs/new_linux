@@ -305,7 +305,7 @@ for service_name in "${CONTAINER_NAMES[@]}"; do
         if [[ "$host_port" =~ ^[0-9]+$ ]]; then
             # Capitalize the first letter of the service name for prettier display
             display_name="$(tr '[:lower:]' '[:upper:]' <<< ${service_name:0:1})${service_name:1}"
-            echo "- ${display_name}: http://localhost:${host_port}"
+            echo "- ${display_name}: http://$(hostname -I | awk '{print $1}'):${host_port}"
         fi
     fi
 done

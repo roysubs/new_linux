@@ -195,33 +195,55 @@ unmount_filesystem_path() {
 
     if ! sudo mountpoint -q "$mount_point"; then
         _log_info "'$mount_point' is not currently mounted or is not a mountpoint."
-        return 0 
+        return 0
     fi
-    
+
     _log_info "Attempting to unmount '$mount_point'..."
-    if sudo fuser -mvs "$mount_point" >/dev/null 2>&1; then 
+    local fuser_check_passed=false # Flag to see if fuser initially indicated not busy
+
+    # Check if busy first using the silent (-s) option of fuser
+    if ! sudo fuser -mvs "$mount_point" >/dev/null 2>&1; then
+        fuser_check_passed=true # Not busy according to fuser's silent check
+    fi
+
+    if [ "$fuser_check_passed" = "false" ]; then # Was busy or fuser command had an issue
         _log_warn "Filesystem '$mount_point' is currently busy. Processes using it:"
-        sudo fuser -mv "$mount_point" 
+        local fuser_display_output
+        fuser_display_output=$(sudo fuser -mv "$mount_point" 2>&1 || true) # Get detailed output, proceed even if fuser exits with error (e.g. nothing found)
+        echo "${fuser_display_output}" # Display the processes
+
+        if echo "${fuser_display_output}" | grep -qE '(smbd|nfsd|lockd|rpc.mountd|statd)'; then
+            _log_warn "${YELLOW}CAUTION: Network share-related processes (Samba/NFS) detected!${NC}"
+            _log_warn "${YELLOW} > Ensure all client machines (e.g., Windows Explorer, other Linux systems) have CLOSED connections to shares on '$mount_point'.${NC}"
+            _log_warn "${YELLOW} > Persistent network handles can prevent a clean unmount and may require a REBOOT to fully delete the partition later, even if a lazy unmount seems to succeed.${NC}"
+        fi
+
         if ask_yes_no "Attempt a lazy unmount ('umount -l') for '$mount_point'?"; then
             if ! run_cmd sudo umount -l "$mount_point"; then return 1; else _log_info "'$mount_point' unmounted (lazily)."; fi
         else
             _log_warn "Skipping unmount of busy filesystem '$mount_point'."
-            return 1 
+            return 1
         fi
-    elif ! run_cmd sudo umount "$mount_point"; then
+    elif ! run_cmd sudo umount "$mount_point"; then # Not busy initially by fuser -s, but standard umount failed
         _log_warn "Standard unmount failed for '$mount_point'."
+        _log_warn "This can happen if processes started using it after the initial check."
+        _log_warn "Processes possibly using it now (running fuser again):"
+        sudo fuser -mv "$mount_point" || true # Show current processes
         if ask_yes_no "Standard unmount failed. Attempt lazy unmount ('umount -l') for '$mount_point'?"; then
             if ! run_cmd sudo umount -l "$mount_point"; then return 1; else _log_info "'$mount_point' unmounted (lazily)."; fi
         else
             return 1
         fi
-    else
+    else # Standard unmount successful
         _log_info "'$mount_point' unmounted successfully."
     fi
-    
-    sleep 1 
+
+    sleep 1 # Give the system a moment, especially after lazy unmount
     if sudo mountpoint -q "$mount_point"; then
         _log_error "'$mount_point' still reported as mounted after unmount attempt."
+        _log_warn "${YELLOW}If a lazy unmount was performed, the mount point may appear 'mounted' if background${NC}"
+        _log_warn "${YELLOW}processes are still finalizing operations, even if it's inaccessible for new activity.${NC}"
+        _log_warn "${YELLOW}This could affect subsequent partition deletion steps without a reboot.${NC}"
         return 1
     fi
     return 0
@@ -296,18 +318,15 @@ delete_partition_device() {
 
     local base_disk
     base_disk=$(sudo lsblk -np -o PKNAME "$partition_device" 2>/dev/null)
-    #!!! base_disk=$(lsblk -no PKNAME "$partition_device" 2>/dev/null)
     if [ -z "$base_disk" ]; then
         _log_error "Could not determine base disk for partition '$partition_device'. Cannot delete."
         return 1
     fi
-    # Convert disk name to full path
-    base_disk="/dev/$base_disk"
-    
+    # Note: The buggy line 'base_disk="/dev/$base_disk"' is correctly absent here.
+
     local part_num_str
     part_num_str=$(sudo lsblk -npo PARTN "$partition_device" 2>/dev/null)
-    #!!! part_num_str=$(echo "$partition_device" | grep -oE '[0-9]+$')
-    if ! [[ "$part_num_str" =~ ^[0-9]+$ ]]; then 
+    if ! [[ "$part_num_str" =~ ^[0-9]+$ ]]; then
         _log_warn "lsblk PARTN for '$partition_device' not found/invalid, attempting string manipulation fallback..."
         part_num_str=$(echo "$partition_device" | grep -oE '[0-9]+$')
     fi
@@ -323,24 +342,35 @@ delete_partition_device() {
         _log_error "CRITICAL: Partition '$partition_device' or its filesystem STILL appears to be mounted."
         _log_warn "Output of 'sudo findmnt -S $partition_device':"
         sudo findmnt -S "$partition_device"
-        _log_warn "Cannot delete a mounted partition. Ensure unmount operations (including for lazy unmounts) have fully completed."
+        _log_warn "Cannot delete a mounted partition. Ensure unmount operations (including for lazy unmounts) have fully completed and the kernel has released the device."
         return 1
     fi
     _log_info "Confirmed: Partition '$partition_device' appears to be unmounted."
 
     if ask_yes_no "CONFIRM DELETION of partition '$partition_device' (number $part_num_str from $base_disk)? THIS IS DESTRUCTIVE."; then
-        # Run partprobe on base disk before attempting to delete partition, helps kernel sync.
         _log_info "Running partprobe on $base_disk before attempting partition deletion..."
         sudo partprobe "$base_disk" && sleep 2
 
         if run_cmd sudo parted --script "$base_disk" rm "$part_num_str"; then
             _log_info "Partition $part_num_str successfully deleted from $base_disk."
             _log_info "Reloading partition table (sudo partprobe $base_disk)..."
-            sudo partprobe "$base_disk" && sleep 1 && sudo partprobe "$base_disk" || _log_warn "partprobe failed for $base_disk. A reboot might be required."
+            # Run partprobe multiple times as sometimes the kernel needs a bit more persuasion or time
+            sudo partprobe "$base_disk" && sleep 1 && sudo partprobe "$base_disk" || _log_warn "partprobe failed for $base_disk. A reboot might be required for changes to be fully visible."
             return 0
         else
-            _log_error "Failed to delete partition $part_num_str from $base_disk."
-            _log_warn "This can happen if the kernel still holds a reference (e.g., LVM, LUKS, RAID)."
+            # run_cmd will have already logged: ">>> Command failed with exit code X: sudo parted..."
+            _log_warn "${YELLOW}PARTITION DELETION COMMAND FAILED or reported errors.${NC}"
+            _log_warn "${YELLOW}If the error message from 'parted' (see above) mentions it was 'unable to inform the kernel'${NC}"
+            _log_warn "${YELLOW}about changes, this is often because the partition is still in use.${NC}"
+            _log_warn "${YELLOW} -- A primary cause is active network connections (e.g., from Windows Explorer to a Samba share,${NC}"
+            _log_warn "${YELLOW}    or an NFS client) that were not fully closed before or during this script's operation.${NC}"
+            _log_warn "${YELLOW} -- In this case, 'parted' might have successfully updated the partition table on the DISK ITSELF,${NC}"
+            _log_warn "${YELLOW}    but the operating system's kernel is still using the old layout.${NC}"
+            _log_warn "${YELLOW} -- A SYSTEM REBOOT is typically required for the changes to update and the partition to be fully gone.${NC}"
+            _log_warn "${YELLOW} -- Before rebooting, ensure all client systems are disconnected from any shares that were on this${NC}"
+            _log_warn "${YELLOW}    partition to prevent issues on next startup.${NC}"
+            _log_warn "${YELLOW}The failure can also happen if the kernel still holds a reference for other reasons like LVM, LUKS,${NC}"
+            _log_warn "${YELLOW}software RAID not fully dismantled, or if partprobe itself couldn't update the kernel.${NC}"
             return 1
         fi
     else

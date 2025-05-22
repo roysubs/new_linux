@@ -1,16 +1,10 @@
-If detect running on WSL, offer to copy into 
+For vimrc setup, if running on WSL, check if vim or nvim are installed.
+If they are, offer to copy into 
 /mnt/c/Users/XXXXX/AppData/Local/nvim/init.vim
 and to
 /mnt/c/Users/XXXXX/.vimrc
 
 It should really do this output for you 
-
-ALSO, git-rm should support -string which searches all history for personal
-git-rm -string roy          # things containing my name
-git-rm -string 192.168.1.*  # things containing my ip's
-
-
-
 
 
 this is wrong, need to sort
