@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # --- Git-aware Bash prompt ---
-# (Keep your color definitions and other functions like Is_Sourced, print_intro, parse_git_branch etc. as they were)
 CYAN=$(tput setaf 6)
 GREEN=$(tput setaf 2)
 RED=$(tput setaf 1)
@@ -16,7 +15,6 @@ Is_Sourced() {
 }
 
 print_intro() {
-    # ... (your print_intro function) ...
     echo "To activate: source $0"
     echo "To restore: source $0 restore"
     echo "For help: source $0 --help"
@@ -94,50 +92,31 @@ restore_prompt() {
         unset PROMPT_COMMAND
     fi
     unset __git_aware_prompt_original_ps1 __git_aware_prompt_original_prompt_command
-    unset -f parse_git_branch update_ps1 restore_prompt Is_Sourced show_usage print_intro # Ensure all functions from this script are unset
+    unset -f parse_git_branch update_ps1 restore_prompt Is_Sourced show_usage print_intro
 }
 
 show_usage() {
-    # ... (your show_usage, potentially integrated with print_intro) ...
     print_intro
 }
-# --- End Store/Restore Logic ---
 
 update_ps1() {
     local git_info
     git_info="$(parse_git_branch)"
 
     if [[ -n "$git_info" ]]; then
-        local regex='(.*)([\$#]\s*)$'
-        if [[ "$__git_aware_prompt_original_ps1" =~ $regex ]]; then
-            local original_prefix="${BASH_REMATCH[1]}" # Known to end with '\' from previous debug
-            local suffix="${BASH_REMATCH[2]}"
-            local final_prefix # This will be the correctly cleaned prefix
-
-            # # --- START DEBUG OUTPUT (You can comment these out after confirming the fix) ---
-            # echo "---- GIT-AWARE-PROMPT DEBUG (FINAL FIX ATTEMPT) ----" >&2
-            # printf "1. original_prefix (%%q): '%q'\n" "${original_prefix}" >&2
-            # # --- END DEBUG OUTPUT ---
-
-            # --- DEFINITIVE PREFIX CLEANING ---
-            # We've established from debug that original_prefix's string value ends 
-            # with a single literal '\', and that "${original_prefix%\\}" successfully removes it.
-            # We will use this direct removal, bypassing the unreliable glob condition.
-            final_prefix="${original_prefix%\\}"
-            # --- END DEFINITIVE PREFIX CLEANING ---
-
-            # # --- START DEBUG OUTPUT (You can comment these out after confirming the fix) ---
-            # printf "2. final_prefix after direct removal (%%q): '%q'\n" "${final_prefix}" >&2
-            # echo "---- GIT-AWARE-PROMPT DEBUG END ----" >&2
-            # # --- END DEBUG OUTPUT ---
-            
-            # Construct new PS1 using the final_prefix.
-            # This version with the space after final_prefix is generally the desired format.
-            PS1="${final_prefix} ${git_info} ${suffix}"
-
+        # Simple approach: find the pattern and replace it directly
+        # This preserves the exact original escaping
+        local new_ps1
+        new_ps1="${__git_aware_prompt_original_ps1}"
+        
+        # Replace the pattern: \[user@host \W\]\ with \[user@host \W\] (git_info) 
+        if [[ "$new_ps1" =~ ^(.*\\W\\])\\(.*) ]]; then
+            local prefix="${BASH_REMATCH[1]}"
+            local rest="${BASH_REMATCH[2]}"
+            PS1="${prefix} ${git_info} ${rest}"
         else
-            echo "DEBUG: Regex for PS1 splitting DID NOT MATCH. This is unexpected." >&2
-            PS1="${git_info} ${__git_aware_prompt_original_ps1} " 
+            # Fallback if regex doesn't match
+            PS1="${git_info} ${__git_aware_prompt_original_ps1}"
         fi
     else
         PS1="$__git_aware_prompt_original_ps1"
@@ -147,22 +126,20 @@ update_ps1() {
 # --- Main script logic for sourcing ---
 if [ "$1" = "restore" ]; then
     restore_prompt
-    return 0 # Use return for sourced scripts
+    return 0
 fi
 
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     show_usage
-    return 0 # Use return for sourced scripts
+    return 0
 fi
 
-if [ "$#" -gt 0 ] && [ "$1" != "" ]; then # Check if any argument is passed that isn't restore or help
+if [ "$#" -gt 0 ] && [ "$1" != "" ]; then
     echo "Unknown option: $1" >&2
     show_usage
-    return 1 # Use return for sourced scripts
+    return 1
 fi
 
 # If no arguments or only empty argument, activate the prompt
 PROMPT_COMMAND="update_ps1${__git_aware_prompt_original_prompt_command:+;}${__git_aware_prompt_original_prompt_command}"
-# print_intro # You might want this here or not, depending on preference on activation
 echo -e "Git-aware prompt ${BOLD}activated${RESET}."
-# --- End Main script logic ---
