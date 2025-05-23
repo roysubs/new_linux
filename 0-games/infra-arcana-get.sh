@@ -169,8 +169,6 @@ export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 ./ia "\$@"
 EOF
     chmod +x "$INSTALL_DIR/ia_launcher.sh"
-    
-    # Create symlinks for easy access
     ln -sf "$INSTALL_DIR/ia_launcher.sh" "$BIN_LINK_DIR/ia"
     ln -sf "$INSTALL_DIR/ia_launcher.sh" "$BIN_LINK_DIR/infra-arcana"
     

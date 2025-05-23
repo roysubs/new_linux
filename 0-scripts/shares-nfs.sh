@@ -17,7 +17,12 @@ else
     USER_HOME="$HOME"
 fi
 
-OUTPUT_FILE="$USER_HOME/shares-nfs-report.txt"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"       # Directory where this script is
+SCRIPT_FILENAME_WITH_EXT="${0##*/}"               # This script's filename without path
+SCRIPT_BASENAME="${SCRIPT_FILENAME_WITH_EXT%.*}"
+OUTPUT_DIR="$USER_HOME/reports"
+OUTPUT_FILE="$OUTPUT_DIR/$SCRIPT_BASENAME-report.txt"
+mkdir -p "$OUTPUT_DIR"
 
 # Add date/time to the output file and display headers
 echo -e "${YELLOW}=== NFS Exports Quick Reference & Report ===${RESET}" | tee "$OUTPUT_FILE"

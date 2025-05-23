@@ -242,11 +242,160 @@ print_aligned "Total Physical Cores" "$total_physical_cores"
 print_aligned "Total Logical Processors" "$total_logical_processors"
 print_aligned "NUMA Node(s)" "$numa_nodes"
 
+
 # ----------------------
 # Memory Information
 # ----------------------
 print_section "🧠 Memory Information"
 print_aligned "Total Memory" "$(free -h | awk '/^Mem:/ {print $2}')"
+print_aligned "Used Memory" "$(free -h | awk '/^Mem:/ {print $3}')"
+print_aligned "Free Memory" "$(free -h | awk '/^Mem:/ {print $4}')"
+if free -h | awk '/^Mem:/ {print $7}' &>/dev/null; then # Check if "available" field exists
+    print_aligned "Available Memory" "$(free -h | awk '/^Mem:/ {print $7}')"
+fi
+echo # Add a blank line for spacing
+
+if command -v dmidecode &>/dev/null; then
+    if [[ $EUID -ne 0 ]]; then
+        echo "  Information: Run as root to see detailed RAM stick/slot information (needs dmidecode)."
+    else
+        echo "  RAM Module Details (from dmidecode):"
+        
+        # Use awk to parse dmidecode output for Memory Devices (Type 17)
+        # Each record (Memory Device block) is separated by blank lines.
+        # Fields within a record are on separate lines.
+        parsed_ram_info=$(sudo dmidecode -t memory | awk '
+            # Function to trim leading/trailing whitespace
+            function trim(s) {
+                sub(/^[\s\t]+/, "", s);
+                sub(/[\s\t]+$/, "", s);
+                return s;
+            }
+
+            BEGIN { 
+                RS = "\n\n"; # Records are separated by blank lines
+                FS = "\n";   # Fields within a record are separated by newlines
+            }
+
+            # Process only "Memory Device" blocks
+            /Memory Device/ {
+                # Initialize fields for each device
+                size = "N/A"; manufacturer = "N/A"; part_number = "N/A";
+                type = "N/A"; speed = "N/A"; locator = "N/A";
+                is_empty_flag = 0;
+
+                for (i=1; i<=NF; i++) {
+                    current_line = $i;
+                    # Trim current_line for reliable matching
+                    current_line = trim(current_line);
+
+                    if (current_line ~ /^Size: No Module Installed$/) { 
+                        is_empty_flag = 1; 
+                        size = "Empty"; # Specific value for empty
+                    } else if (current_line ~ /^Size: /) { 
+                        size = current_line; sub(/^Size: /, "", size); 
+                    }
+                    
+                    if (current_line ~ /^Manufacturer: /) { manufacturer = current_line; sub(/^Manufacturer: /, "", manufacturer); }
+                    if (current_line ~ /^Part Number: /) { part_number = current_line; sub(/^Part Number: /, "", part_number); }
+                    if (current_line ~ /^Type: /) { type = current_line; sub(/^Type: /, "", type); }
+                    if (current_line ~ /^Speed: /) { speed = current_line; sub(/^Speed: /, "", speed); }
+                    if (current_line ~ /^Locator: /) { locator = current_line; sub(/^Locator: /, "", locator); }
+                }
+
+                # Normalize common "Not Specified" or "Unknown" values from dmidecode for consistency
+                if (manufacturer == "" || manufacturer == "Not Specified") manufacturer = "N/A";
+                if (part_number == "" || part_number == "Not Specified") part_number = "N/A";
+                if (type == "" || type == "Unknown" || type == "Not Specified") type = "N/A";
+                if (speed == "" || speed == "Unknown" || speed == "Not Specified" || speed == "0 MT/s") speed = "N/A"; # 0 MT/s can mean unknown or not running
+                if (locator == "" || locator == "Not Specified") locator = "N/A";
+                if (size == "" || size == "Not Specified") size = "N/A"; # Should be "Empty" or a value if populated
+
+                # Output CSV-like format: tag,locator,size,manufacturer,part_number,type,speed
+                if (is_empty_flag) {
+                    print "empty_slot," locator "," type; # For empty slots, type is what dmidecode says (often "Unknown")
+                } else {
+                    # Only print if size is not N/A (i.e., its a populated slot)
+                    if (size != "N/A" && size != "Empty") {
+                         print "populated_slot," locator "," size "," manufacturer "," part_number "," type "," speed;
+                    }
+                }
+            }
+        ')
+
+        if [[ -z "$parsed_ram_info" ]]; then
+            echo "    Could not parse detailed RAM information from dmidecode, or no memory devices reported."
+        else
+            populated_slots_count=0
+            empty_slots_count=0
+            populated_ram_details=""
+            empty_ram_details=""
+            declare -A installed_ram_types # Associative array to store types of installed RAM
+
+            # Read through parsed info
+            while IFS=',' read -r tag p_locator p_size p_manufacturer p_part_number p_type p_speed; do
+                if [[ "$tag" == "populated_slot" ]]; then
+                    populated_slots_count=$((populated_slots_count + 1))
+                    detail_line="    Slot ${p_locator} ("
+                    detail_line+="${p_size}"
+                    if [[ "$p_manufacturer" != "N/A" ]]; then detail_line+=", ${p_manufacturer}"; fi
+                    if [[ "$p_part_number" != "N/A" ]]; then detail_line+=", PN: ${p_part_number}"; fi
+                    if [[ "$p_type" != "N/A" ]]; then
+                        detail_line+=", Type: ${p_type}"
+                        # Store type if it's specific (not N/A or Unknown)
+                        if [[ "$p_type" != "N/A" && "$p_type" != "Unknown" ]]; then
+                            installed_ram_types["$p_type"]=1
+                        fi
+                    fi
+                    if [[ "$p_speed" != "N/A" ]]; then detail_line+=", Speed: ${p_speed}"; fi
+                    detail_line+=")"
+                    populated_ram_details+="${detail_line}\n"
+                elif [[ "$tag" == "empty_slot" ]]; then
+                    empty_slots_count=$((empty_slots_count + 1))
+                    # For empty slots, p_size is the type field from awk
+                    empty_ram_details+="    Slot ${p_locator} (Empty, Compatible Type: ${p_size})\n" # p_size here is actually the type from dmidecode for empty slot
+                fi
+            done <<< "$parsed_ram_info" # Use here-string
+
+            if [[ $populated_slots_count -gt 0 ]]; then
+                echo "  Populated RAM Modules:"
+                printf "%b" "$populated_ram_details"
+            else
+                echo "  No populated RAM modules found by dmidecode (or details not parsable)."
+            fi
+
+            # Infer technology for empty slots if dmidecode reported "Unknown"
+            inferred_empty_type="Unknown"
+            if [[ ${#installed_ram_types[@]} -eq 1 ]]; then # If all populated RAM is of the same specific type
+                for ram_type in "${!installed_ram_types[@]}"; do inferred_empty_type="$ram_type"; done
+            elif [[ ${#installed_ram_types[@]} -gt 1 ]]; then
+                types_list=$(printf "%s/" "${!installed_ram_types[@]}")
+                inferred_empty_type="Mixed (e.g., ${types_list%/})" # e.g. DDR4/DDR5
+            fi # Otherwise, it remains "Unknown" or whatever dmidecode said initially.
+
+            if [[ $empty_slots_count -gt 0 ]]; then
+                echo "  Empty RAM Slots:"
+                # Re-iterate for empty slots to apply inferred type if needed
+                 while IFS=',' read -r tag p_locator p_type_from_dmi; do # p_type_from_dmi is the 3rd field for empty_slot
+                    if [[ "$tag" == "empty_slot" ]]; then
+                        current_empty_tech="$p_type_from_dmi"
+                        if [[ "$current_empty_tech" == "N/A" || "$current_empty_tech" == "Unknown" ]]; then
+                            current_empty_tech="$inferred_empty_type (inferred)"
+                        fi
+                        printf "    Slot %s (Empty, Approx. Technology: %s)\n" "$p_locator" "$current_empty_tech"
+                    fi
+                done <<< "$parsed_ram_info"
+            else
+                echo "  No empty RAM slots found (or all slots appear populated)."
+            fi
+            echo # Blank line
+            print_aligned "Detected Populated RAM Sticks" "$populated_slots_count"
+            print_aligned "Detected Empty RAM Slots" "$empty_slots_count"
+        fi
+    fi
+else
+    echo "  Warning: dmidecode command not found. Cannot display detailed RAM stick/slot information."
+fi
 
 # ----------------------
 # Display Information
@@ -455,23 +604,29 @@ fi
 # ----------------------
 if command -v testparm &>/dev/null && [[ -f /etc/samba/smb.conf ]]; then
     print_section "🗂️ Samba Shares (Configured)"
-    testparm_output=$(testparm -s --section-name='*' 2>/dev/null | grep -E '^\[' | sed 's/^/    /' || true)
+    # Corrected testparm command:
+    # 1. Use 'testparm -s' to dump all service definitions.
+    # 2. Extract section names (without brackets) using grep -Po.
+    # 3. Filter out 'global', 'homes', and 'printers' sections.
+    # 4. Format the output similarly to the elif branch.
+    testparm_output=$(testparm -s 2>/dev/null | grep -Po '^\[\K[^]]+(?=\])' | grep -vE '^(global|homes|printers)$' | sed 's/^/   [ /; s/$/ ]/' || true)
     if [[ -n "$testparm_output" ]]; then
         echo "$testparm_output"
     else
-        echo "    (No shares defined or error reading smb.conf with testparm)"
+        echo "   (No custom shares defined or error reading smb.conf with testparm)" # Modified message for clarity
     fi
 elif [[ -f /etc/samba/smb.conf ]]; then
     print_section "🗂️ Samba Shares (Configured)"
-    samba_shares=$(grep -Po '^\s*\[\K[^]]+(?=\])' /etc/samba/smb.conf | grep -vE 'global|homes|printers' | sed 's/^/    [ /; s/$/ ]/' || true)
+    # This part remains the same
+    samba_shares=$(grep -Po '^\s*\[\K[^]]+(?=\])' /etc/samba/smb.conf | grep -vE 'global|homes|printers' | sed 's/^/   [ /; s/$/ ]/' || true)
     if [[ -n "$samba_shares" ]]; then
         echo "$samba_shares"
     else
-         echo "    (No shares found in smb.conf, or 'testparm' not available)"
+        echo "   (No custom shares found in smb.conf, or 'testparm' not available)" # Modified message for clarity
     fi
 else
-    print_section "🗂️ Samba Shares (Configured)"
-    echo "    (Samba not configured or smb.conf not found)"
+    print_section "🗂️ Samba Shares (Configured)" # Note: title says "Configured" even if not found. Consider "Samba Status".
+    echo "   (Samba not configured or smb.conf not found)"
 fi
 
 echo

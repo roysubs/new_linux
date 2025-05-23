@@ -14,7 +14,7 @@ fi
 
 # Ensure exactly one argument is provided
 if [ "$#" -ne 1 ]; then
-    white "Usage: $0 /full/path/to/folder"
+    white "Usage: ${0##*/} /full/path/to/folder"
     white "  - Must be a directory (not a file)"
     white "  - Recursively backs up with hidden files/folders included"
     white "  - Backup saved to ~/.backup-quick/<folder>-YYYY-MM-DD_HH-MM-SS.zip"

@@ -31,9 +31,9 @@ display_lsblk_info() {
     echo -e "${CYAN}${BOLD}--- Block Device Information (lsblk) ---${NC}"
     echo -e "${CYAN}${BOLD}----------------------------------------${NC}"
     if ensure_command_available "lsblk" "util-linux"; then
-        echo -e "${ORANGE}Command: lsblk -e 7 -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT,LABEL,UUID,MODEL${NC}"
+        echo -e "${ORANGE}Command: lsblk -e 7 -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINTS,LABEL,UUID,MODEL${NC}"
         echo -e "${YELLOW}Excluding loop devices. Run with sudo for potentially more details.${NC}"
-        lsblk -e 7 -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT,LABEL,UUID,MODEL
+        lsblk -e 7 -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINTS,LABEL,UUID,MODEL
     fi
     echo ""
     echo ""

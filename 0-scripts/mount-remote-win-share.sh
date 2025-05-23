@@ -2,7 +2,7 @@
 
 # Check if the required arguments are provided
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $(basename 0) <WINDOWS_NAME_OR_IP> <SHARE_NAME> <USER_NAME>"
+    echo "Usage: ${0##*/} <WINDOWS_NAME_OR_IP> <SHARE_NAME> <USER_NAME>"
     echo "   If connecting via hostname, it must be visible from this system."
     exit 1
 fi

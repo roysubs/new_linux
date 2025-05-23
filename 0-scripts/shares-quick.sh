@@ -1,3 +1,15 @@
+#!/bin/bash
+
+# ANSI color codes
+YELLOW='\e[1;33m'
+GREEN='\e[1;32m'
+CYAN='\e[1;36m'
+RED='\e[1;31m'
+RESET='\e[0m'
+
+# SAMBA Shares (testparm -s)
+echo -e "\n${CYAN}--- SAMBA Shares (testparm -s) ---${RESET}"
+
 testparm -s 2>&1 | awk '
 BEGIN {
     # Initialize variables and arrays
@@ -129,3 +141,11 @@ END {
         printf "%-*s\n", max_widths[6], shares[share_name]["comment"] # Left-align Comment (no trailing spaces)
     }
 }'
+
+
+# NFS Exports (sudo exportfs -v)
+echo -e "\n${CYAN}--- NFS Exports (Active - via exportfs -v) ---${RESET}"
+echo "This shows the directories currently being exported by the NFS server."
+echo "   # -v for verbose output (shows export options). Requires root."
+sudo exportfs -v
+echo ""

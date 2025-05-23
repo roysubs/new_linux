@@ -45,9 +45,6 @@ CPU_CORES=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
 NUMA=$(lscpu | awk -F: '/NUMA node0 CPU\(s\)/ {print $2}' | xargs)
 LOGICAL_CORES=$(lscpu | awk -F: '/Thread\(s\) per core/ {print $2}' | xargs)
 
-# Get information about X server (if available)
-X_SERVER=$(ps -e | grep -E 'xfce|mate|gnome|kde|cinnamon|lxde|openbox|fluxbox|i3')
-
 # Get memory information
 TOTAL_MEMORY=$(free -g | awk '/Mem:/ {print $2}')
 
@@ -68,6 +65,9 @@ OS_INFO=$(lsb_release -d | cut -f2-)
 DISPLAY_CARD=$(lspci | awk '/VGA|3D/ { found=1; print; next } /^[[:space:]]/ && found { print; next } found { exit }')
 DISPLAY_DRIVER=$(lspci -k | awk '/VGA|3D/ { found=1; next } /^[[:space:]]/ && found { print; next } found { exit }' | awk -F': ' '/Kernel driver in use/ {print $2}')
 
+# Get information about X server (if available)
+X_SERVER=$(ps -e | grep -E 'xfce|mate|gnome|kde|cinnamon|lxde|openbox|fluxbox|i3')
+
 # Get repositories info (deduplicated)
 REPOS=$(apt-cache policy | grep "http" | awk '{print $2}' | sort -u)
 
@@ -84,7 +84,6 @@ Uptime:          $UPTIME
 
 Hostname:        $HOSTNAME
 OS:              $OS_INFO
-X Server:        $X_SERVER
 Domain:          ${DOMAIN:-(none)}
 Primary Owner:   $PRIMARY_OWNER
 Make/Model:      $MAKE $MODEL
@@ -97,6 +96,7 @@ NUMA node0:      $NUMA
 Logical Cores:   $LOGICAL_CORES
 Display Card:    $DISPLAY_CARD
 Display Driver:  ${DISPLAY_DRIVER:-(not found)}
+X Server:        $X_SERVER
 
 IP Addresses:
 $(echo "$IP_ADDRESSES" | sed 's/^/    /')

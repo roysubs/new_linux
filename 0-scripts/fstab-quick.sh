@@ -108,6 +108,5 @@ echo ""
 echo -e "${YELLOW}=== End of fstab Explanation ===${NC}"
 echo "Remember to be cautious when editing ${FSTAB_FILE}. Errors can prevent your system from booting."
 echo "Always back up ${FSTAB_FILE} before making changes."
-echo -e "Example backup: ${GREEN}sudo cp ${FSTAB_FILE} ${FSTAB_FILE}.bak${NC}"
 echo ""
 
