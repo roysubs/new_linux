@@ -1,0 +1,294 @@
+#!/bin/bash
+# TMUX Tool Script ("t")
+# Unified wrapper for commonly used tmux commands with colorful output and aliases.
+
+# --- Script Colors & Helper Functions ---
+BLUE='\033[1;34m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+print_line() {
+    echo -e "${BLUE}=====${NC}"
+}
+
+color_echo() {
+    echo -e "${GREEN}$1${NC}"
+}
+
+help_text() {
+    # Your existing help_text function content here...
+    # Make sure it's up-to-date with the btop pane description.
+    printf "Tmux Wrapper.   Usage: t [option] [args...]
+Options:
+  list            List buffers, clients, panes, sessions, windows
+  s|t|start       Start a new tmux session (if not already in one); ${BLUE}tmux new-session${NC}
+  a <name>        Attach to session <name> (or to last session if no name); ${BLUE}tmux attach-session -t <name>${NC}
+  d               Detach from current session; ${BLUE}tmux detach-client${NC}  'C-b d'
+  f|b             Panes (f forwards, b backwards); tmux select-pane -t :.+ (forwards), or :.- (backwards)
+  sh              Split Horizontal (current pane or new session)
+  sv              Split Vertical (current pane or new session)
+  sg              Split Grid (2x2 layout in current window or new session)
+  btop            Split a new pane (min 80w x 24h) for btop in current window (starts tmux if needed)
+  rl|rr|ru|rd     Resize current pane (L/R/U/D by 5 cells)
+  copy            Enter copy mode
+  mouse           Toggle tmux mouse mode on/off
+    on:  Left-click on a pane to switch to pane; on pane-divider to drag-resize
+         Left-click to select text in a pane (then use 'C-b ]' to paste)
+         Right-click context-sensitive menu
+    off: Mouse-wheel will scroll console history
+  panes           Flash up the pane numbers, and show details in console
+  ren|rename <name> Rename current session to <name>
+  swi <name>      Switch client to session <name>
+  k               ${BLUE}tmux kill-pane${NC} | Kill current tmux pane (with confirmation)
+  hk              Help summary of common tmux key binding defaults
+  hb              Help summary of common byobu features
+  help            Show tmux's internal list-commands and list-keys (paged)
+  cmds            List all tmux commands (paged)
+  keys            List all tmux key bindings (paged)
+  -h, --help      Show this help menu
+
+"
+}
+
+
+# --- Main TMUX Command Handler Function ---
+_t_command_handler() {
+    local main_command="$1"
+    # local arg2="$2" # Available for commands that take more arguments
+
+    case "$main_command" in
+        ""|-h|--help)
+            help_text
+            return 0
+            ;;
+
+        # ... (Your other cases like list, s, k, copy, etc., with TMUX checks where needed) ...
+        # Example for 's' to be more robust:
+        s|t|start)
+            if [ -n "$TMUX" ]; then
+                color_echo "You are already in a tmux session: $TMUX_PANE"
+                tmux display-message "Already in a tmux session. No new session started."
+                return 1
+            fi
+            color_echo "Starting new tmux session..."
+            tmux new-session # Starts and attaches. Add any specific flags if needed.
+            ;;
+
+        sh)
+            if [ -z "$TMUX" ]; then
+                tmux new-session -d -c "$PWD" \; \
+                     split-window -h -c "$PWD" \; \
+                     select-pane -t 0 \; \
+                     attach-session
+            else
+                tmux split-window -h -c "#{pane_current_path}"
+            fi
+            ;;
+
+        sv)
+            if [ -z "$TMUX" ]; then
+                tmux new-session -d -c "$PWD" \; \
+                     split-window -v -c "$PWD" \; \
+                     select-pane -t 0 \; \
+                     attach-session
+            else
+                tmux split-window -v -c "#{pane_current_path}" # Corrected from -h in your script
+            fi
+            ;;
+        sg)
+            if [ -z "$TMUX" ]; then
+                tmux new-session -d -c "$PWD" \; \
+                     split-window -h -c "#{pane_current_path}" \; \
+                     select-pane -L \; \
+                     split-window -v -c "#{pane_current_path}" \; \
+                     select-pane -R \; \
+                     split-window -v -c "#{pane_current_path}" \; \
+                     select-pane -t 0 \; \
+                     attach-session
+            else
+                tmux split-window -h -c "#{pane_current_path}"
+                tmux select-pane -L
+                tmux split-window -v -c "#{pane_current_path}"
+                tmux select-pane -R
+                tmux split-window -v -c "#{pane_current_path}"
+                tmux select-pane -t 0
+            fi
+            ;;
+
+        btop)
+            # Local variables are valid as this is inside _t_command_handler
+            local term_width term_height
+            local original_pane_target
+            local min_btop_width=80
+            local min_btop_height=24 # For warning purposes
+    
+            if [ -z "$TMUX" ]; then
+                # --- Outside tmux: Start new session, split for btop, run btop as command, attach ---
+                echo "Starting new tmux session, creating pane for btop..."
+    
+                # Get terminal size using tput before starting tmux
+                # Provide defaults if tput fails or is unavailable
+                term_width=$(tput cols 2>/dev/null || echo 80)
+                term_height=$(tput lines 2>/dev/null || echo 24)
+    
+                if [[ "$term_width" -lt "$min_btop_width" || "$term_height" -lt "$min_btop_height" ]]; then
+                    echo -e "${RED}Warning: Terminal (${term_width}x${term_height}) is smaller than btop's ideal ${min_btop_width}x${min_btop_height}. btop may not display correctly.${NC}" >&2
+                    sleep 2 # Give user time to see this before tmux takes over
+                fi
+    
+                # Chain of commands:
+                # 1. New session, detached, first pane is "Main".
+                # 2. Split "Main" pane horizontally, new pane on right (-h).
+                #    Request $min_btop_width for it (-l $min_btop_width).
+                #    Run "btop" as the command directly in this new pane.
+                # 3. Select the left pane (the original "Main" pane) to ensure focus is there on attach.
+                # 4. Attach to the session.
+                tmux new-session -d -n "Main" -c "$PWD" \; \
+                     split-window -h -l "$min_btop_width" -c "$PWD" "btop" \; \
+                     select-pane -L \; \
+                     attach-session
+            else
+                # --- Inside tmux: Use current window, split for btop, run btop as command, return focus ---
+                original_pane_target=$(tmux display-message -p '#{pane_id}') # Get ID of current pane
+    
+                term_width=$(tmux display-message -p '#{window_width}')
+                term_height=$(tmux display-message -p '#{window_height}')
+                
+                if [[ "$term_width" -lt "$min_btop_width" || "$term_height" -lt "$min_btop_height" ]]; then
+                    tmux display-message -d 3000 "Warning: Window (${term_width}x${term_height}) is smaller than btop's ideal ${min_btop_width}x${min_btop_height}."
+                fi
+                
+                # Check if the current (original) pane is wide enough to give $min_btop_width to btop
+                # and leave a reasonable amount for itself (e.g., at least 30-40 columns).
+                local current_pane_width
+                current_pane_width=$(tmux display-message -p -t "$original_pane_target" '#{pane_width}')
+                local requested_btop_pane_width="$min_btop_width"
+    
+                # If current pane is not much wider than min_btop_width, btop might take almost all of it.
+                # This logic ensures btop gets its 80 columns IF the original pane was wider than that.
+                # If the original pane was already < 80, tmux will give the new pane what it can up to 50% or so.
+                # The `-l $requested_btop_pane_width` tells tmux the desired size for the new pane.
+    
+                # Split current pane horizontally. The new pane (running btop) becomes active.
+                # The original_pane_target becomes the pane to the left.
+                # "btop" is passed as the command to run in the new pane.
+                tmux split-window -h -l "$requested_btop_pane_width" -c "#{pane_current_path}" "btop"
+                
+                # After split, focus is on the new btop pane.
+                # Return focus to the original pane (which is now to the left).
+                tmux select-pane -t "$original_pane_target"
+            fi
+            ;; # End of btop
+        # ... (All your other cases: f, b, rl, rr, ru, rd, ren, swi, a, d, mouse, panes, cmds, keys, help, hk, hb) ...
+        # Ensure they also use `local` for variables if any, and `return` appropriately.
+        # Add $TMUX checks to commands that only make sense inside tmux.
+        # Example for 'ren':
+        ren|rename)
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to rename."; return 1; fi
+            local new_name="$2" # $2 refers to the script's second argument
+            if [ -z "$new_name" ]; then
+                echo "Usage: t rename <new-session-name>"
+                read -r -p "Enter new session name: " new_name
+                if [ -z "$new_name" ]; then echo "No name provided. Aborting."; return 1; fi
+            fi
+            tmux rename-session "$new_name"
+            ;;
+
+        # Example for 'a' (attach):
+        a|at|att|attach)
+            local target_session_attach="$2"
+            if [ -n "$TMUX" ] && [ -z "$target_session_attach" ]; then
+                 echo "You are already in a tmux session. To switch, use 't swi <session>' or 't a <other_session>'."
+                 return 1
+            fi
+            if [ -n "$target_session_attach" ]; then
+                tmux attach-session -t "$target_session_attach"
+            else
+                tmux attach-session # Attaches to last session, or new if none/first available
+            fi
+            ;;
+
+
+        # ... (The rest of your cases from your script, adapted as needed) ...
+        f)
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to select panes."; return 1; fi
+            tmux select-pane -t :.+
+            ;;
+        b)
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to select panes."; return 1; fi
+            tmux select-pane -t :.-
+            ;;
+        rl) if [ -n "$TMUX" ]; then tmux resize-pane -L 5; else echo "Not in tmux."; return 1; fi ;;
+        rr) if [ -n "$TMUX" ]; then tmux resize-pane -R 5; else echo "Not in tmux."; return 1; fi ;;
+        ru) if [ -n "$TMUX" ]; then tmux resize-pane -U 5; else echo "Not in tmux."; return 1; fi ;;
+        rd) if [ -n "$TMUX" ]; then tmux resize-pane -D 5; else echo "Not in tmux."; return 1; fi ;;
+        
+        swi) # switch client
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to switch client."; return 1; fi
+            local target_session_switch="$2"
+            if [ -z "$target_session_switch" ]; then echo "Usage: t swi <session-name-or-target>"; return 1; fi
+            tmux switch-client -t "$target_session_switch"
+            ;;
+        d|de|det|detach)
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to detach from."; return 1; fi
+            tmux detach-client
+            ;;
+        mouse)
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to toggle mouse mode."; return 1; fi
+            local current_mouse_status
+            current_mouse_status=$(tmux show-options -g mouse | awk '{print $2}')
+            if [ "$current_mouse_status" = "on" ]; then
+                tmux set-option -g mouse off
+                echo -e "Mouse mode turned ${RED}off${NC}."
+            else
+                tmux set-option -g mouse on
+                echo -e "Mouse mode turned ${GREEN}on${NC}."
+            fi
+            ;;
+        panes)
+            if [ -z "$TMUX" ]; then echo "Not in a tmux session to list/display panes."; return 1; fi
+            tmux list-panes
+            tmux display-panes
+            ;;
+        cmds)
+            tmux list-commands | less
+            ;;
+        keys)
+            tmux list-keys | less # tmux handles if server not running, though less useful
+            ;;
+        help)
+            if [ -z "$TMUX" ]; then
+                 (tmux list-commands; echo -e "\n${BLUE}--- KEY BINDINGS (default set) ---${NC}\n"; tmux list-keys -N) | less
+            else
+                 (tmux list-commands; echo -e "\n${BLUE}--- KEY BINDINGS (current session) ---${NC}\n"; tmux list-keys) | less
+            fi
+            ;;
+        hk) # Your hk content
+            printf '\033[1;33m  *** Default tmux Key Bindings ***\033[0m\n  First press \033[1;36mC-b\033[0m (Ctrl+b), then one of the following:\n\n\033[1;33m  Splits & Panes                                Navigation\033[0m\n  \033[1;36m"\033[0m    : Split horizontally            \033[1;36mo / ;\033[0m     : Next / Last pane\n  \033[1;36m%%\033[0m    : Split vertically              \033[1;36mArrow keys\033[0m: Move between panes\n  \033[1;36m!\033[0m    : Break pane into window        \033[1;36mCtrl+Arrow\033[0m: Resize pane\n  \033[1;36mx\033[0m    : Kill current pane             \033[1;36mSpace\033[0m     : Cycle layouts (often, might need binding)\n  \033[1;36mz\033[0m    : Toggle zoom (fullscreen)\n\n\033[1;33m  Windows & Sessions                            Copy Mode\033[0m\n  \033[1;36mc\033[0m    : Create new window             \033[1;36m[\033[0m     : Copy mode (PgUpDn+cursors to move)\n  \033[1;36mn / p\033[0m : Next / Prev window              then \033[1;36mSpace\033[0m to start selection\n  \033[1;36m,\033[0m    : Rename window                   then \033[1;36mEnter\033[0m to copy highlighted to buffer\n  \033[1;36m&\033[0m    : Kill window                   \033[1;36m]\033[0m     : Paste buffer\n  \033[1;36mw\033[0m    : Choose window\n  \033[1;36ms\033[0m    : List sessions\n\n\033[1;33m  Mouse & Buffers                               Miscellaneous\033[0m\n  \033[1;36m:\033[0m    : Open command prompt\n  \033[1;36m:show-buffer\033[0m                            \033[1;36md\033[0m : Detach from session\n  \033[1;36m:save-buffer ~/out.txt\033[0m                  \033[1;36m?\033[0m : List all key bindings\n  \033[1;36m:list-buffers\033[0m                           \033[1;36mt\033[0m : Show clock\n  \033[1;36m:clear-history\033[0m                          \033[1;36mr\033[0m : Reload config\n\n\033[1;33m  Mouse Usage (optional, but very useful)\033[0m\n  \033[1;36m:set -g mouse on\033[0m    : Enable mouse mode (click, resize splits, scroll)\n  \033[1;36m:set -g mouse off\033[0m   : Disable mouse mode (back to keyboard only)\n  Useful key binding to easily toggle mouse on/off:\n  \033[1;36mbind m set -g mouse \\; display-message \"Mouse mode: #{?mouse,on,off}\"\033[0m\n\033[1;33m  To add this to your config:\033[0m \033[1;36mvi ~/.tmux.conf\033[0m\n  Then reload with \033[1;36mC-b r\033[0m or \033[1;36m:source-file ~/.tmux.conf\033[0m\n\n  For full list: \033[1;36mC-b ?\033[0m or run \033[1;36m\"t help\"\033[0m inside tmux\n'
+            ;;
+        hb) # Your hb content
+            printf '\033[1;33m  *** Byobu: An Enhanced Terminal Environment ***\033[0m\n  Byobu is a wrapper around GNU Screen or tmux, with useful keybindings, automatic session\n  management (auto-start/attach on login), and system info bar.\n  Defaults to preferring \033[0;32mtmux\033[0m if available. Use \033[0;32mbyobu-config\033[0m to change.\n  It chooses based on byobu configuration (\033[0;32m~/.byobu/\033[0m) and which multiplexers are installed.\n  \033[1;33mTo Start:\033[0m \033[0;32mbyobu\033[0m   To install: sudo apt install byobu, etc.)\n\n\033[1;33m  Default Key Bindings:\033[0m\n  (Bindings may vary slightly based on Byobu version and backend)\n\n  \033[1;33mWindows                                   Panes\033[0m\n  \033[1;36mF2\033[0m        : New window                  \033[1;36mShift-F2\033[0m : Split horizontally\n  \033[1;36mF3/F4\033[0m     : Prev/Next window            \033[1;36mCtrl-F2\033[0m  : Split vertically\n  \033[1;36mSh-F3/F4\033[0m  : Move window L/R             \033[1;36mShift-Left/Right/Up/Down\033[0m: Navigate panes\n  \033[1;36mF8\033[0m        : Rename window               \033[1;36mCtrl-Left/Right/Up/Down\033[0m: Resize pane\n  \033[1;36mF10\033[0m       : Exit Byobu/window           \033[1;36mCtrl-D\033[0m   : Close pane/shell\n\n  \033[1;33mSessions                                  Miscellaneous\033[0m\n  \033[1;36mShift-F1\033[0m: Show help/keys              \033[1;36mF5\033[0m       : Refresh status\n  \033[1;36mF6\033[0m        : Detach                      \033[1;36mF7\033[0m       : Enter scrollback (Copy mode)\n  \033[1;36mShift-F6\033[0m: Attach to session           \033[1;36mF9\033[0m       : Configuration menu\n  \033[1;36mCtrl-F6\033[0m : Kill session                  \033[1;36mCtrl-L\033[0m   : Clear screen\n'
+            ;;
+
+        *)
+            echo -e "${RED}Unknown option: $main_command${NC}\n" >&2
+            help_text
+            return 1
+            ;;
+    esac
+    return 0 # Default success for the handler
+}
+
+
+# --- Main Script Execution Starts Here ---
+
+# If called with no arguments, show help (same as t -h)
+if [[ $# -eq 0 ]]; then
+    help_text
+    exit 0
+fi
+
+# Call the main handler function, passing all script arguments
+_t_command_handler "$@"
+exit $? # Exit the script with the status code from the handler function

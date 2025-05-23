@@ -30,6 +30,7 @@ Options:
   sh            Split Horizontal (create pane, split line is top to bottom)
   sv            Split Vertical (create pane, split line is left to right)
   sg            Split Grid (create panes to form a 2x2 grid)
+  btop          Split and create space for a btop session
   rl|rr|ru|rd   Resize current pane (L/R/U/D)
   copy          Enter copy mode
   mouse         Toggle mouse mode (if 'off', copy mode will span multiple panes)
@@ -74,11 +75,6 @@ case "$1" in
         tmux
         ;;
 
-#     b)
-#         color_echo "Starting byobu..."
-#         byobu
-#         ;;
-
     k)
         read -rp "Are you sure you want to kill the current tmux pane? [y/N]: " confirm
         if [[ $confirm == [yY] ]]; then
@@ -114,17 +110,111 @@ case "$1" in
 
     sg)
         if [ -z "$TMUX" ]; then
-            tmux new-session -d -c "$PWD"
-            tmux attach
-            exit
+            # If not in tmux: create session, apply all splits, then attach
+            tmux new-session -d -c "$PWD" \; \
+                 split-window -h -c "#{pane_current_path}" \; \
+                 select-pane -L \; \
+                 split-window -v -c "#{pane_current_path}" \; \
+                 select-pane -R \; \
+                 split-window -v -c "#{pane_current_path}" \; \
+                 attach-session # Attach to the session configured by the preceding commands
+        else
+            # If already in tmux: apply splits to current window
+            tmux split-window -h -c "#{pane_current_path}"
+            tmux select-pane -L
+            tmux split-window -v -c "#{pane_current_path}"
+            tmux select-pane -R
+            tmux split-window -v -c "#{pane_current_path}"
+            # Optional: you might want to select a specific pane to be active after splits,
+            # e.g., the top-left one: tmux select-pane -t 0 (if it's a fresh window)
+            # or using directional selections like tmux select-pane -U -L from bottom-right.
+        fi
+        tmux select-pane -t 0
+        ;;
+
+    btop)
+        # Ensure we are in a tmux session
+        if [ -z "$TMUX" ]; then
+            echo "This command must be run inside a tmux session."
+            return 1 # Or exit, depending on how 't' is structured
         fi
     
-        tmux split-window -h -c "#{pane_current_path}"     # split right
-        tmux select-pane -L                               # move back to left pane
-        tmux split-window -v -c "#{pane_current_path}"     # split bottom of left
-        tmux select-pane -R                               # move to right pane
-        tmux split-window -v -c "#{pane_current_path}"     # split bottom of right
+        # 0. Check current client terminal size (optional, but good for the requirement)
+        local current_client_width=$(tmux display-message -p '#{client_width}')
+        local current_client_height=$(tmux display-message -p '#{client_height}')
+        
+        if [[ "$current_client_width" -lt 80 || "$current_client_height" -lt 24 ]]; then
+            # Display a message in the tmux status line for a few seconds
+            tmux display-message -d 3000 "Warning: Client terminal (${current_client_width}x${current_client_height}) is smaller than btop's ideal 80x24."
+            # Depending on how strict you want to be, you could 'return 1' here.
+            # For now, we'll proceed, and btop will adapt or complain.
+        fi
+    
+        # 1. Store current location to return to
+        local original_session_id=$(tmux display-message -p '#{session_id}') # For more robust targeting
+        local original_window_id=$(tmux display-message -p '#{window_id}')
+        local original_pane_id=$(tmux display-message -p '#{pane_id}')
+        local target_original_pane="${original_session_id}:${original_window_id}.${original_pane_id}" # Full target for select-pane
+    
+        local btop_window_name="BTOP_SYSINFO" # Define a consistent name for the btop window
+        local btop_window_id=""
+        local btop_target_pane="" # Will hold the full target string for btop pane e.g., @session_id:@window_id.0
+    
+        # 2. Find or create the btop window and prepare to run btop in it
+        # Try to find an existing window named btop_window_name in the current session
+        # Using awk for a cleaner match and extraction. Output is just the window_id if found.
+        btop_window_id=$(tmux list-windows -s "$original_session_id" -F "#{window_id}:#{window_name}" 2>/dev/null | \
+            awk -F: -v name="$btop_window_name" '$2 == name {print $1; exit}')
+        
+        if [[ -n "$btop_window_id" ]]; then
+            # Window exists. Target its first pane (usually .0).
+            btop_target_pane="${original_session_id}:${btop_window_id}.0"
+            # Ensure btop is running. Send Ctrl-C to stop any current command, then start btop.
+            # This sequence makes sure btop starts fresh or restarts if it was already there.
+            tmux send-keys -t "$btop_target_pane" C-c
+            tmux send-keys -t "$btop_target_pane" "btop" Enter
+        else
+            # Window does not exist, create it.
+            # -s "$original_session_id": Target current session.
+            # -d: don't select the new window immediately (run in background).
+            # -n: set window name.
+            # -P -F "#{window_id}": print new window ID after creation.
+            # -a: add the new window after the current one (appears "to the right" in status bar).
+            btop_window_id=$(tmux new-window -s "$original_session_id" -ad -n "$btop_window_name" -P -F "#{window_id}")
+            btop_target_pane="${original_session_id}:${btop_window_id}.0"
+            # Send btop command to the first pane of the new window
+            tmux send-keys -t "$btop_target_pane" "btop" Enter
+        fi
+    
+        # 3. Return focus to the original pane and window
+        # Check if original window and pane still exist (should be robust)
+        # We use the full target string for select-pane which is very specific.
+        if tmux select-pane -t "$target_original_pane" 2>/dev/null; then
+            # Successfully selected original pane.
+            # If select-window was also desired (though select-pane implies it):
+            # tmux select-window -t "${original_session_id}:${original_window_id}"
+            : # Placeholder for clarity, successfully returned
+        else
+            # Fallback if original pane is somehow gone (very unlikely if script is quick)
+            # Try to select original window's first pane (pane 0)
+            if tmux select-pane -t "${original_session_id}:${original_window_id}.0" 2>/dev/null; then
+                : # Successfully selected pane 0 of original window
+            else
+                # Even original window is gone or has no pane 0? Extreme fallback.
+                # Select the first window and its first pane in the current session.
+                local first_window_in_session=$(tmux list-windows -s "$original_session_id" -F '#{window_id}' 2>/dev/null | head -n1)
+                if [[ -n "$first_window_in_session" ]]; then
+                     tmux select-window -t "${original_session_id}:${first_window_in_session}"
+                     tmux select-pane -t "${original_session_id}:${first_window_in_session}.0"
+                fi
+                # If even this fails, tmux is likely in a very odd state.
+            fi
+        fi
         ;;
+    
+    #   esac
+    # }
+
 
     f)
         tmux select-pane -t :.+
@@ -262,4 +352,9 @@ hb)
         exit 1
         ;;
 esac
+
+#     b)
+#         color_echo "Starting byobu..."
+#         byobu
+#         ;;
 

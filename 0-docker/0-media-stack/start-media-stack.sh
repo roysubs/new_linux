@@ -153,42 +153,41 @@ PGID=$(id -g)
 echo "Using UID=$PUID and GID=$PGID, TimeZone=$TZ"
 
 echo "--- Media Directory Setup ---"
-DEFAULT_SOURCE_PATH="/mnt/sdc1/Downloads"
-read -p "Enter path to your actual media location (e.g. /srv/mymedia, this will be bind-mounted to $BASE_MEDIA) [default: $DEFAULT_SOURCE_PATH]: " SOURCE_PATH_INPUT
-SOURCE_PATH="${SOURCE_PATH_INPUT:-$DEFAULT_SOURCE_PATH}"
-echo "Using source path for media: $SOURCE_PATH"
+DEFAULT_MEDIA_PATH="/mnt/media"
+read -p "Enter path to your actual media location (e.g. /srv/mymedia, /mnt/media etc) [default: $DEFAULT_MEDIA_PATH]: " MEDIA_PATH_INPUT
+MEDIA_PATH="${MEDIA_PATH_INPUT:-$DEFAULT_MEDIA_PATH}"
+echo "Using source path for media: $MEDIA_PATH"
 
-if [ ! -d "$SOURCE_PATH" ]; then
-    echo "Source path \"$SOURCE_PATH\" does not exist. Creating..."
-    sudo mkdir -p "$SOURCE_PATH" || { echo "❌ Error creating source path: $SOURCE_PATH"; exit 1; }
+if [ ! -d "$MEDIA_PATH" ]; then
+    echo "Source path \"$MEDIA_PATH\" does not exist." || { echo "❌ Error creating source path: $MEDIA_PATH"; exit 1; }
 fi
-if [ ! -d "$BASE_MEDIA" ]; then
-    echo "Mount point $BASE_MEDIA does not exist. Creating..."
-    sudo mkdir -p "$BASE_MEDIA" || { echo "❌ Error creating mount point: $BASE_MEDIA"; exit 1; }
-fi
+# if [ ! -d "$BASE_MEDIA" ]; then
+#     echo "Mount point $BASE_MEDIA does not exist. Creating..."
+#     sudo mkdir -p "$BASE_MEDIA" || { echo "❌ Error creating mount point: $BASE_MEDIA"; exit 1; }
+# fi
+# 
+# if mountpoint -q "$BASE_MEDIA"; then
+#     echo "$BASE_MEDIA is already mounted."
+# else
+#     echo "Mounting $MEDIA_PATH to $BASE_MEDIA..."
+#     if sudo mount --bind "$MEDIA_PATH" "$BASE_MEDIA"; then
+#         echo "Mounted $MEDIA_PATH to $BASE_MEDIA"
+#     else
+#         echo "❌ Error mounting $MEDIA_PATH to $BASE_MEDIA. Check permissions and if the source path exists."
+#         exit 1
+#     fi
+# fi
 
-if mountpoint -q "$BASE_MEDIA"; then
-    echo "$BASE_MEDIA is already mounted."
-else
-    echo "Mounting $SOURCE_PATH to $BASE_MEDIA..."
-    if sudo mount --bind "$SOURCE_PATH" "$BASE_MEDIA"; then
-        echo "Mounted $SOURCE_PATH to $BASE_MEDIA"
-    else
-        echo "❌ Error mounting $SOURCE_PATH to $BASE_MEDIA. Check permissions and if the source path exists."
-        exit 1
-    fi
-fi
-
-echo "Ensuring required media subdirectories exist under $SOURCE_PATH (visible at $BASE_MEDIA)..."
+echo "Ensuring required media subdirectories exist under $MEDIA_PATH..."
 # Subdirectories for Radarr, Lidarr, downloads etc.
-# These will be created inside $SOURCE_PATH and thus appear under $BASE_MEDIA after bind mount.
-SUBDIRS=("$BASE_MEDIA/downloads" "$BASE_MEDIA/movies" "$BASE_MEDIA/tv" "$BASE_MEDIA/music" "$BASE_MEDIA/books" "$BASE_MEDIA/audiobooks")
+# These will be created inside $MEDIA_PATH and thus appear under $BASE_MEDIA after bind mount.
+SUBDIRS=("$MEDIA_PATH/downloads" "$MEDIA_PATH/movies" "$MEDIA_PATH/tv" "$MEDIA_PATH/music" "$MEDIA_PATH/books" "$MEDIA_PATH/audiobooks")
 for subdir in "${SUBDIRS[@]}"; do
     if sudo mkdir -p "$subdir"; then
         echo "Created/Ensured directory: $subdir"
     else
         echo "❌ Error creating necessary media subdirectory: $subdir."
-        echo "Please check permissions for the user $USER (or root if using sudo) on $SOURCE_PATH."
+        echo "Please check permissions for the user $USER (or root if using sudo) on $MEDIA_PATH."
         exit 1
     fi
 done
@@ -203,9 +202,9 @@ done
 echo "✅ Config directories created."
 
 
-echo "Setting ownership on $BASE_MEDIA to $PUID:$PGID..."
-if ! sudo chown -R "$PUID:$PGID" "$BASE_MEDIA"; then
-    echo "❌ Error setting ownership on $BASE_MEDIA. Make sure you have appropriate permissions."
+echo "Setting ownership on $MEDIA_PATH to $PUID:$PGID..."
+if ! sudo chown -R "$PUID:$PGID" "$MEDIA_PATH"; then
+    echo "❌ Error setting ownership on $MEDIA_PATH. Make sure you have appropriate permissions."
     exit 1
 fi
 
@@ -249,6 +248,7 @@ env_content=""
 env_content+="TZ=$TZ"$'\n'
 env_content+="PUID=$PUID"$'\n'
 env_content+="PGID=$PGID"$'\n'
+env_content+="MEDIA_PATH=$MEDIA_PATH"$'\n'
 env_content+="CONFIG_ROOT=${CONFIG_ROOT}"$'\n' # Ensures compose file can use this
 # Add any other global environment variables if needed by multiple services in compose
 echo "$env_content" > "$ENV_FILE"

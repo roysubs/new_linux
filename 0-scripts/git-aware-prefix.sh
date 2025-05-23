@@ -15,9 +15,31 @@ Is_Sourced() {
 }
 
 print_intro() {
-    echo "To activate: source $0"
-    echo "To restore: source $0 restore"
-    echo "For help: source $0 --help"
+    echo "=== Git-Aware Bash Prompt ==="
+    echo
+    echo "USAGE:"
+    echo "  To activate: source $0"
+    echo "  To restore:  source $0 restore"
+    echo "  For help:    source $0 --help"
+    echo
+    echo "WHAT IT SHOWS:"
+    echo "  When in a git repository, displays: (branch) [normal prompt]"
+    echo
+    echo "GIT STATUS INDICATORS:"
+    echo "  • Branch name appears in cyan"
+    echo "  • Numbers show file counts:"
+    echo "    - Green numbers (e.g. 2+) = staged files ready to commit"
+    echo "    - Red numbers (e.g. 3-) = modified files not yet staged"
+    echo "    - Yellow numbers (e.g. 1?) = untracked files"
+    echo "  • Remote sync status:"
+    echo "    - Cyan ▲2 = 2 commits ahead of remote"
+    echo "    - Magenta ▼1 = 1 commit behind remote"
+    echo
+    echo "EXAMPLES:"
+    echo "  (main) [user@host dir]#           - Clean main branch"
+    echo "  (feature 2+ 1-) [user@host dir]#  - Feature branch: 2 staged, 1 modified"
+    echo "  (main 1? ▲1) [user@host dir]#     - Main branch: 1 untracked, 1 ahead"
+    echo
 }
 
 parse_git_branch() {
@@ -97,6 +119,8 @@ restore_prompt() {
 
 show_usage() {
     print_intro
+    echo "NOTE: This script must be sourced (not executed) to modify your prompt."
+    echo "The git information will appear before your normal prompt when in git repos."
 }
 
 update_ps1() {

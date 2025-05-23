@@ -21,8 +21,9 @@ NC='\033[0m'         # No Color
 # Check if exactly two arguments are provided
 if [ "$#" -ne 2 ]; then
     echo
-    echo "Compare a current file with a previous version, where HEAD~1 is the last committed"
-    echo "version, HEAD~3 is 3 commits ago, etc"
+    echo "Compare a current file with a previous version from its git history. In git syntax,"
+    echo "HEAD~1 is the last committed version of the script (not just the last commit in general"
+    echo "but the last time that this file was committed). HEAD~3 is 3rd commit ago, etc."
     echo
     echo -e "Usage: ${GREEN}${0##*/} <filename> <HEAD-ref_number>${NC}"   # Use ${0##*/} instead of $(basename $0) as basename not always present
     echo

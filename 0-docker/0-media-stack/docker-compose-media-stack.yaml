@@ -25,7 +25,7 @@ services:
       - LAN_NETWORK=192.168.1.0/24,100.64.0.0/10
     volumes:
       - ${CONFIG_ROOT}/qbittorrentvpn:/config
-      - /mnt/media/downloads:/downloads
+      - ${MEDIA_PATH}/downloads:/downloads
     ports:
       - "8080:8080"
       - "6881:6881/tcp"
@@ -43,8 +43,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_ROOT}/radarr:/config
-      - /mnt/media:/media # Radarr's root folder for movies (e.g., /media/movies)
-      - /mnt/media/downloads:/downloads # Radarr needs access to where qBittorrent saves completed files
+      - ${MEDIA_PATH}:/media # Radarr's root folder for movies (e.g., /media/movies)
+      - ${MEDIA_PATH}/downloads:/downloads # Radarr needs access to where qBittorrent saves completed files
     ports:
       - "7878:7878" # Radarr Web UI
     restart: unless-stopped
@@ -60,8 +60,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_ROOT}/lidarr:/config
-      - /mnt/media:/media # Lidarr's root folder for music (e.g., /media/music)
-      - /mnt/media/downloads:/downloads # Lidarr needs access to where qBittorrent saves completed files
+      - ${MEDIA_PATH}:/media # Lidarr's root folder for music (e.g., /media/music)
+      - ${MEDIA_PATH}/downloads:/downloads # Lidarr needs access to where qBittorrent saves completed files
     ports:
       - "8686:8686" # Lidarr Web UI
     restart: unless-stopped
@@ -92,8 +92,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_ROOT}/sonarr:/config
-      - /mnt/media:/media        # Sonarr's root folder for TV series (e.g., /media/tv)
-      - /mnt/media/downloads:/downloads # Sonarr needs access to where qBittorrent saves completed files
+      - ${MEDIA_PATH}:/media        # Sonarr's root folder for TV series (e.g., /media/tv)
+      - ${MEDIA_PATH}/downloads:/downloads # Sonarr needs access to where qBittorrent saves completed files
     ports:
       - "8989:8989" # Sonarr Web UI
     restart: unless-stopped
@@ -109,8 +109,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_ROOT}/readarr:/config
-      - /mnt/media:/media        # Readarr's root folder for books (e.g., /media/books and /media/audiobooks)
-      - /mnt/media/downloads:/downloads # Readarr needs access to completed downloads
+      - ${MEDIA_PATH}:/media        # Readarr's root folder for books (e.g., /media/books and /media/audiobooks)
+      - ${MEDIA_PATH}/downloads:/downloads # Readarr needs access to completed downloads
     ports:
       - "8787:8787" # Readarr Web UI
     restart: unless-stopped
@@ -126,7 +126,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_ROOT}/bazarr:/config
-      - /mnt/media:/media # Bazarr needs access to your media library folders.
+      - ${MEDIA_PATH}:/media # Bazarr needs access to your media library folders.
                           # In Bazarr's UI, point to /media/movies and /media/tv
                           # (assuming Radarr uses /media/movies and Sonarr uses /media/tv within their containers)
     ports:

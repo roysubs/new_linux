@@ -8,8 +8,6 @@
 # (e.g., Windows Terminal hosting PowerShell) to support these sequences.
 #
 # Usage: ./apply_ssh_theme.sh <theme_name>
-# Available themes: default, solarized_dark, gruvbox_dark, dracula, nord,
-#                   material_dark, one_dark_pro, tomorrow_night_eighties
 
 # --- Helper function to apply palette and main FG/BG ---
 apply_colors() {
@@ -43,16 +41,10 @@ apply_colors() {
 
 apply_theme_default() {
     echo "Attempting to reset to your terminal's default palette..."
-    # OSC 104 without arguments: Resets the color palette (ANSI 0-255) to defaults
-    printf "\033]104\007"
-    # OSC 10 without arguments: Resets default foreground color
-    printf "\033]10\007"
-    # OSC 11 without arguments: Resets default background color
-    printf "\033]11\007"
-    # OSC 107: Resets text highlight color (less common, but for completeness)
-    # printf "\033]107\007"
+    printf "\033]104\007" # Resets the color palette (ANSI 0-255)
+    printf "\033]10\007"  # Resets default foreground color
+    printf "\033]11\007"  # Resets default background color
     echo "Terminal default palette reset commands sent."
-    echo "You may need to 'clear' or open a new tab to see the full effect."
 }
 
 apply_theme_solarized_dark() {
@@ -118,53 +110,107 @@ apply_theme_tomorrow_night_eighties() {
     apply_colors "Tomorrow Night Eighties" p "#2D2D2D" "#CCCCCC"
 }
 
+apply_theme_monokai_classic() {
+    declare -A p
+    p[0]="#272822";  p[1]="#F92672";  p[2]="#A6E22E";  p[3]="#F4BF75"
+    p[4]="#66D9EF";  p[5]="#AE81FF";  p[6]="#A1EFE4";  p[7]="#F8F8F2"
+    p[8]="#75715E";  p[9]="#F92672";  p[10]="#A6E22E"; p[11]="#F4BF75"
+    p[12]="#66D9EF"; p[13]="#AE81FF"; p[14]="#A1EFE4"; p[15]="#F9FAFB"
+    apply_colors "Monokai Classic" p "#272822" "#F8F8F2"
+}
+
+apply_theme_ayu_mirage() {
+    declare -A p
+    p[0]="#1F2430";  p[1]="#FF3333";  p[2]="#BAE67E";  p[3]="#FFA759"
+    p[4]="#73D0FF";  p[5]="#D4BFFF";  p[6]="#95E6CB";  p[7]="#CBCCC6"
+    p[8]="#707A8C";  p[9]="#FF3333";  p[10]="#BAE67E"; p[11]="#FFA759"
+    p[12]="#73D0FF"; p[13]="#D4BFFF"; p[14]="#95E6CB"; p[15]="#FFFFFF"
+    apply_colors "Ayu Mirage" p "#1F2430" "#CBCCC6"
+}
+
+apply_theme_synthwave_84() {
+    declare -A p
+    p[0]="#0D0221";  p[1]="#FF489A";  p[2]="#20F52E";  p[3]="#F8F52F"
+    p[4]="#237AFA";  p[5]="#B339FF";  p[6]="#39F9F8";  p[7]="#F8F8F8"
+    p[8]="#6B6A73";  p[9]="#FF7EDD";  p[10]="#50FA5B"; p[11]="#F7F85B"
+    p[12]="#5091F8"; p[13]="#D279FF"; p[14]="#60FAFA"; p[15]="#FFFFFF"
+    apply_colors "Synthwave '84" p "#2B213A" "#F9F9F9" # Specific BG/FG for Synthwave
+}
+
+apply_theme_zenburn() {
+    declare -A p
+    p[0]="#4D4D4D";  p[1]="#705050";  p[2]="#60B48A";  p[3]="#F0DFAF"
+    p[4]="#506070";  p[5]="#C080D0";  p[6]="#88AFBE";  p[7]="#DCDCDC"
+    p[8]="#6F6F6F";  p[9]="#CC9393";  p[10]="#7F9F7F"; p[11]="#DFAF8F"
+    p[12]="#93A3BC"; p[13]="#DC8CC3"; p[14]="#94BFF3"; p[15]="#FFFFFF"
+    apply_colors "Zenburn" p "#3F3F3F" "#DCDCDC"
+}
+
+apply_theme_catppuccin_mocha() {
+    declare -A p
+    p[0]="#1E1E2E";  p[1]="#F38BA8";  p[2]="#A6E3A1";  p[3]="#F9E2AF" # base, red, green, yellow
+    p[4]="#89B4FA";  p[5]="#F5C2E7";  p[6]="#94E2D5";  p[7]="#BAC2DE" # blue, pink, teal, subtext1
+    p[8]="#313244";  p[9]="#EBA0AC";  p[10]="#A6E3A1"; p[11]="#F9E2AF" # surface0, maroon (alt-red), green, yellow
+    p[12]="#74C7EC"; p[13]="#CBA6F7"; p[14]="#89DCEB"; p[15]="#CDD6F4" # sapphire (alt-blue), mauve (alt-pink), sky (alt-teal), text
+    apply_colors "Catppuccin Mocha" p "#1E1E2E" "#CDD6F4" # base, text
+}
+
+apply_theme_tokyo_night_storm() {
+    declare -A p
+    p[0]="#1D202F";  p[1]="#F7768E";  p[2]="#9ECE6A";  p[3]="#E0AF68"
+    p[4]="#7AA2F7";  p[5]="#BB9AF7";  p[6]="#7DCFFF";  p[7]="#A9B1D6"
+    p[8]="#414868";  p[9]="#F7768E";  p[10]="#9ECE6A"; p[11]="#E0AF68"
+    p[12]="#7AA2F7"; p[13]="#BB9AF7"; p[14]="#7DCFFF"; p[15]="#C0CAF5"
+    apply_colors "Tokyo Night Storm" p "#24283B" "#C0CAF5"
+}
+
+apply_theme_palenight_material() {
+    declare -A p
+    p[0]="#292D3E";  p[1]="#F07178";  p[2]="#C3E88D";  p[3]="#FFCB6B"
+    p[4]="#82AAFF";  p[5]="#C792EA";  p[6]="#89DDFF";  p[7]="#A6ACCD"
+    p[8]="#434758";  p[9]="#F07178";  p[10]="#C3E88D"; p[11]="#FFCB6B"
+    p[12]="#82AAFF"; p[13]="#C792EA"; p[14]="#89DDFF"; p[15]="#FFFFFF"
+    apply_colors "Palenight Material" p "#292D3E" "#A6ACCD"
+}
 
 # --- Main script logic ---
 if [ -z "$1" ]; then
     echo "Usage: $0 <theme_name>"
     echo "Available themes: default, solarized_dark, gruvbox_dark, dracula, nord,"
-    echo "                  material_dark, one_dark_pro, tomorrow_night_eighties"
+    echo "                  material_dark, one_dark_pro, tomorrow_night_eighties,"
+    echo "                  monokai_classic, ayu_mirage, synthwave_84, zenburn,"
+    echo "                  catppuccin_mocha, tokyo_night_storm, palenight_material"
     exit 1
 fi
 
-# Optional: Rough check for TERM variable compatibility
-# if [[ "$TERM" != *"xterm"* && "$TERM" != *"putty"* && "$TERM" != *"linux"* && "$TERM" != *"screen"* && "$TERM" != *"tmux"* ]]; then
-#     echo "Warning: Your TERM variable ('$TERM') might not fully support OSC palette changes."
-# fi
-
 case "$1" in
-    default)
-        apply_theme_default
-        ;;
-    solarized_dark)
-        apply_theme_solarized_dark
-        ;;
-    gruvbox_dark)
-        apply_theme_gruvbox_dark
-        ;;
-    dracula)
-        apply_theme_dracula
-        ;;
-    nord)
-        apply_theme_ nord
-        ;;
-    material_dark)
-        apply_theme_material_dark
-        ;;
-    one_dark_pro)
-        apply_theme_one_dark_pro
-        ;;
-    tomorrow_night_eighties)
-        apply_theme_tomorrow_night_eighties
-        ;;
+    default)                       apply_theme_default ;;
+    solarized_dark)                apply_theme_solarized_dark ;;
+    gruvbox_dark)                  apply_theme_gruvbox_dark ;;
+    dracula)                       apply_theme_dracula ;;
+    nord)                          apply_theme_nord ;;
+    material_dark)                 apply_theme_material_dark ;;
+    one_dark_pro)                  apply_theme_one_dark_pro ;;
+    tomorrow_night_eighties)       apply_theme_tomorrow_night_eighties ;;
+    monokai_classic)               apply_theme_monokai_classic ;;
+    ayu_mirage)                    apply_theme_ayu_mirage ;;
+    synthwave_84)                  apply_theme_synthwave_84 ;;
+    zenburn)                       apply_theme_zenburn ;;
+    catppuccin_mocha)              apply_theme_catppuccin_mocha ;;
+    tokyo_night_storm)             apply_theme_tokyo_night_storm ;;
+    palenight_material)            apply_theme_palenight_material ;;
     *)
         echo "Unknown theme: $1"
+        # Re-list available themes for convenience
         echo "Available themes: default, solarized_dark, gruvbox_dark, dracula, nord,"
-        echo "                  material_dark, one_dark_pro, tomorrow_night_eighties"
+        echo "                  material_dark, one_dark_pro, tomorrow_night_eighties,"
+        echo "                  monokai_classic, ayu_mirage, synthwave_84, zenburn,"
+        echo "                  catppuccin_mocha, tokyo_night_storm, palenight_material"
         exit 1
         ;;
 esac
 
 echo ""
 echo "Reminder: These changes are likely temporary for this SSH session only."
+echo "The script changes how your terminal *displays* colors; it does not change server-side settings like LS_COLORS."
 echo "Run 'clear' to refresh the full screen with the new theme if needed."
