@@ -490,7 +490,6 @@ case "$option" in
             exit $?
         fi
 
-
         echo "==== LOCAL vs REMOTE diff summary ($LOCAL_BRANCH vs $REMOTE_BRANCH) ===="
         # Use ... to show difference from common ancestor to remote tip
         display_and_run "git diff --name-status $LOCAL_BRANCH...$REMOTE_BRANCH" 
@@ -503,7 +502,7 @@ case "$option" in
                 for file in $CHANGED_FILES; do
                     echo -e "\n==== Diff for: $file ===="
                     # Use pager for long diffs
-                    git diff "$LOCAL_BRANCH...$REMOTE_BRANCH" -- "$file" | less -R
+                    git diff "$LOCAL_BRANCH...$REMOTE_BRANCH" -- "$file" | cat
                 done
             else
                 echo_blue "No file differences to review."
