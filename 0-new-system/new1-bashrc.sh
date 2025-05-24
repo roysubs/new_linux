@@ -120,7 +120,7 @@ h() {
 def() {
     if [ -z \"\$1\" ]; then
         declare -F; printf \"\\nAll defined functions ('declare -F').\\n\"
-        printf \"Usage: def <name>'  - show definition of a function, alias, built-in, or script called 'name'.\\n\"
+        printf \"Usage: def <name> - show definition of a function, alias, built-in, or script called 'name'.\\n\"
         return
     fi
     local OVERLAPS=()    # Track overlaps in an array, i.e. where the item is in more than one category

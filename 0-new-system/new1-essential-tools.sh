@@ -2,7 +2,7 @@ sudo apt install -y openssh-server
 sudo apt install -y git vim neovim htop btop tmux jq yq ncdu
 sudo apt install -y net-tools   # ifconfig and the below:
 # arp, ifconfig, netstat, rarp, nameif, route, iptunnel, ipmaddr. Specific hardware: plipconfig, slattach, mii-tool
-sudo apt install -y bat         # Provides batcat
+sudo apt install -y bat         # Provides batcat, used by 'def' tool
 sudo apt install -y iftop iotop
 sudo apt install -y sysstat
 # - sar: collects and reports system activity information
