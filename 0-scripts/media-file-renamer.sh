@@ -16,7 +16,7 @@ MEDIA_EXTENSIONS=("mkv" "avi" "mp3" "mp4" "cbr" "cbz" "mov" "flv" "wmv" "webm" "
 
 # Fast junk pattern list to strip from filenames (case-insensitive)
 # Escaped hyphens in specific terms (e.g., HD-CAM) and split WEB-?DL for better sed compatibility.
-DEFAULT_JUNK_PATTERN='(HDRip|HD\-CAM|HD CAM|BluRay|Blu\-Ray|WEBRip|WEB\-DL|WEBDL|DVDRip|HDTV|x264|h264|x265|h265|XviD|AAC|AC3|DTS|TGx|YIFY|RARBG|PROPER|REPACK|EXTENDED|UNRATED|REMUX|IMAX|NF|AMZN|DSNP|HMAX|GalaxyTV|720p|1080p|2160p|4K|HEVC|VP9|AV1|DD5\.?1|DDP5\.?1|[xXhH]265\-ELiTE|[xXhH]265)'
+DEFAULT_JUNK_PATTERN='(HDRip|HD\-CAM|HD\ CAM|BluRay|Blu\-Ray|WEBRip|WEB\-DL|WEBDL|DVDRip|HDTV|x264|h264|x265|h265|XviD|AAC|AC3|DTS|TGx|YIFY|RARBG|PROPER|REPACK|EXTENDED|UNRATED|REMUX|IMAX|NF|AMZN|DSNP|HMAX|GalaxyTV|720p|1080p|2160p|4K|HEVC|VP9|AV1|DD5\.?1|DDP5\.?1|[xXhH]265\-ELiTE|[xXhH]265)'
 
 # Script path and junk database
 SCRIPT_PATH="$(realpath "$0")"
@@ -262,19 +262,20 @@ clean_name() {
     year="${BASH_REMATCH[2]}"
     cleaned_name=$(echo "$cleaned_name" | sed -E "s/[(\[]?\b${year}\b[)\]]?(\s|$)/ /g")
   fi
-
   cleaned_name=$(echo "$cleaned_name" | sed -E 's/\b([Ss])([0-9]{1,2})([EeXx])([0-9]{1,3})\b/S\2E\4/g')
   cleaned_name=$(echo "$cleaned_name" | sed -E 's/\b[Ss]eason\s+([0-9]+)\s+[Ee]pisode\s+([0-9]+)\b/S\1E\2/gI')
   cleaned_name=$(echo "$cleaned_name" | sed -E 's/\bS([0-9])E/S0\1E/g; s/ES([0-9])\b/ES0\1/g')
-  cleaned_name=$(echo "$cleaned_name" | sed -E 's/E([0-9])(?![0-9])/E0\1/g')
-
-
+  # cleaned_name=$(echo "$cleaned_name" | sed -E 's/E([0-9])(?![0-9])/E0\1/g')   # ?! not understood by most GNU sed
+  # 1. Pad E<digit> when it is followed by a non-digit character.
+  #    ([^0-9]) captures the non-digit character, which is then put back using \2.
+  cleaned_name=$(echo "$cleaned_name" | sed -E 's/E([0-9])([^0-9])/E0\1\2/g')
+  # 2. Pad E<digit> when it is at the very end of the string ($).
+  cleaned_name=$(echo "$cleaned_name" | sed -E 's/E([0-9])$/E0\1/g')
   cleaned_name=$(echo "$cleaned_name" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2)); print $0}')
 
   if [[ -n "$year" ]]; then
     cleaned_name="$cleaned_name ($year)"
   fi
-
   cleaned_name=$(echo "$cleaned_name" | sed -E 's/\s+/ /g; s/^[[:space:]]+//; s/[[:space:]]+$//')
 
   if [[ -z "$cleaned_name" ]]; then
