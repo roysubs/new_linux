@@ -267,28 +267,28 @@ Files checked:
 --- System-Wide Files ---     Generally loaded earlier or provide the base environment.
 /etc/environment       Typically loaded by PAM very early in the login process, before shell-specific files.
                        Sets environment variables for all processes started after login.
-/etc/profile           System-wide login file for Bourne-compatible shells (like Bash, Zsh). Often sources '*.sh' in /etc/profile.d/
+/etc/profile           System-wide login file for Bourne-compatible shells (like Bash, Zsh). Often sources '*.sh' in /etc/profile.d/
 Zsh system-specific:
-/etc/zsh/zshenv        Zsh system-wide, sourced on ALL Zsh invocations (login, interactive, scripts). Loaded very early for Zsh.
-/etc/zsh/zshrc         Zsh system-wide, for INTERACTIVE shells. (After /etc/profile if it's a login shell, and after zshenv).
-                       Note: Zsh also has /etc/zprofile (login, after zshenv, before zshrc) and /etc/zlogin (login, last).
+/etc/zsh/zshenv        Zsh system-wide, sourced on ALL Zsh invocations (login, interactive, scripts). Loaded very early for Zsh.
+/etc/zsh/zshrc         Zsh system-wide, for INTERACTIVE shells. (After /etc/profile if it's a login shell, and after zshenv).
+                       Note: Zsh also has /etc/zprofile (login, after zshenv, before zshrc) and /etc/zlogin (login, last).
 Bash system-specific:
-/etc/bash.bashrc       Bash system-wide, for INTERACTIVE non-login shells. Usually sourced from the user's ~/.bashrc if it exists.
+/etc/bash.bashrc       Bash system-wide, for INTERACTIVE non-login shells. Usually sourced from the user's ~/.bashrc if it exists.
 Fish system-specific:
 /etc/fish/config.fish  Fish system-wide configuration. Loaded before user's Fish config.
 
 --- User-Specific Files ---   For user customisation, typically loaded after system-wide counterparts.
 Zsh user-specific files (following the Zsh system file order):
-$HOME/.zshenv        Zsh user, sourced on ALL Zsh invocations, after /etc/zsh/zshenv.
-$HOME/.zshrc         Zsh user, for INTERACTIVE shells, after /etc/zsh/zshrc. Note: Zsh also has ~/.zprofile (login) and ~/.zlogin (login).
+$HOME/.zshenv        Zsh user, sourced on ALL Zsh invocations, after /etc/zsh/zshenv.
+$HOME/.zshrc         Zsh user, for INTERACTIVE shells, after /etc/zsh/zshrc. Note: Zsh also has ~/.zprofile (login) and ~/.zlogin (login).
 Bash user-specific (Bash reads ONE of .bash_profile, .bash_login, or .profile for login shells)
 $HOME/.bash_profile  Bash user, for LOGIN shells. Preferred by Bash if it exists.
 $HOME/.bash_login    Bash user, for LOGIN shells. (Alternative if .bash_profile doesn't exist - not in your original list but for context)
-$HOME/.profile       Bash user, for LOGIN shells (fallback if .bash_profile/.bash_login don't exist).
-                     Also used by other Bourne-compatible shells for login.
+$HOME/.profile       Bash user, for LOGIN shells (fallback if .bash_profile/.bash_login don't exist).
+                     Also used by other Bourne-compatible shells for login.
 Bash user interactive:
-$HOME/.bashrc        Bash user, for INTERACTIVE non-login shells.
-                     Often sourced by ~/.bash_profile or ~/.profile for login shells to share settings.
+$HOME/.bashrc        Bash user, for INTERACTIVE non-login shells.
+                     Often sourced by ~/.bash_profile or ~/.profile for login shells to share settings.
 Fish user-specific file
 $HOME/.config/fish/config.fish   Fish user configuration.
 
@@ -307,51 +307,51 @@ EOF
         # For simplicity, we'll use $HOME, which is usually correct for the context.
 
         files_to_check=(
-            # --- System-Wide Files ---
-            # These are generally loaded earlier or provide the base environment.
+            # --- System-Wide Files ---
+            # These are generally loaded earlier or provide the base environment.
 
-            "/etc/environment"              # Typically loaded by PAM very early in the login process, before shell-specific files.
-                                            # Sets environment variables for all processes started after login.
+            "/etc/environment"              # Typically loaded by PAM very early in the login process, before shell-specific files.
+                                            # Sets environment variables for all processes started after login.
 
-            "/etc/profile"                  # System-wide login file for Bourne-compatible shells (like Bash, Zsh).
-                                            # Often sources all `*.sh` scripts in /etc/profile.d/
+            "/etc/profile"                  # System-wide login file for Bourne-compatible shells (like Bash, Zsh).
+                                            # Often sources all `*.sh` scripts in /etc/profile.d/
 
-            # Zsh system-specific files
-            "/etc/zsh/zshenv"               # Zsh system-wide, sourced on ALL Zsh invocations (login, interactive, scripts). Loaded very early for Zsh.
-            "/etc/zsh/zshrc"                # Zsh system-wide, for INTERACTIVE shells. (After /etc/profile if it's a login shell, and after zshenv).
-                                            # Note: Zsh also has /etc/zprofile (login, after zshenv, before zshrc) and /etc/zlogin (login, last).
+            # Zsh system-specific files
+            "/etc/zsh/zshenv"               # Zsh system-wide, sourced on ALL Zsh invocations (login, interactive, scripts). Loaded very early for Zsh.
+            "/etc/zsh/zshrc"                # Zsh system-wide, for INTERACTIVE shells. (After /etc/profile if it's a login shell, and after zshenv).
+                                            # Note: Zsh also has /etc/zprofile (login, after zshenv, before zshrc) and /etc/zlogin (login, last).
 
-            # Bash system-specific file
-            "/etc/bash.bashrc"    # Bash system-wide, for INTERACTIVE non-login shells.
-                                  # Usually sourced from the user's ~/.bashrc if it exists.
+            # Bash system-specific file
+            "/etc/bash.bashrc"    # Bash system-wide, for INTERACTIVE non-login shells.
+                                  # Usually sourced from the user's ~/.bashrc if it exists.
 
-            # Fish system-specific file
-            "/etc/fish/config.fish"   # Fish system-wide configuration. Loaded before user's Fish config.
+            # Fish system-specific file
+            "/etc/fish/config.fish"   # Fish system-wide configuration. Loaded before user's Fish config.
 
-            # --- User-Specific Files ---
-            # These allow users to customize their environment, typically loaded after system-wide counterparts.
+            # --- User-Specific Files ---
+            # These allow users to customize their environment, typically loaded after system-wide counterparts.
 
-            # Zsh user-specific files (following the Zsh system file order)
-            "$HOME/.zshenv"    # Zsh user, sourced on ALL Zsh invocations, after /etc/zsh/zshenv.
-            "$HOME/.zshrc"     # Zsh user, for INTERACTIVE shells, after /etc/zsh/zshrc.
-                                            # Note: Zsh also has ~/.zprofile (login) and ~/.zlogin (login).
+            # Zsh user-specific files (following the Zsh system file order)
+            "$HOME/.zshenv"    # Zsh user, sourced on ALL Zsh invocations, after /etc/zsh/zshenv.
+            "$HOME/.zshrc"     # Zsh user, for INTERACTIVE shells, after /etc/zsh/zshrc.
+                                            # Note: Zsh also has ~/.zprofile (login) and ~/.zlogin (login).
 
-            # Bash user login files (Bash reads ONE of .bash_profile, .bash_login, or .profile for login shells)
-            "$HOME/.bash_profile"    # Bash user, for LOGIN shells. Preferred by Bash if it exists.
-            # "$HOME/.bash_login"    # Bash user, for LOGIN shells. (Alternative if .bash_profile doesn't exist - not in your original list but for context)
-            "$HOME/.profile"    # Bash user, for LOGIN shells (fallback if .bash_profile/.bash_login don't exist).
-                                # Also used by other Bourne-compatible shells for login.
+            # Bash user login files (Bash reads ONE of .bash_profile, .bash_login, or .profile for login shells)
+            "$HOME/.bash_profile"    # Bash user, for LOGIN shells. Preferred by Bash if it exists.
+            # "$HOME/.bash_login"    # Bash user, for LOGIN shells. (Alternative if .bash_profile doesn't exist - not in your original list but for context)
+            "$HOME/.profile"    # Bash user, for LOGIN shells (fallback if .bash_profile/.bash_login don't exist).
+                                # Also used by other Bourne-compatible shells for login.
 
-            # Bash user interactive file
-            "$HOME/.bashrc"    # Bash user, for INTERACTIVE non-login shells.
-                               # Often sourced by ~/.bash_profile or ~/.profile for login shells to share settings.
+            # Bash user interactive file
+            "$HOME/.bashrc"    # Bash user, for INTERACTIVE non-login shells.
+                               # Often sourced by ~/.bash_profile or ~/.profile for login shells to share settings.
 
-            # Fish user-specific file
-            "$HOME/.config/fish/config.fish"   # Fish user configuration.
+            # Fish user-specific file
+            "$HOME/.config/fish/config.fish"   # Fish user configuration.
 
-            # --- Other Files ---
-            "/etc/shells"    # Lists paths of valid login shells. Not for setting PATH itself.
-        )
+            # --- Other Files ---
+            "/etc/shells"    # Lists paths of valid login shells. Not for setting PATH itself.
+        )
         
         if [[ -d "/etc/profile.d" ]]; then
             for f_in_profile_d in /etc/profile.d/*.sh; do
