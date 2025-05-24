@@ -1,5 +1,5 @@
 ####################
-# Display login banner, except for when starting a new tmux/byobu session)
+# Display login banner, except for when starting a new tmux session)
 #################### 
 
 RGB() { awk 'BEGIN{ s="          "; s=s s s s s s s s; for (colnum = 0; colnum<77; colnum++) { r = 255-(colnum*255/76); g = (colnum*510/76); b = (colnum*255/76); if (g>255) g = 510-g; printf "\033[48;2;%d;%d;%dm", r,g,b; printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b; printf "%s\033[0m", substr(s,colnum+1,1); } printf "\n";}'; }
@@ -12,8 +12,15 @@ login_banner() { printf "\n$(RGB)\n$(ver) : $(upnow) : $(date +"%Y-%m-%d, %H:%M:
 
 [ -z "$TMUX" ] && login_banner   # Only display login_banner if this is not a new tmux session
 # [ -z "$TMUX" ] && export TERM=xterm-256color && exec tmux   # Optional: Always start tmux at login, but skip when running a new tmux session
-# read -p "Run tmux? (y/n)" -n 1 -r echo if [[ $REPLY =~ ^[Yy]$ ]]; then exec tmux new-session -A -s main fi fi   # Offer to start tmux, https://unix.stackexchange.com/questions/43601/how-can-i-set-my-default-shell-to-start-up-tmux
+# read -p "Run tmux? (y/n)" -n 1 -r echo if [[ $REPLY =~ ^[Yy]$ ]]; then exec tmux new-session -A -s main fi fi
+# Offer to start tmux, https://unix.stackexchange.com/questions/43601/how-can-i-set-my-default-shell-to-start-up-tmux
 
+
+
+
+
+
+####################
 # Other fig-cow-pony-toilet stuff from .custom
 
 # type figlet  &> /dev/null && fignow() { printf "\e[33m$(figlet -w -t -f /usr/share/figlet/small.flf $(date +"%a, %d %b, wk%V"))"; [ -f /usr/share/figlet/univers.flf ] && local opts="-f /usr/share/figlet/univers.flf" || local opts="-f /usr/share/figlet/big.flf"; printf "\n\e[94m$(figlet -t $opts $(date +"%H:%M"))\e[00m\n"; }   # date "%b %d, week %V", was larry3d.flf

@@ -9,7 +9,7 @@ NC='\e[0m' # No Color
 
 # Function to show usage help
 show_help() {
-    echo "Apt Tool.   Usage: a [option] <package(s)>"
+    echo "Apt Tool.   Usage:  [option] <package(s)>"
     echo "Options:"
     echo "  i <package(s)>    Install the specified package(s) (uses sudo)"
     echo "  h                 History: show install/remove/upgrade history"

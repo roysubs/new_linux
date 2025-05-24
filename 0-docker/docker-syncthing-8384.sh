@@ -28,8 +28,10 @@ NC='\033[0m' # No Color
 # (contains database, keys, settings - KEEP THIS SAFE!)
 ST_HOST_CONFIG_DIR="$HOME/.config/syncthing-docker" # Changed slightly to avoid conflict if native Syncthing is also used
 # --- Host directory to be setup in web GUI to sync ---
-DEFAULT_HOST_SYNC_SHARE="/mnt/sdc1/Downloads/0-torrents-complete"
+DEFAULT_HOST_SYNC_SHARE="/mnt/media"
 echo -e "${BOLD}Please enter the host folder to be used by Syncthing to sync.${NC}"
+echo -e "Note: this is *not* neceissarily the folder that will sync, this is a shared volume."
+echo -e "You can sync this folder or any subfolder by configuration in the syncthing web client."
 echo -e "You can use 'tab' to autocomplete paths."
 echo -e "Leave this empty to use the default path:  ${BLUE_BOLD}${DEFAULT_HOST_SYNC_SHARE}${NC}"
 read -e -p "Enter host sync root path [${DEFAULT_HOST_SYNC_SHARE}]: " user_input   # -e enables tab completion, -p sets the prompt string.
@@ -182,11 +184,9 @@ echo
 echo -e "${BOLD}✨ How to Add Your Sync Folders (via Web UI):${NC}"
 echo -e "1. Open the Syncthing Web UI (${YELLOW}http://${HOST_IP}:8384${NC})."
 echo -e "2. Click the ${GREEN}'+ Add Folder'${NC} button."
-echo -e "3. ${BOLD}Folder Label:${NC} Give it a descriptive name (e.g., 'Completed Torrents')."
-echo -e "4. ${BOLD}Folder Path:${NC} THIS IS CRUCIAL! Enter the path ${UNDERLINE}inside the container${NC} that you mounted earlier."
-echo -e "   - For an added volume mount, enter: ${YELLOW}/sync/name-of-mount${NC}, and not the path as it is on the host."
-# Add examples for other mounts if configured
-# echo -e "   - For photos: Enter ${YELLOW}/sync/photos${NC}"
+echo -e "3. ${BOLD}Folder Label:${NC} Give it a descriptive name."
+echo -e "4. ${BOLD}Folder Path:${NC} Enter the path ${UNDERLINE}inside the container${NC} that you mounted earlier."
+echo -e "   - For an added volume mount, find these under: ${YELLOW}/sync/name-of-mount${NC} (i.e., not the path as it is on the host)."
 echo -e "5. Go to the ${BOLD}'Sharing'${NC} tab to select which devices should sync this folder."
 echo -e "6. Configure other options (Versioning, Ignore Patterns) as needed."
 echo -e "7. Click ${GREEN}'Save'${NC}."

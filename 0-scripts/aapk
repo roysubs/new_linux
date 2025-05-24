@@ -9,7 +9,7 @@ NC='\e[0m' # No Color
 
 # Function to show usage help
 show_help() {
-    echo "Apk Tool.     Usage: a [option] <package(s)>"
+    echo "Apk Tool.   Usage:  [option] <package(s)>"
     echo "Options:"
     echo "  a|i <package(s)>  Add (install) the specified package(s) (uses sudo)"
     echo "  d <package(s)>    Delete (remove) the specified package(s) (uses sudo)"

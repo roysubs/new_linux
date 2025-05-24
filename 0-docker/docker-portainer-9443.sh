@@ -147,7 +147,7 @@ echo -e "${BOLD}🔑 Initial Setup / Resetting Password:${NC}"
 echo -e "The ${UNDERLINE}first time${NC} you access Portainer, you will be prompted to create an administrator user and password."
 echo -e "Make sure to choose a strong password."
 echo
-echo -e "If you need to ${UNDERLINE}reset your admin password${NC} or start Portainer completely fresh:"
+echo -e "If you want to reset all configuration:"
 echo -e "1. ${RED}Stop the container:${NC} ${CYAN}docker stop $CONTAINER_NAME${NC}"
 echo -e "2. ${RED}Remove the container:${NC} ${CYAN}docker rm $CONTAINER_NAME${NC}"
 echo -e "3. ${RED}DELETE the host data directory:${NC} ${CYAN}rm -rf \"$HOST_DATA_DIR\"${NC}"
@@ -166,7 +166,7 @@ echo -e "${BOLD}🚀 Next Steps After Login:${NC}"
 echo -e "  1. Choose the environment you want to manage (e.g., your local Docker environment)."
 echo -e "  2. Explore the dashboard to see your running containers, images, volumes, etc."
 echo -e "  3. You can now manage your Docker environment through the intuitive web UI."
-echo -e "  4. ${RED}Very important:${NC} If you can't login, Portainer requires a 12 char password (what 12 char password would you have used?)"
+echo -e "  4. ${RED}Important:${NC} Remember that Portainer required a 12 char password (if you can't login, what 12 char password would you have used?)"
 echo
 
 exit 0

@@ -2,7 +2,8 @@
 
 # Universal Application Package Manager Wrapper
 #
-# Check which package manager is present on this system, then use the the corresponding wrapper script.
+# This script will check which package manager is present on this system, then use that corresponding wrapper script.
+# Always make sure that 'a i' points to 'install' syntax for each package manager for compatibility across platforms.
 # apt, apk, dnf, yum, zypper, pacman (see end of script for more details).
 
 # Define colors
