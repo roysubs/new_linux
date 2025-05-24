@@ -51,16 +51,6 @@ prompt_timeshift_backup() {
   fi
 }
 
-setup_home_folders() {
-  if ! grep -q 'OMV_CREATE_HOME' /etc/default/openmediavault; then
-    echo 'OMV_CREATE_HOME="yes"' >> /etc/default/openmediavault
-    omv-salt stage run prepare && omv-salt deploy run user
-    info "Enabled automatic home folder creation for new users."
-  else
-    info "User home folder creation already enabled."
-  fi
-}
-
 install_portainer_plugin() {
   if omv-confdbadm read "conf.system.omvextras" | grep -q 'portainer'; then
     info "Portainer plugin already installed via OMV extras."
@@ -76,6 +66,34 @@ install_portainer_plugin() {
     fi
   fi
 }
+
+install_sharerootfs_plugin() {
+  if omv-confdbadm read "conf.system.omvextras" | grep -q 'sharerootfs'; then
+    info "Sharerootfs plugin already installed via OMV extras."
+  else
+    read -rp $'\nWould you like to install the OMV sharerootfs plugin via OMV Extras? [y/N]: ' reply
+    if [[ $reply =~ ^[Yy]$ ]]; then
+      omv-confdbadm populate
+      omv-confdbadm create "conf.system.omvextras.sharerootfs"
+      omv-salt deploy run omvextras
+      info "Sharerootfs plugin installed."
+      # sudo apt install openmediavault-sharerootfs
+    else
+      info "Skipped sharerootfs plugin installation."
+    fi
+  fi
+}
+
+setup_home_folders() {
+  if ! grep -q 'OMV_CREATE_HOME' /etc/default/openmediavault; then
+    echo 'OMV_CREATE_HOME="yes"' >> /etc/default/openmediavault
+    omv-salt stage run prepare && omv-salt deploy run user
+    info "Enabled automatic home folder creation for new users."
+  else
+    info "User home folder creation already enabled."
+  fi
+}
+
 
 print_summary() {
   color "\n========= ✅ OMV SETUP SUMMARY ========="
@@ -126,11 +144,12 @@ install_if_missing gnupg
 install_if_missing software-properties-common
 install_if_missing lsb-release
 
+install_portainer_plugin
+install_sharerootfs_plugin
+
 setup_home_folders
 setup_tailscale
 setup_timeshift
-
-install_portainer_plugin
 
 print_summary
 prompt_timeshift_backup
