@@ -17,7 +17,7 @@ info()  { echo -e "\e[1;32m$1\e[0m"; }
 install_if_missing() {
   if ! dpkg -s "$1" &>/dev/null; then
     info "Installing $1..."
-    sduo apt-get install -y "$1"
+    sudo apt-get install -y "$1"
   else
     info "$1 is already installed."
   fi
@@ -52,14 +52,14 @@ prompt_timeshift_backup() {
 }
 
 install_portainer_plugin() {
-  if omv-confdbadm read "conf.system.omvextras" | grep -q 'portainer'; then
+  if sudo omv-confdbadm read "conf.system.omvextras" | grep -q 'portainer'; then
     info "Portainer plugin already installed via OMV extras."
   else
     read -rp $'\nWould you like to install the official Portainer plugin via OMV Extras? [y/N]: ' reply
     if [[ $reply =~ ^[Yy]$ ]]; then
-      omv-confdbadm populate
-      omv-confdbadm create "conf.system.omvextras.portainer"
-      omv-salt deploy run omvextras
+      sudo omv-confdbadm populate
+      sudo omv-confdbadm create "conf.system.omvextras.portainer"
+      sudo omv-salt deploy run omvextras
       info "Portainer plugin installed."
     else
       info "Skipped Portainer plugin installation."
@@ -68,15 +68,15 @@ install_portainer_plugin() {
 }
 
 install_sharerootfs_plugin() {
-  if omv-confdbadm read "conf.system.omvextras" | grep -q 'sharerootfs'; then
+  if sudo omv-confdbadm read "conf.system.omvextras" | grep -q 'sharerootfs'; then
     info "Sharerootfs plugin already installed via OMV extras."
   else
     read -rp $'\nWould you like to install the OMV sharerootfs plugin via OMV Extras? [y/N]: ' reply
     if [[ $reply =~ ^[Yy]$ ]]; then
       sudo apt install openmediavault-sharerootfs
-      omv-confdbadm populate
-      omv-confdbadm create "conf.system.omvextras.sharerootfs"
-      omv-salt deploy run omvextras
+      sudo omv-confdbadm populate
+      sudo omv-confdbadm create "conf.system.omvextras.sharerootfs"
+      sudo omv-salt deploy run omvextras
       info "Sharerootfs plugin installed."
     else
       info "Skipped sharerootfs plugin installation."
@@ -87,7 +87,7 @@ install_sharerootfs_plugin() {
 setup_home_folders() {
   if ! grep -q 'OMV_CREATE_HOME' /etc/default/openmediavault; then
     echo 'OMV_CREATE_HOME="yes"' >> /etc/default/openmediavault
-    omv-salt stage run prepare && omv-salt deploy run user
+    sudo omv-salt stage run prepare && omv-salt deploy run user
     info "Enabled automatic home folder creation for new users."
   else
     info "User home folder creation already enabled."
@@ -136,7 +136,7 @@ print_summary() {
 color "\n========= 🛠 Starting OMV Initial Setup Script ========="
 
 info "Updating APT cache..."
-apt update
+sudo apt update
 
 install_if_missing sudo
 install_if_missing curl
