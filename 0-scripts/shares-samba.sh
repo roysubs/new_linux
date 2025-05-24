@@ -17,7 +17,7 @@ else
     USER_HOME="$HOME"
 fi
 
-OUTPUT_FILE="$USER_HOME/shares-samba-report.txt"
+OUTPUT_FILE="$USER_HOME/reports/shares-samba-report.txt"
 
 # Add date/time to the output file and display headers
 echo -e "${YELLOW}=== Samba Shares Quick Reference & Report ===${RESET}" | tee "$OUTPUT_FILE"
@@ -178,7 +178,14 @@ echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/lo
 echo "Shows active mounts, filtered to exclude zero-size, transient, snap, docker overlay, and run filesystems." | tee -a "$OUTPUT_FILE"
 echo -e "${GREEN}findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS | grep -v \"^[[:space:]]*0\" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL'${RESET}" | tee -a "$OUTPUT_FILE"
 echo "   # -o custom format. Filters zero size and common non-persistent/container mounts." | tee -a "$OUTPUT_FILE"
-findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | column -t | tee -a "$OUTPUT_FILE"
+# findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | grep -v "^[[:space:]]*0" | grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | column -t | tee -a "$OUTPUT_FILE"
+findmnt -o SIZE,USE%,TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | \
+grep -v "^[[:space:]]*0" | \
+grep -v -E 'tmpfs|loop|squashfs|/docker|/run|/wsl|WSL' | \
+sed 's/^[[:space:]]*├─/.    .    ├─/' | \
+sed 's/^[[:space:]]*$/.    .    .    .    .    ./' | \
+column -t | \
+sed 's/\.    /     /g'
 
 # # Mounted non-zero size filesystems (Filtered)
 # echo -e "\n${CYAN}--- Mounted Filesystems with Non-Zero Size (excluding tmpfs/loop/squashfs/docker/run/wsl) ---${RESET}" | tee -a "$OUTPUT_FILE"
@@ -206,22 +213,140 @@ echo -e "\n${CYAN}--- Samba Shares (Configured) ---${RESET}" | tee -a "$OUTPUT_F
 echo "Share names as defined in smb.conf." | tee -a "$OUTPUT_FILE"
 # Define the path to the custom table script (assumes it's in the same directory)
 # $BASH_SOURCE[0] is the path to the current script
-SCRIPT_DIR="$(dirname "$BASH_SOURCE[0]")"
-TABLE_SCRIPT_PATH="$SCRIPT_DIR/shares-smb-table.sh"
+# SCRIPT_DIR="$(dirname "$BASH_SOURCE[0]")"
+# TABLE_SCRIPT_PATH="$SCRIPT_DIR/shares-smb-table.sh"
 # Check if the custom table script exists and is executable
-if [ -x "$TABLE_SCRIPT_PATH" ]; then
-    echo "Using custom script for formatted table output: $TABLE_SCRIPT_PATH" | tee -a "$OUTPUT_FILE"
-    # Execute the custom script and pipe its output to tee
-    "$TABLE_SCRIPT_PATH" 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Error executing custom script)" | tee -a "$OUTPUT_FILE"
-else
-    echo "Custom script '$TABLE_SCRIPT_PATH' not found or not executable. Falling back to testparm -s raw output." | tee -a "$OUTPUT_FILE"
-    echo -e "${GREEN}testparm -s${RESET}" | tee -a "$OUTPUT_FILE"
-    echo "   # -s prints configuration in a concise format" | tee -a "$OUTPUT_FILE"
-    # Fallback to the original testparm -s command
-    testparm -s 2>/dev/null | tee -a "$OUTPUT_FILE" || echo "(Command 'testparm -s' failed - config error?)" | tee -a "$OUTPUT_FILE"
-fi
-# Add a blank line after this section for spacing
-echo "" | tee -a "$OUTPUT_FILE"
+testparm -s 2>&1 | awk '
+BEGIN {
+    # Initialize variables and arrays
+    current_share = ""
+    share_count = 0
+    # Define headers
+    headers[0] = "Name"
+    headers[1] = "CreateMask"
+    headers[2] = "DirMask"
+    headers[3] = "Read-Only"
+    headers[4] = "ValidUsers"
+    headers[5] = "Path"
+    headers[6] = "Comment"
+
+    # Initialize max widths with header lengths
+    for (i = 0; i <= 6; i++) {
+        max_widths[i] = length(headers[i])
+    }
+}
+
+{ # Main processing block for every line
+    # Check if the line is a share header
+    if ($0 ~ /^\[.*\]$/) {
+        # If we were processing a previous share (and it is not the global section)
+        if (current_share != "" && current_share != "global") {
+            # Store the order of the previous share
+            share_order[share_count++] = current_share
+        }
+
+        # Extract the new share name
+        first_bracket = index($0, "[")
+        last_bracket = index($0, "]")
+        current_share = substr($0, first_bracket + 1, last_bracket - first_bracket - 1)
+
+        # Initialize the entry for the new share in the shares array with default values
+        shares[current_share]["createmask"] = "default"
+        shares[current_share]["dirmask"] = "default"
+        shares[current_share]["path"] = "n.a." # Use n.a. as in your example for path if not set
+        shares[current_share]["readonly"] = "default"
+        shares[current_share]["validusers"] = "n.a." # Use n.a. as in your example for users if not set
+        shares[current_share]["comment"] = "n.a." # Use n.a. as in your example for comment if not set
+
+    } else if (current_share != "" && current_share != "global") { # Process lines within a share (excluding global)
+        # Trim leading and trailing whitespace (spaces and tabs) for processing
+        line = $0
+        gsub(/^[ \t]+|[ \t]+$/, "", line)
+
+        # Use pattern matching and extraction for parameters, assigning directly to the shares array
+        if (match(line, /^create mask *=/)) {
+            value = substr(line, RSTART + RLENGTH)
+            gsub(/^ *| *$/, "", value) # Trim spaces from the value
+            shares[current_share]["createmask"] = value
+        } else if (match(line, /^directory mask *=/)) {
+            value = substr(line, RSTART + RLENGTH)
+            gsub(/^ *| *$/, "", value)
+            shares[current_share]["dirmask"] = value
+        } else if (match(line, /^path *=/)) {
+            value = substr(line, RSTART + RLENGTH)
+            gsub(/^ *| *$/, "", value)
+            shares[current_share]["path"] = value
+        } else if (match(line, /^read only *=/)) {
+            value = substr(line, RSTART + RLENGTH)
+            gsub(/^ *| *$/, "", value)
+             # Represent "Yes" as "Yes" and "No" as "No" as in your example
+            if (value == "Yes") shares[current_share]["readonly"] = "Yes"
+            else if (value == "No") shares[current_share]["readonly"] = "No"
+            else shares[current_share]["readonly"] = value # Handle other potential values
+        } else if (match(line, /^valid users *=/)) {
+            value = substr(line, RSTART + RLENGTH)
+            gsub(/^ *| *$/, "", value)
+            shares[current_share]["validusers"] = value
+        } else if (match(line, /^comment *=/)) { # Extract comment
+            value = substr(line, RSTART + RLENGTH)
+            gsub(/^ *| *$/, "", value)
+            shares[current_share]["comment"] = value
+        }
+    }
+}
+
+END {
+    # Process the last share data (if it exists and is not the global section)
+     if (current_share != "" && current_share != "global") {
+        share_order[share_count++] = current_share # Store the order of the last share
+    }
+
+    # Determine the maximum width for each column based on data and headers
+    for (i = 0; i < share_count; i++) {
+        share_name = share_order[i]
+        if (length(share_name) > max_widths[0]) max_widths[0] = length(share_name)
+        if (length(shares[share_name]["createmask"]) > max_widths[1]) max_widths[1] = length(shares[share_name]["createmask"])
+        if (length(shares[share_name]["dirmask"]) > max_widths[2]) max_widths[2] = length(shares[share_name]["dirmask"])
+        if (length(shares[share_name]["readonly"]) > max_widths[3]) max_widths[3] = length(shares[share_name]["readonly"])
+        if (length(shares[share_name]["validusers"]) > max_widths[4]) max_widths[4] = length(shares[share_name]["validusers"])
+        if (length(shares[share_name]["path"]) > max_widths[5]) max_widths[5] = length(shares[share_name]["path"])
+        if (length(shares[share_name]["comment"]) > max_widths[6]) max_widths[6] = length(shares[share_name]["comment"])
+    }
+
+    # Print headers with dynamic width
+    printf "%-*s  ", max_widths[0], headers[0] # Left-align Name
+    printf "%-*s  ", max_widths[1], headers[1] # Left-align CreateMask
+    printf "%-*s  ", max_widths[2], headers[2] # Left-align DirMask
+    printf "%-*s  ", max_widths[3], headers[3] # Left-align Read-Only
+    printf "%-*s  ", max_widths[4], headers[4] # Left-align ValidUsers
+    printf "%-*s  ", max_widths[5], headers[5] # Left-align Path
+    printf "%-*s\n", max_widths[6], headers[6] # Left-align Comment (no trailing spaces)
+
+    # Print the separator line made of '=' characters
+    for (i = 0; i <= 6; i++) {
+        # Print '=' characters for the width of the column
+        for (j = 0; j < max_widths[i]; j++) {
+            printf "="
+        }
+        # Print the spacing after the column (except for the last column)
+        if (i < 6) {
+            printf "  "
+        }
+    }
+    printf "\n" # Newline after the separator line
+
+    # Print share data with dynamic width
+    for (i = 0; i < share_count; i++) {
+        share_name = share_order[i]
+        printf "%-*s  ", max_widths[0], share_name # Left-align Name
+        printf "%-*s  ", max_widths[1], shares[share_name]["createmask"] # Left-align CreateMask
+        printf "%-*s  ", max_widths[2], shares[share_name]["dirmask"] # Left-align DirMask
+        printf "%-*s  ", max_widths[3], shares[share_name]["readonly"] # Left-align Read-Only
+        printf "%-*s  ", max_widths[4], shares[share_name]["validusers"] # Left-align ValidUsers
+        printf "%-*s  ", max_widths[5], shares[share_name]["path"] # Left-align Path
+        printf "%-*s\n", max_widths[6], shares[share_name]["comment"] # Left-align Comment (no trailing spaces)
+    }
+}'
 
 # List active shares (as seen by client connecting to localhost)
 echo -e "\n${CYAN}--- Samba Shares (Active - via smbclient -L localhost) ---${RESET}" | tee -a "$OUTPUT_FILE"

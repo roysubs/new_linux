@@ -13,7 +13,6 @@ clean_path() {
 # Function to add a directory to PATH
 add_to_path() {
   local DIR="$1"
-
   # Resolve absolute path (handles ~/ correctly)
   DIR=$(realpath -e "$HOME/${DIR/#\~\//}") || { echo "Directory $DIR does not exist, skipping."; return 1; }
 
@@ -26,7 +25,6 @@ add_to_path() {
       echo "$DIR is already in the PATH for the current session."
     fi
   fi
-
   # Ensure it's added to .bashrc
   local PROFILE_FILE="$HOME/.bashrc"
   if ! grep -qxF "export PATH=\"$DIR:\$PATH\"" "$PROFILE_FILE"; then
@@ -36,13 +34,6 @@ add_to_path() {
     echo "$DIR is already in $PROFILE_FILE."
   fi
 }
-
-# Clean PATH before adding new directories
-clean_path
-
-# Apply function to both directories
-add_to_path "new_linux"
-add_to_path "new_linux/0-scripts"
 
 echo "
 Console Login (TTY Login) order of Profile files:
@@ -86,6 +77,13 @@ echo \$0          # Check the current shell
 bash -x --login  # Debug login shell startup scripts
 bash -x          # Debug non-login shell startup scripts
 "
+
+# Clean PATH before adding new directories
+clean_path
+
+# Apply function to both directories
+add_to_path "new_linux"
+add_to_path "new_linux/0-scripts"
 
 # Check if script was sourced
 if ! (return 0 2>/dev/null); then
