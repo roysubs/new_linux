@@ -265,8 +265,8 @@ case "$option" in
 Files checked:
 
 --- System-Wide Files ---     Generally loaded earlier or provide the base environment.
-/etc/environment       Typically loaded by PAM very early in the login process, before shell-specific files.
-                       Sets environment variables for all processes started after login.
+/etc/environment       Typically loaded by PAM very early in the login process, before shell-specific files.
+                       Sets environment variables for all processes started after login.
 /etc/profile           System-wide login file for Bourne-compatible shells (like Bash, Zsh). Often sources '*.sh' in /etc/profile.d/
 Zsh system-specific:
 /etc/zsh/zshenv        Zsh system-wide, sourced on ALL Zsh invocations (login, interactive, scripts). Loaded very early for Zsh.
