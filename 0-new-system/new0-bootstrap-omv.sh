@@ -17,7 +17,7 @@ info()  { echo -e "\e[1;32m$1\e[0m"; }
 install_if_missing() {
   if ! dpkg -s "$1" &>/dev/null; then
     info "Installing $1..."
-    apt-get install -y "$1"
+    sduo apt-get install -y "$1"
   else
     info "$1 is already installed."
   fi
@@ -34,9 +34,9 @@ setup_tailscale() {
 
 setup_timeshift() {
   if ! command -v timeshift &>/dev/null; then
-    add-apt-repository -y ppa:teejee2008/ppa
-    apt update
-    apt install -y timeshift
+    sudo add-apt-repository -y ppa:teejee2008/ppa
+    sudo apt update
+    sudo apt install -y timeshift
   else
     info "Timeshift is already installed."
   fi
@@ -73,11 +73,11 @@ install_sharerootfs_plugin() {
   else
     read -rp $'\nWould you like to install the OMV sharerootfs plugin via OMV Extras? [y/N]: ' reply
     if [[ $reply =~ ^[Yy]$ ]]; then
+      sudo apt install openmediavault-sharerootfs
       omv-confdbadm populate
       omv-confdbadm create "conf.system.omvextras.sharerootfs"
       omv-salt deploy run omvextras
       info "Sharerootfs plugin installed."
-      # sudo apt install openmediavault-sharerootfs
     else
       info "Skipped sharerootfs plugin installation."
     fi
